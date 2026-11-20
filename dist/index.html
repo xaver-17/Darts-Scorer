@@ -397,6 +397,63 @@
   .vbtn { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--mute); font: inherit; font-size: 13px; cursor: pointer; }
   .vbtn.on { color: var(--ink); }
   .vbtn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  /* ---- Übergänge ---- */
+  @keyframes vtIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes popIn { 0% { opacity: 0; transform: scale(.85); } 60% { opacity: 1; transform: scale(1.04); } 100% { transform: scale(1); } }
+  #viewTrainer.vt-enter, #viewX01, #viewCounter { animation: vtIn .32s cubic-bezier(.2,.7,.2,1) both; }
+  .celebrate > * { animation: vtIn .45s cubic-bezier(.2,.7,.2,1) both; }
+  .celebrate > .result { animation: popIn .6s cubic-bezier(.2,.7,.2,1) both; font-size: 30px; }
+  .celebrate > :nth-child(2) { animation-delay: .35s; } .celebrate > :nth-child(3) { animation-delay: .55s; }
+  .celebrate > :nth-child(4) { animation-delay: .75s; } .celebrate > :nth-child(5) { animation-delay: .9s; }
+  .celebrate table.cmp tr { animation: vtIn .4s ease-out both; }
+  .celebrate table.cmp tr:nth-child(1) { animation-delay: 0.81s; }
+  .celebrate table.cmp tr:nth-child(2) { animation-delay: 0.87s; }
+  .celebrate table.cmp tr:nth-child(3) { animation-delay: 0.93s; }
+  .celebrate table.cmp tr:nth-child(4) { animation-delay: 0.99s; }
+  .celebrate table.cmp tr:nth-child(5) { animation-delay: 1.05s; }
+  .celebrate table.cmp tr:nth-child(6) { animation-delay: 1.11s; }
+  .celebrate table.cmp tr:nth-child(7) { animation-delay: 1.17s; }
+  .celebrate table.cmp tr:nth-child(8) { animation-delay: 1.23s; }
+  .celebrate table.cmp tr:nth-child(9) { animation-delay: 1.29s; }
+  .celebrate table.cmp tr:nth-child(10) { animation-delay: 1.35s; }
+  .celebrate table.cmp tr:nth-child(11) { animation-delay: 1.41s; }
+  svg.bzoom { animation: zoomIn .22s ease-out both; }
+  @keyframes zoomIn { from { opacity: .4; transform: scale(.92); } to { opacity: 1; transform: none; } }
+  .zl text { paint-order: stroke; stroke: rgba(0,0,0,.35); stroke-width: .5; pointer-events: none; }
+  .zl { pointer-events: none; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  /* ---- Laptop / Desktop: ganze Breite nutzen, Navigation links ---- */
+  @media (min-width: 900px) {
+    body { padding: 0 32px 40px 252px !important; }
+    .app { max-width: 1180px; }
+    #nav { top: 0; bottom: 0; right: auto; width: 220px; display: flex; flex-direction: column; gap: 4px; padding: 84px 14px 20px; border-top: none; border-right: 1px solid var(--line); background: #fafafa; }
+    #nav::before { content: 'Darts'; position: absolute; top: 26px; left: 24px; font: 800 24px/1 -apple-system, BlinkMacSystemFont, Inter, sans-serif; letter-spacing: -.03em; color: var(--ink); }
+    #nav button { flex-direction: row; justify-content: flex-start; gap: 12px; padding: 10px 12px; font-size: 15px; border-radius: 8px; }
+    #nav button.active { background: #ececef; }
+    #nav svg { width: 22px; height: 22px; }
+    .phead { padding-top: 28px; } .phead h1 { font-size: 32px; }
+    .topbar { padding-top: 24px; } .topbar h1 { visibility: hidden; }
+    .cats { margin: 18px 0 0; padding: 2px 0 4px; }
+    .carousel { margin: 0; padding: 0; grid-auto-flow: row; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+    .ccard .thumb { height: 150px; }
+    .rows { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; }
+    .statstrip b { font-size: 24px; }
+    #viewTrainer .card { padding: 22px; }
+    .trgrid { grid-template-columns: repeat(4, 1fr); }
+    .sumgrid { grid-template-columns: repeat(6, 1fr) !important; }
+    .bigavg .avgnum { font-size: 72px; }
+    .boardwrap { max-width: 520px; }
+    .gboard { max-width: 100%; }
+    .gsplit { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 28px; align-items: start; margin-top: 10px; }
+    .gsplit .boardwrap { max-width: none; margin-top: 0; }
+    .gright .slots { margin-top: 0; }
+    #viewCounter, #viewX01 { max-width: 760px; }
+    .tgrid { grid-template-columns: repeat(6, 1fr); }
+    .quickstart { grid-template-columns: repeat(4, 1fr); }
+    .celebrate { max-width: 760px; margin: 0 auto; }
+    .datacard, .muhelp { max-width: 760px; }
+  }
+  @media (min-width: 1400px) { .app { max-width: 1320px; } }
   /* ---- PWA: Platz für Notch / Statusleiste, wenn die App vom Home-Bildschirm startet ---- */
   body { padding-top: env(safe-area-inset-top); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
   html, body { overscroll-behavior-y: none; }
@@ -409,6 +466,20 @@
   .datamsg { margin-top: 12px; font-size: 14px; min-height: 18px; color: #15803d; }
   .datamsg.err { color: #dc2626; }
   .appver { margin-top: 18px; font-size: 12px; color: #71717a; text-align: center; }
+  /* ---- Startbildschirm ---- */
+  #splash { position: fixed; inset: 0; z-index: 100; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; transition: opacity .45s ease, transform .45s ease; }
+  #splash.out { opacity: 0; transform: scale(1.04); pointer-events: none; }
+  .sp-board { width: 132px; height: 132px; overflow: visible; }
+  .sp-r { fill: none; stroke: #111; stroke-width: 5; transform-origin: 0 0; animation: spRing .55s cubic-bezier(.2,.8,.2,1) both; }
+  .sp-r1 { fill: #111; stroke: none; } .sp-r2 { stroke: #fff; stroke-width: 4; animation-delay: .08s; } .sp-r3 { stroke: #fff; stroke-width: 4; animation-delay: .16s; }
+  .sp-bull { fill: #fff; transform-origin: 0 0; animation: spRing .4s .26s cubic-bezier(.2,.8,.2,1) both; }
+  .sp-dart { animation: spDart .38s .55s cubic-bezier(.5,0,.9,.6) both; }
+  .sp-wave { fill: none; stroke: #ff5a1f; stroke-width: 3; transform-origin: 0 0; opacity: 0; animation: spWave .6s .92s ease-out both; }
+  .sp-name { font: 800 30px/1 -apple-system, BlinkMacSystemFont, 'SF Pro Display', Inter, sans-serif; letter-spacing: -.03em; color: #111; animation: spName .45s 1s ease-out both; }
+  @keyframes spRing { from { transform: scale(0); } to { transform: scale(1); } }
+  @keyframes spDart { from { transform: translate(90px, -90px); opacity: 0; } 30% { opacity: 1; } to { transform: translate(0, 0); opacity: 1; } }
+  @keyframes spWave { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(6.5); opacity: 0; } }
+  @keyframes spName { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   /* Trainingsspiele (drills.js) */
   .tgrid.dgrid { grid-template-columns: 1fr 1fr; }
   .okb.zero { background: #f4f4f5; color: #18181b; }
@@ -441,85 +512,15 @@
 </style>
 </head>
 <body>
-<nav id="nav"></nav>
-<div class="app">
-  <div id="viewCounter" style="display:none">
-  <div class="phead"><h1>Zähler</h1><p>Felder abwerfen, Summe wird geteilt</p></div>
-  <div class="label">Gesamt <span class="modebadge" id="modebadge">Normal</span></div>
-  <div class="total" id="total">0</div>
-  <div class="sub" id="sub">0 Eingaben</div>
-
-  <div class="choices" id="choices"></div>
-  <div class="lockhint" id="lockhint"></div>
-  <button class="add" id="add">+1</button>
-
-  <h2>Felder · <span class="done-count" id="doneCount">0</span> / <span id="activeCount">22</span> abgeschlossen</h2>
-  <div class="tapmode">
-    <button id="tapHit" class="active">🎯 Treffen</button>
-    <button id="tapLock" class="lock">✕ Sperren</button>
-  </div>
-  <div class="numbers" id="numbers"></div>
-
-  <details id="settings">
-    <summary>⚙️ Einstellungen</summary>
-    <div class="setbody">
-      <div class="setlabel">Wurfart</div>
-      <div class="seg" id="modeSeg"></div>
-
-      <div class="two">
-        <div><div class="setlabel">25 treffen</div><div class="seg" data-field="25"></div></div>
-        <div><div class="setlabel">50 treffen</div><div class="seg" data-field="50"></div></div>
-      </div>
-
-      <div class="setlabel">Zahlen im Spiel</div>
-      <div class="pick" id="pick"></div>
-      <div class="presets">
-        <button data-p="all">Alle</button>
-        <button data-p="none">Keine</button>
-        <button data-p="1-20">1–20</button>
-        <button data-p="15-20">15–20 + Bull</button>
-        <button data-p="bull">Nur Bull</button>
-      </div>
-      <div class="hint">Gilt dauerhaft. Zum Sperren nur für eine Runde oben „✕ Sperren“ nutzen.</div>
-    </div>
-  </details>
-
-  <div class="row">
-    <button id="undo">↶ Rückgängig</button>
-    <button id="reset">Runde zurücksetzen</button>
-  </div>
-  <div class="confirm" id="confirm">
-    <p>Aktuelle Runde (Summe, Felder, Sperren) zurücksetzen?</p>
-    <div class="row" style="margin-top:0">
-      <button id="no">Abbrechen</button>
-      <button class="yes" id="yes">Ja, zurücksetzen</button>
-    </div>
-  </div>
-  <div class="banner" id="banner"></div>
-  <div class="log" id="log"></div>
-
-  <h2>Ergebnisse</h2>
-  <div class="filter" id="filter"></div>
-  <div id="results"></div>
-  <div class="row" id="clearRow" style="display:none"><button id="clearAll">Tabelle leeren</button></div>
-  <div class="confirm" id="confirm2">
-    <p>Alle Ergebnisse löschen?</p>
-    <div class="row" style="margin-top:0">
-      <button id="no2">Abbrechen</button>
-      <button class="yes" id="yes2">Ja, löschen</button>
-    </div>
-  </div>
-
-  <h2>Verlauf</h2>
-  <div class="chartbox">
-    <div class="legend"><span style="--c:#60a5fa">Gesamtzahl</span><span style="--c:#4ade80">Geteilte Zahl</span></div>
-    <div id="chart"></div>
-    <div class="chartnote">Je höher die Linie, desto niedriger die Zahl</div>
-  </div>
+<div id="splash" aria-hidden="true">
+  <svg class="sp-board" viewBox="-60 -60 120 120">
+    <circle class="sp-r sp-r1" r="46"/><circle class="sp-r sp-r2" r="33"/><circle class="sp-r sp-r3" r="20"/>
+    <circle class="sp-bull" r="7"/>
+    <g class="sp-dart"><path d="M0 0 L26 -26" stroke="#111" stroke-width="3" stroke-linecap="round"/><path d="M22 -30 L34 -30 L30 -22 Z M30 -34 L30 -22 L38 -26 Z" fill="#ff5a1f"/></g>
+    <circle class="sp-wave" r="8"/>
+  </svg>
+  <div class="sp-name">Darts</div>
 </div>
-  <div id="viewTrainer"></div>
-</div>
-
 <script>
 // ===== Darts-Kern: Board, Checkouts, Bot =====
 const ORDER = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
@@ -1078,6 +1079,92 @@ window.DRILLS = (function () {
 
 </script>
 <script>
+  (function () {
+    var s = document.getElementById('splash'); if (!s) return;
+    var quick = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setTimeout(function () { s.classList.add('out'); setTimeout(function () { s.remove(); }, 450); }, quick ? 200 : 1500);
+  })();
+</script>
+<nav id="nav"></nav>
+<div class="app">
+  <div id="viewCounter" style="display:none">
+  <div class="phead"><h1>Zähler</h1><p>Felder abwerfen, Summe wird geteilt</p></div>
+  <div class="label">Gesamt <span class="modebadge" id="modebadge">Normal</span></div>
+  <div class="total" id="total">0</div>
+  <div class="sub" id="sub">0 Eingaben</div>
+
+  <div class="choices" id="choices"></div>
+  <div class="lockhint" id="lockhint"></div>
+  <button class="add" id="add">+1</button>
+
+  <h2>Felder · <span class="done-count" id="doneCount">0</span> / <span id="activeCount">22</span> abgeschlossen</h2>
+  <div class="tapmode">
+    <button id="tapHit" class="active">🎯 Treffen</button>
+    <button id="tapLock" class="lock">✕ Sperren</button>
+  </div>
+  <div class="numbers" id="numbers"></div>
+
+  <details id="settings">
+    <summary>⚙️ Einstellungen</summary>
+    <div class="setbody">
+      <div class="setlabel">Wurfart</div>
+      <div class="seg" id="modeSeg"></div>
+
+      <div class="two">
+        <div><div class="setlabel">25 treffen</div><div class="seg" data-field="25"></div></div>
+        <div><div class="setlabel">50 treffen</div><div class="seg" data-field="50"></div></div>
+      </div>
+
+      <div class="setlabel">Zahlen im Spiel</div>
+      <div class="pick" id="pick"></div>
+      <div class="presets">
+        <button data-p="all">Alle</button>
+        <button data-p="none">Keine</button>
+        <button data-p="1-20">1–20</button>
+        <button data-p="15-20">15–20 + Bull</button>
+        <button data-p="bull">Nur Bull</button>
+      </div>
+      <div class="hint">Gilt dauerhaft. Zum Sperren nur für eine Runde oben „✕ Sperren“ nutzen.</div>
+    </div>
+  </details>
+
+  <div class="row">
+    <button id="undo">↶ Rückgängig</button>
+    <button id="reset">Runde zurücksetzen</button>
+  </div>
+  <div class="confirm" id="confirm">
+    <p>Aktuelle Runde (Summe, Felder, Sperren) zurücksetzen?</p>
+    <div class="row" style="margin-top:0">
+      <button id="no">Abbrechen</button>
+      <button class="yes" id="yes">Ja, zurücksetzen</button>
+    </div>
+  </div>
+  <div class="banner" id="banner"></div>
+  <div class="log" id="log"></div>
+
+  <h2>Ergebnisse</h2>
+  <div class="filter" id="filter"></div>
+  <div id="results"></div>
+  <div class="row" id="clearRow" style="display:none"><button id="clearAll">Tabelle leeren</button></div>
+  <div class="confirm" id="confirm2">
+    <p>Alle Ergebnisse löschen?</p>
+    <div class="row" style="margin-top:0">
+      <button id="no2">Abbrechen</button>
+      <button class="yes" id="yes2">Ja, löschen</button>
+    </div>
+  </div>
+
+  <h2>Verlauf</h2>
+  <div class="chartbox">
+    <div class="legend"><span style="--c:#60a5fa">Gesamtzahl</span><span style="--c:#4ade80">Geteilte Zahl</span></div>
+    <div id="chart"></div>
+    <div class="chartnote">Je höher die Linie, desto niedriger die Zahl</div>
+  </div>
+</div>
+  <div id="viewTrainer"></div>
+</div>
+
+<script>
   const FIELDS = [...Array.from({ length: 20 }, (_, i) => i + 1), 25, 50];
   const MODES = { N: 'Normal', D: 'Doppel', T: 'Triple' };
   let step = 1, history = [], need = { 25: 3, 50: 3 }, results = [];
@@ -1614,12 +1701,33 @@ window.DRILLS = (function () {
   const MISS_RING = `<circle r="${MISS_R}" fill="#f4f4f5" stroke="#a1a1aa" stroke-width="1.5" stroke-dasharray="6 5"/>` +
     `<text y="${-(MISS_R - 26)}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">DANEBEN</text>` +
     `<text y="${MISS_R - 14}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">DANEBEN</text>`;
+  // Gezoomt: ganz dezent die Feldnamen in jedem Feld, damit man nicht daneben tippt
+  const ZOOM_LABELS = (function () {
+    let s = '<g class="zl" fill="#fff" fill-opacity=".38" font-size="4.2" font-weight="700" text-anchor="middle" dominant-baseline="central">';
+    ORDER.forEach((n, i) => {
+      [[62, String(n)], [103, 'T' + n], [134, String(n)], [166, 'D' + n]].forEach(([r, t]) => {
+        const [x, y] = pt(r, i * 18); s += `<text x="${x}" y="${y}">${t}</text>`;
+      });
+    });
+    return s + '<text x="0" y="-11">25</text><text x="0" y="0">BULL</text><text x="0" y="203" font-size="5">DANEBEN</text></g>';
+  })();
+  // Nur zoomen, wenn der Tipp mehrdeutig ist: Triple/Doppel/Bull oder nah an einer Ring- bzw. Feldgrenze
+  const RINGS = [6.35, 15.9, 99, 107, 162, 170];
+  function needsZoom(x, y) {
+    const r = Math.hypot(x, y);
+    if (r <= 15.9 + 6) return true;                                   // Bull-Bereich
+    if ((r >= 99 && r <= 107) || (r >= 162 && r <= 170)) return true; // Triple- oder Doppelring
+    if (RINGS.some(b => Math.abs(r - b) < 6)) return true;            // nah an einem Ring
+    const deg = ((Math.atan2(x, y) * 180 / Math.PI) + 369) % 18;      // Abstand zur Feldgrenze
+    const dTan = Math.min(deg, 18 - deg) * Math.PI / 180 * r;
+    return dTan < 5;
+  }
   // dots: [{x,y,c,r,o,t}] in mm (y nach oben)
   function boardSVG(o) {
     const R = o.click ? MISS_R + 6 : 200;   // Eingabe-Scheiben zeigen außen den „Daneben“-Ring
     const vb = o.zoom ? `${(o.zoom.x - 50).toFixed(1)} ${(o.zoom.y - 50).toFixed(1)} 100 100` : `${-R} ${-R} ${2 * R} ${2 * R}`;
     const k = o.zoom ? 0.3 : 1;
-    let s = `<svg ${o.click ? 'data-board="1"' : ''} viewBox="${vb}" width="100%" style="display:block;touch-action:manipulation">${o.click ? MISS_RING : ''}${BOARD_BASE}${o.extra || ''}`;
+    let s = `<svg ${o.click ? 'data-board="1"' : ''} viewBox="${vb}" width="100%" class="${o.zoom ? 'bzoom' : ''}" style="display:block;touch-action:manipulation">${o.click ? MISS_RING : ''}${BOARD_BASE}${o.zoom ? ZOOM_LABELS : ''}${o.extra || ''}`;
     (o.dots || []).forEach(d => {
       s += `<circle cx="${d.x}" cy="${-d.y}" r="${(d.r || 4) * k}" fill="${d.c}" fill-opacity="${d.o || 1}" stroke="${d.s || '#000'}" stroke-width="${(d.sw || 1) * k}"/>`;
       if (d.t) s += `<text x="${d.x}" y="${(-d.y + 3.5 * k).toFixed(2)}" font-size="${10 * k}" font-weight="800" text-anchor="middle" fill="${d.tc || '#000'}">${d.t}</text>`;
@@ -1636,7 +1744,7 @@ window.DRILLS = (function () {
     const q = p.matrixTransform(svg.getScreenCTM().inverse());
     const r = Math.hypot(q.x, q.y);
     if (r > MISS_R) { if (T.zoom) { T.zoom = null; render(); } return; }   // außerhalb: nur Zoom schließen
-    if (r <= 170 && T.set.zoom !== false && !T.zoom) { T.zoom = { x: q.x, y: q.y }; render(); return; }
+    if (r <= 170 && T.set.zoom !== false && !T.zoom && needsZoom(q.x, -q.y)) { T.zoom = { x: q.x, y: q.y }; render(); return; }
     T.zoom = null;
     const x = Math.round(q.x * 10) / 10, y = Math.round(-q.y * 10) / 10;
     playerDart(Object.assign(scoreAt(x, y), { x, y }));
@@ -2089,10 +2197,12 @@ window.DRILLS = (function () {
       if (g.busy) g.bLast.forEach((d, i) => dots.push({ x: d.x, y: d.y, c: '#3b82f6', r: 8, t: i + 1, s: '#fff', sw: 1.5, tc: '#fff' }));
       else if (!V.length) g.bLast.forEach((d, i) => dots.push({ x: d.x, y: d.y, c: '#3b82f6', o: .5, r: 5, s: '#fff', sw: .8 }));
       V.forEach((d, i) => { if (d.x !== null && d.x !== undefined) dots.push({ x: d.x, y: d.y, c: '#facc15', r: 7, t: i + 1 }); });
+      h += `<div class="gsplit"><div class="gleft">`;
       if (g.busy) h += `<div class="botpop ${g.botPop ? 'on' : ''}">${g.botPop ? `<small>Bot · Pfeil ${g.botPop.i}</small>${g.botPop.txt}` : '<small>Bot</small>wirft …'}</div>`;
       h += `<div class="boardwrap">${boardSVG({ click: myTurn, zoom: T.zoom, dots })}</div>`;
       if (T.zoom) h += `<div class="zoombar"><span>Genau tippen, wo der Pfeil steckt · außerhalb des grauen Rings tippen = zurück</span>${btn('zoomOff', 'Abbrechen', undefined, 'zb')}</div>`;
-      else if (myTurn) h += `<div class="boardhint">Auf die Scheibe tippen${T.set.zoom !== false ? ' (zoomt zum genauen Setzen)' : ''} oder unten das Feld wählen · grauer Ring = Daneben</div>`;
+      else if (myTurn) h += `<div class="boardhint">Auf die Scheibe tippen${T.set.zoom !== false ? ' (bei Triple, Doppel und Grenzen wird gezoomt)' : ''} oder unten das Feld wählen · grauer Ring = Daneben</div>`;
+      h += `</div><div class="gright">`;
 
       if (g.busy) h += `<div class="wait">Du bist gleich wieder dran …</div>`;
       else {
@@ -2106,15 +2216,16 @@ window.DRILLS = (function () {
         h += `<div class="numrow">${btn('s25', '25', undefined, 'nb')}${btn('bull', 'Bull', undefined, 'nb bullb')}${btn('miss', 'Miss / 0', undefined, 'nb missb')}</div>`;
         h += `<button class="link" data-a="zoomSet" data-v="${T.set.zoom === false ? 1 : 0}">🔍 Zoom beim Tippen auf die Scheibe: ${T.set.zoom === false ? 'aus' : 'an'}</button>`;
       }
+      h += `</div></div>`;
     } else if (g.phase === 'legover') {
-      h += `<div class="result ${g.legWinner === 'p' ? 'win' : 'lose'}">${g.legWinner === 'p' ? 'Leg gewonnen! 🎯' : 'Leg an den Bot'}</div>`;
+      h += `<div class="celebrate"><div class="result ${g.legWinner === 'p' ? 'win' : 'lose'}">${g.legWinner === 'p' ? 'Leg gewonnen!' : 'Leg an den Bot'}</div>`;
       h += `<div class="live">Stand ${g.legs.p} : ${g.legs.b}</div><button class="big go" data-a="nextLeg">Nächstes Leg</button>`;
-      h += `<div class="setlabel">Statistik bisher</div>${cmpTable(P, B)}`;
+      h += `<div class="setlabel">Statistik bisher</div>${cmpTable(P, B)}</div>`;
     } else if (g.phase === 'over') {
       const won = g.legWinner === 'p';
-      h += `<div class="result ${won ? 'win' : 'lose'}">${won ? 'Spiel gewonnen! 🏆' : 'Spiel verloren'}</div>`;
+      h += `<div class="celebrate"><div class="result ${won ? 'win' : 'lose'}">${won ? 'Spiel gewonnen!' : 'Spiel verloren'}</div>`;
       h += `<div class="live">Legs ${g.legs.p} : ${g.legs.b}</div>${cmpTable(P, B)}`;
-      h += `<div class="row2">${btn('again', 'Revanche', undefined, 'mid')}${btn('close', 'Zu den Einstellungen', undefined, 'mid')}</div>`;
+      h += `<div class="row2">${btn('again', 'Revanche', undefined, 'mid')}${btn('close', 'Zu den Einstellungen', undefined, 'mid')}</div></div>`;
       return h + `</div>`;
     }
     if (T.confirm === 'quit') h += `<div class="confirmbox"><p>Spiel abbrechen? Es wird nicht gespeichert.</p><div class="row2">${btn('no', 'Weiterspielen', undefined, 'mid')}${btn('quitYes', 'Abbrechen', undefined, 'mid redb')}</div></div>`;
@@ -2336,6 +2447,7 @@ window.DRILLS = (function () {
 
   // ===== 90-main.js =====
 // Rendern, Navigation, Start
+  let lastScreen = '';
   function render() {
     const cv = document.getElementById('viewCounter'), r = T.route || 'home';
     const panel = EXT.panels[r];   // eigenständiges Modul mit eigenem Container (z.B. X01)
@@ -2352,6 +2464,9 @@ window.DRILLS = (function () {
       else h = T.sess ? (DR[T.sess.mode] ? DR[T.sess.mode].view(T.sess, ctx) : T.sess.mode === 'score' ? viewScore() : viewTask()) : T.summary ? viewSummary() : viewSetup();
       el.innerHTML = h;
       if (EXT.after[r]) EXT.after[r](el);
+      // Sanfter Übergang, wenn ein neuer Bildschirm kommt (nicht bei jedem Tipp im selben Bildschirm)
+      const key = r + '|' + (r === 'play' && T.game ? T.game.phase + T.game.legNo : '') + '|' + (r === 'train' ? (T.sess ? T.sess.mode : T.summary ? 'sum' : 'set') : '') + '|' + (r === 'stats' ? T.stab : '');
+      if (key !== lastScreen) { el.classList.remove('vt-enter'); void el.offsetWidth; el.classList.add('vt-enter'); lastScreen = key; }
     }
     document.querySelectorAll('#nav [data-route]').forEach(b => b.classList.toggle('active', b.dataset.route === ((panel && panel.nav) || r)));
     save();
@@ -2373,7 +2488,7 @@ window.DRILLS = (function () {
 </script>
 <script>
 // ===== PWA: Service Worker anmelden (nur über http/https, nicht bei file://) =====
-window.APP_VERSION = '6941992797';
+window.APP_VERSION = '36fe5fe25d';
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
   window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service Worker nicht registriert:', e)); });
 }

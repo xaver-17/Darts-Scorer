@@ -1,0 +1,16 @@
+<div id="splash" aria-hidden="true">
+  <svg class="sp-board" viewBox="-60 -60 120 120">
+    <circle class="sp-r sp-r1" r="46"/><circle class="sp-r sp-r2" r="33"/><circle class="sp-r sp-r3" r="20"/>
+    <circle class="sp-bull" r="7"/>
+    <g class="sp-dart"><path d="M0 0 L26 -26" stroke="#111" stroke-width="3" stroke-linecap="round"/><path d="M22 -30 L34 -30 L30 -22 Z M30 -34 L30 -22 L38 -26 Z" fill="#ff5a1f"/></g>
+    <circle class="sp-wave" r="8"/>
+  </svg>
+  <div class="sp-name">Darts</div>
+</div>
+<script>
+  (function () {
+    var s = document.getElementById('splash'); if (!s) return;
+    var quick = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setTimeout(function () { s.classList.add('out'); setTimeout(function () { s.remove(); }, 450); }, quick ? 200 : 1500);
+  })();
+</script>

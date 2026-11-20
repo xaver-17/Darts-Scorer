@@ -23,12 +23,33 @@
   const MISS_RING = `<circle r="${MISS_R}" fill="#f4f4f5" stroke="#a1a1aa" stroke-width="1.5" stroke-dasharray="6 5"/>` +
     `<text y="${-(MISS_R - 26)}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">DANEBEN</text>` +
     `<text y="${MISS_R - 14}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">DANEBEN</text>`;
+  // Gezoomt: ganz dezent die Feldnamen in jedem Feld, damit man nicht daneben tippt
+  const ZOOM_LABELS = (function () {
+    let s = '<g class="zl" fill="#fff" fill-opacity=".38" font-size="4.2" font-weight="700" text-anchor="middle" dominant-baseline="central">';
+    ORDER.forEach((n, i) => {
+      [[62, String(n)], [103, 'T' + n], [134, String(n)], [166, 'D' + n]].forEach(([r, t]) => {
+        const [x, y] = pt(r, i * 18); s += `<text x="${x}" y="${y}">${t}</text>`;
+      });
+    });
+    return s + '<text x="0" y="-11">25</text><text x="0" y="0">BULL</text><text x="0" y="203" font-size="5">DANEBEN</text></g>';
+  })();
+  // Nur zoomen, wenn der Tipp mehrdeutig ist: Triple/Doppel/Bull oder nah an einer Ring- bzw. Feldgrenze
+  const RINGS = [6.35, 15.9, 99, 107, 162, 170];
+  function needsZoom(x, y) {
+    const r = Math.hypot(x, y);
+    if (r <= 15.9 + 6) return true;                                   // Bull-Bereich
+    if ((r >= 99 && r <= 107) || (r >= 162 && r <= 170)) return true; // Triple- oder Doppelring
+    if (RINGS.some(b => Math.abs(r - b) < 6)) return true;            // nah an einem Ring
+    const deg = ((Math.atan2(x, y) * 180 / Math.PI) + 369) % 18;      // Abstand zur Feldgrenze
+    const dTan = Math.min(deg, 18 - deg) * Math.PI / 180 * r;
+    return dTan < 5;
+  }
   // dots: [{x,y,c,r,o,t}] in mm (y nach oben)
   function boardSVG(o) {
     const R = o.click ? MISS_R + 6 : 200;   // Eingabe-Scheiben zeigen außen den „Daneben“-Ring
     const vb = o.zoom ? `${(o.zoom.x - 50).toFixed(1)} ${(o.zoom.y - 50).toFixed(1)} 100 100` : `${-R} ${-R} ${2 * R} ${2 * R}`;
     const k = o.zoom ? 0.3 : 1;
-    let s = `<svg ${o.click ? 'data-board="1"' : ''} viewBox="${vb}" width="100%" style="display:block;touch-action:manipulation">${o.click ? MISS_RING : ''}${BOARD_BASE}${o.extra || ''}`;
+    let s = `<svg ${o.click ? 'data-board="1"' : ''} viewBox="${vb}" width="100%" class="${o.zoom ? 'bzoom' : ''}" style="display:block;touch-action:manipulation">${o.click ? MISS_RING : ''}${BOARD_BASE}${o.zoom ? ZOOM_LABELS : ''}${o.extra || ''}`;
     (o.dots || []).forEach(d => {
       s += `<circle cx="${d.x}" cy="${-d.y}" r="${(d.r || 4) * k}" fill="${d.c}" fill-opacity="${d.o || 1}" stroke="${d.s || '#000'}" stroke-width="${(d.sw || 1) * k}"/>`;
       if (d.t) s += `<text x="${d.x}" y="${(-d.y + 3.5 * k).toFixed(2)}" font-size="${10 * k}" font-weight="800" text-anchor="middle" fill="${d.tc || '#000'}">${d.t}</text>`;
@@ -45,7 +66,7 @@
     const q = p.matrixTransform(svg.getScreenCTM().inverse());
     const r = Math.hypot(q.x, q.y);
     if (r > MISS_R) { if (T.zoom) { T.zoom = null; render(); } return; }   // außerhalb: nur Zoom schließen
-    if (r <= 170 && T.set.zoom !== false && !T.zoom) { T.zoom = { x: q.x, y: q.y }; render(); return; }
+    if (r <= 170 && T.set.zoom !== false && !T.zoom && needsZoom(q.x, -q.y)) { T.zoom = { x: q.x, y: q.y }; render(); return; }
     T.zoom = null;
     const x = Math.round(q.x * 10) / 10, y = Math.round(-q.y * 10) / 10;
     playerDart(Object.assign(scoreAt(x, y), { x, y }));

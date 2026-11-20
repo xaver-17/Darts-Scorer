@@ -87,10 +87,12 @@
       if (g.busy) g.bLast.forEach((d, i) => dots.push({ x: d.x, y: d.y, c: '#3b82f6', r: 8, t: i + 1, s: '#fff', sw: 1.5, tc: '#fff' }));
       else if (!V.length) g.bLast.forEach((d, i) => dots.push({ x: d.x, y: d.y, c: '#3b82f6', o: .5, r: 5, s: '#fff', sw: .8 }));
       V.forEach((d, i) => { if (d.x !== null && d.x !== undefined) dots.push({ x: d.x, y: d.y, c: '#facc15', r: 7, t: i + 1 }); });
+      h += `<div class="gsplit"><div class="gleft">`;
       if (g.busy) h += `<div class="botpop ${g.botPop ? 'on' : ''}">${g.botPop ? `<small>Bot · Pfeil ${g.botPop.i}</small>${g.botPop.txt}` : '<small>Bot</small>wirft …'}</div>`;
       h += `<div class="boardwrap">${boardSVG({ click: myTurn, zoom: T.zoom, dots })}</div>`;
       if (T.zoom) h += `<div class="zoombar"><span>Genau tippen, wo der Pfeil steckt · außerhalb des grauen Rings tippen = zurück</span>${btn('zoomOff', 'Abbrechen', undefined, 'zb')}</div>`;
-      else if (myTurn) h += `<div class="boardhint">Auf die Scheibe tippen${T.set.zoom !== false ? ' (zoomt zum genauen Setzen)' : ''} oder unten das Feld wählen · grauer Ring = Daneben</div>`;
+      else if (myTurn) h += `<div class="boardhint">Auf die Scheibe tippen${T.set.zoom !== false ? ' (bei Triple, Doppel und Grenzen wird gezoomt)' : ''} oder unten das Feld wählen · grauer Ring = Daneben</div>`;
+      h += `</div><div class="gright">`;
 
       if (g.busy) h += `<div class="wait">Du bist gleich wieder dran …</div>`;
       else {
@@ -104,15 +106,16 @@
         h += `<div class="numrow">${btn('s25', '25', undefined, 'nb')}${btn('bull', 'Bull', undefined, 'nb bullb')}${btn('miss', 'Miss / 0', undefined, 'nb missb')}</div>`;
         h += `<button class="link" data-a="zoomSet" data-v="${T.set.zoom === false ? 1 : 0}">🔍 Zoom beim Tippen auf die Scheibe: ${T.set.zoom === false ? 'aus' : 'an'}</button>`;
       }
+      h += `</div></div>`;
     } else if (g.phase === 'legover') {
-      h += `<div class="result ${g.legWinner === 'p' ? 'win' : 'lose'}">${g.legWinner === 'p' ? 'Leg gewonnen! 🎯' : 'Leg an den Bot'}</div>`;
+      h += `<div class="celebrate"><div class="result ${g.legWinner === 'p' ? 'win' : 'lose'}">${g.legWinner === 'p' ? 'Leg gewonnen!' : 'Leg an den Bot'}</div>`;
       h += `<div class="live">Stand ${g.legs.p} : ${g.legs.b}</div><button class="big go" data-a="nextLeg">Nächstes Leg</button>`;
-      h += `<div class="setlabel">Statistik bisher</div>${cmpTable(P, B)}`;
+      h += `<div class="setlabel">Statistik bisher</div>${cmpTable(P, B)}</div>`;
     } else if (g.phase === 'over') {
       const won = g.legWinner === 'p';
-      h += `<div class="result ${won ? 'win' : 'lose'}">${won ? 'Spiel gewonnen! 🏆' : 'Spiel verloren'}</div>`;
+      h += `<div class="celebrate"><div class="result ${won ? 'win' : 'lose'}">${won ? 'Spiel gewonnen!' : 'Spiel verloren'}</div>`;
       h += `<div class="live">Legs ${g.legs.p} : ${g.legs.b}</div>${cmpTable(P, B)}`;
-      h += `<div class="row2">${btn('again', 'Revanche', undefined, 'mid')}${btn('close', 'Zu den Einstellungen', undefined, 'mid')}</div>`;
+      h += `<div class="row2">${btn('again', 'Revanche', undefined, 'mid')}${btn('close', 'Zu den Einstellungen', undefined, 'mid')}</div></div>`;
       return h + `</div>`;
     }
     if (T.confirm === 'quit') h += `<div class="confirmbox"><p>Spiel abbrechen? Es wird nicht gespeichert.</p><div class="row2">${btn('no', 'Weiterspielen', undefined, 'mid')}${btn('quitYes', 'Abbrechen', undefined, 'mid redb')}</div></div>`;

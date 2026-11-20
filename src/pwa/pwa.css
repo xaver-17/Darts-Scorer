@@ -10,3 +10,17 @@
   .datamsg { margin-top: 12px; font-size: 14px; min-height: 18px; color: #15803d; }
   .datamsg.err { color: #dc2626; }
   .appver { margin-top: 18px; font-size: 12px; color: #71717a; text-align: center; }
+  /* ---- Startbildschirm ---- */
+  #splash { position: fixed; inset: 0; z-index: 100; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; transition: opacity .45s ease, transform .45s ease; }
+  #splash.out { opacity: 0; transform: scale(1.04); pointer-events: none; }
+  .sp-board { width: 132px; height: 132px; overflow: visible; }
+  .sp-r { fill: none; stroke: #111; stroke-width: 5; transform-origin: 0 0; animation: spRing .55s cubic-bezier(.2,.8,.2,1) both; }
+  .sp-r1 { fill: #111; stroke: none; } .sp-r2 { stroke: #fff; stroke-width: 4; animation-delay: .08s; } .sp-r3 { stroke: #fff; stroke-width: 4; animation-delay: .16s; }
+  .sp-bull { fill: #fff; transform-origin: 0 0; animation: spRing .4s .26s cubic-bezier(.2,.8,.2,1) both; }
+  .sp-dart { animation: spDart .38s .55s cubic-bezier(.5,0,.9,.6) both; }
+  .sp-wave { fill: none; stroke: #ff5a1f; stroke-width: 3; transform-origin: 0 0; opacity: 0; animation: spWave .6s .92s ease-out both; }
+  .sp-name { font: 800 30px/1 -apple-system, BlinkMacSystemFont, 'SF Pro Display', Inter, sans-serif; letter-spacing: -.03em; color: #111; animation: spName .45s 1s ease-out both; }
+  @keyframes spRing { from { transform: scale(0); } to { transform: scale(1); } }
+  @keyframes spDart { from { transform: translate(90px, -90px); opacity: 0; } 30% { opacity: 1; } to { transform: translate(0, 0); opacity: 1; } }
+  @keyframes spWave { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(6.5); opacity: 0; } }
+  @keyframes spName { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

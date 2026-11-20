@@ -1,4 +1,5 @@
 // Rendern, Navigation, Start
+  let lastScreen = '';
   function render() {
     const cv = document.getElementById('viewCounter'), r = T.route || 'home';
     const panel = EXT.panels[r];   // eigenständiges Modul mit eigenem Container (z.B. X01)
@@ -15,6 +16,9 @@
       else h = T.sess ? (DR[T.sess.mode] ? DR[T.sess.mode].view(T.sess, ctx) : T.sess.mode === 'score' ? viewScore() : viewTask()) : T.summary ? viewSummary() : viewSetup();
       el.innerHTML = h;
       if (EXT.after[r]) EXT.after[r](el);
+      // Sanfter Übergang, wenn ein neuer Bildschirm kommt (nicht bei jedem Tipp im selben Bildschirm)
+      const key = r + '|' + (r === 'play' && T.game ? T.game.phase + T.game.legNo : '') + '|' + (r === 'train' ? (T.sess ? T.sess.mode : T.summary ? 'sum' : 'set') : '') + '|' + (r === 'stats' ? T.stab : '');
+      if (key !== lastScreen) { el.classList.remove('vt-enter'); void el.offsetWidth; el.classList.add('vt-enter'); lastScreen = key; }
     }
     document.querySelectorAll('#nav [data-route]').forEach(b => b.classList.toggle('active', b.dataset.route === ((panel && panel.nav) || r)));
     save();

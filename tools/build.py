@@ -37,7 +37,7 @@ s = s.replace('<title>Zähler</title>', '<title>Darts-Scorer</title>\n' + rd('pw
               '', 1)
 i = s.index('\n<script>'); j = s.rindex('</div>', 0, i)
 s = s[:j] + '</div>\n  <div id="viewTrainer"></div>\n' + s[j:]
-s = s.replace('<body>', '<body>\n<nav id="nav"></nav>', 1)
+s = s.replace('<body>', '<body>\n' + rd('pwa', 'splash.html').strip() + '\n<nav id="nav"></nav>', 1)
 s = s.replace('\n<script>', '\n<script>\n' + core + '\n</script>\n<script>', 1)
 s = s.replace('</body>', '<script>\n' + tr + '\n</script>\n<script>\n' + rd('pwa', 'register.js') + '</script>\n</body>', 1)
 # ---------- dist/ schreiben ----------

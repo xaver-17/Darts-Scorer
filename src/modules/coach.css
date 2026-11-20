@@ -1,0 +1,24 @@
+  /* Trainer-Coach (06-coach.js) – Farben aus app.css */
+  #viewTrainer .card.coach { margin-bottom: 12px; }
+  .cohead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .cohead b { font-size: 18px; color: var(--ink); } .cohead span { font-size: 13px; color: var(--mute); }
+  .cosub { margin: 6px 0 10px; font-size: 14px; color: var(--mute); line-height: 1.4; }
+  .coitems { display: flex; flex-direction: column; gap: 6px; }
+  .coit { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg); color: var(--ink); text-align: left; cursor: pointer; }
+  .card.list .coit + .coit { margin-top: 6px; }
+  .coit.next { border-color: var(--ink); }
+  .coit.done { background: var(--soft); color: var(--mute); }
+  .con { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--soft); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+  .coit.next .con { background: var(--ink); color: var(--bg); } .coit.done .con { background: var(--ok); color: #fff; }
+  .cot { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .cot b { font-size: 15px; } .cot small { font-size: 12.5px; color: var(--mute); line-height: 1.35; }
+  .corow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .cochip { padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 13px; cursor: pointer; }
+  .cochip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .colv { display: flex; align-items: center; gap: 4px; margin-top: 10px; font-size: 13px; color: var(--mute); }
+  .colv span { margin-right: 6px; }
+  .colv button { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 13px; cursor: pointer; }
+  .colv button.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .cotip { margin: 10px 0; padding: 10px 12px; border-radius: var(--r); background: var(--soft); color: var(--ink); font-size: 14px; line-height: 1.45; text-align: left; }
+  .cotip.intro { border: 1px solid var(--line); background: var(--bg); }
+  .cotip.intro p { margin: 4px 0 8px; color: var(--mute); }
+  .card.lesson p { font-size: 15.5px; line-height: 1.55; color: var(--ink); margin: 0 0 12px; }

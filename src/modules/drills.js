@@ -1,7 +1,7 @@
-// ===== Trainingsspiele: Around the Clock, Bob's 27, Doppel-Runde, Checkout-Leiter =====
+// ===== Trainingsspiele: Around the Clock, Bob's 27, Doppel-Runde, Checkout-Leiter, Shanghai, Halve-It, Cricket-Training =====
 // Jeder Modus liefert: name, short, describe, opts, start, view, act, entry, metric, series, ov, tip.
 // trainer.js ruft diese Funktionen über window.DRILLS auf und übergibt Helfer in ctx
-// (btn, f1, LV, footer, showRoute).
+// (btn, f1, LV, footer, showRoute, input).
 window.DRILLS = (function () {
   const R20 = Array.from({ length: 20 }, (_, i) => i + 1);
   const TOP_D = [20, 16, 18, 12, 10, 8, 4];
@@ -238,5 +238,180 @@ window.DRILLS = (function () {
     }
   };
 
-  return { atc: ATC, bob: BOB, dr: DR, lad: LAD };
+  // ---------- Shanghai ----------
+  const SH_T = L => L === 0 ? R20.slice(0, 7) : L === 1 ? R20.slice(0, 10) : L === 2 ? R20 : [...R20, 25];
+  const SH_GOAL = [80, 120, 250, 280, 320];
+  function shState(S) {
+    const t = SH_T(S.level); let score = 0, hits = 0, sh = 0, out = false; const rs = [];
+    for (let r = 0; r * 3 < S.d.length; r++) {
+      const ds = S.d.slice(r * 3, r * 3 + 3), n = t[r];
+      let pts = ds.reduce((a, m) => a + m * n, 0); hits += ds.filter(m => m > 0).length;
+      if (ds.length === 3 && n !== 25 && [1, 2, 3].every(m => ds.includes(m))) { pts += 100; sh++; }
+      score += pts; rs.push(pts);
+      if (ds.length === 3 && pts === 0 && S.level === 4) { out = true; break; }
+    }
+    const round = Math.floor(S.d.length / 3);
+    return { score, hits, sh, out, rs, round, darts: S.d.length, done: out || round >= t.length, t };
+  }
+  const SH = {
+    name: 'Shanghai', short: 'Shanghai',
+    describe: L => `${['Zahlen 1–7', 'Zahlen 1–10', 'Zahlen 1–20', 'Zahlen 1–20 + Bull', 'Zahlen 1–20 + Bull'][L]} · je Runde 3 Darts auf die Zahl · Single 1×, Doppel 2×, Triple 3× · Single + Doppel + Triple in einer Runde = Shanghai (+100)`
+      + (L === 4 ? ' · Runde ohne Treffer = Schluss' : '') + ` · Ziel: ${SH_GOAL[L]}+ Punkte`,
+    opts: () => '',
+    start: s => ({ mode: 'sh', level: s.level, d: [], date: now() }),
+    view(S, c) {
+      const st = shState(S), n = st.t[st.round], k = S.d.length % 3, cur = S.d.slice(st.round * 3);
+      let h = `<div class="card">` + top(c, 'Shanghai', S.level, `Runde ${st.round + 1} / ${st.t.length}`) + bar(st.round, st.t.length);
+      h += `<div class="target">${lbl(n)}</div><div class="tcap">Dart ${k + 1} von 3 · ${n === 25 ? 'Bull: 25 oder 50' : 'Single, Doppel und Triple = Shanghai'}</div>`;
+      h += `<div class="tdarts">Stand <b>${st.score}</b>${cur.length ? ' · diese Runde: ' + cur.map(m => m ? dlabel(n, m) : '–').join(' ') : ''}</div>`;
+      h += `<div class="setlabel c">Was hast du getroffen?</div><div class="okgrid">`;
+      (n === 25 ? [[1, '25'], [2, 'Bull 50']] : [[1, 'S' + n], [2, 'D' + n], [3, 'T' + n]]).forEach(([m, l]) => { h += c.btn('drSh', l, m, 'okb'); });
+      h += `</div><button class="big bad" data-a="drSh" data-v="0">✕ Daneben</button>`;
+      h += `<div class="live">Trefferquote <b>${c.f1(pct(st.hits, st.darts))} %</b> · Shanghais <b>${st.sh}</b></div>`;
+      if (st.rs.length) h += `<div class="chips">${st.rs.slice(0, st.round).map((p, i) => `<span class="${p ? 'g' : ''}">${lbl(st.t[i])}: ${p}</span>`).slice(-10).join('')}</div>`;
+      return h + c.footer() + `</div>`;
+    },
+    act(a, v, S) {
+      if (a === 'drSh') { S.d.push(+v); return shState(S).done ? 'finish' : ''; }
+      if (a === 'undoTask') S.d.pop();
+      return '';
+    },
+    entry(S) {
+      if (!S.d.length) return null;
+      const st = shState(S);
+      return { date: S.date, mode: 'sh', level: S.level, score: st.score, sh: st.sh, round: st.round, out: st.out, done: st.done,
+               darts: st.darts, hits: st.hits, hitPct: pct(st.hits, st.darts) };
+    },
+    metric: (e, c) => ({ main: e.score + ' Pkt', det: `${c.f1(e.hitPct)} % Treffer${e.sh ? ' · ' + e.sh + '× Shanghai' : ''}${e.out ? ' · raus in Runde ' + e.round : e.done ? '' : ' · abgebrochen'}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b>${e.score}</b><small>Punkte</small></div><div><b>${c.f1(e.hitPct)} %</b><small>Trefferquote</small></div><div><b>${e.sh}</b><small>Shanghais</small></div></div>`,
+    series: [{ n: 'Punkte', c: '#111', k: 'score' }, { n: 'Trefferquote %', c: '#2563eb', k: 'hitPct' }],
+    ov: { val: e => e.score, unit: ' Pkt', bar: v => v / 4 },
+    tip(e) {
+      const g = SH_GOAL[e.level];
+      if (e.score >= g && e.level < 4) return `Stark! Über ${g} Punkte – probier die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
+      return `Ziel auf dieser Stufe: ${g}+ Punkte.`;
+    }
+  };
+
+  // ---------- Halve-It ----------
+  // Ziele: Zahl (nur diese Zahl, jeder Ring), 'D' beliebiges Doppel, 'T' beliebiges Triple, 'D16'/'T20' nur dieses Feld
+  const HI_T = [
+    [20, 19, 'D', 18, 'T'],
+    [20, 19, 'D', 18, 'T', 17],
+    [20, 19, 'D', 18, 'T', 17, 25],
+    [15, 16, 'D', 17, 'T', 18, 19, 20, 25],
+    [20, 19, 'D', 18, 'T', 17, 'D16', 'T20', 25]
+  ];
+  const HI_GOAL = [80, 120, 150, 200, 200];
+  const hiName = t => t === 'D' ? 'Doppel' : t === 'T' ? 'Triple' : t === 25 ? 'Bull' : String(t);
+  const hiCap = t => t === 'D' ? 'beliebiges Doppel' : t === 'T' ? 'beliebiges Triple' : t === 25 ? '25 oder 50' : /^[DT]/.test(t) ? 'nur genau dieses Feld' : 'jeder Ring zählt';
+  // Ist die Punktzahl mit 3 Darts auf dieses Ziel möglich?
+  function hiValid(t, p) {
+    const vals = t === 'D' ? R20.map(n => 2 * n).concat(50) : t === 'T' ? R20.map(n => 3 * n) : t === 25 ? [25, 50]
+      : t === 'D16' ? [32] : t === 'T20' ? [60] : [t, 2 * t, 3 * t];
+    const v = [0, ...vals];
+    for (const a of v) for (const b of v) for (const x of v) if (a + b + x === p) return true;
+    return false;
+  }
+  function hiState(S) {
+    let score = 0, halves = 0; const rs = [];
+    S.r.forEach(p => { if (p > 0) score += p; else { score = Math.floor(score / 2); halves++; } rs.push(score); });
+    return { score, halves, rs, round: S.r.length };
+  }
+  const HI = {
+    name: 'Halve-It', short: 'Halve-It',
+    describe: L => `${HI_T[L].length} Runden: ${HI_T[L].map(hiName).join(' · ')} · je 3 Darts · Treffer werden addiert, Runde ohne Treffer halbiert den Stand · Ziel: ${HI_GOAL[L]}+ Punkte`,
+    opts: () => '',
+    start: s => ({ mode: 'hi', level: s.level, t: HI_T[s.level].slice(), r: [], date: now() }),
+    view(S, c) {
+      const st = hiState(S), t = S.t[st.round];
+      let h = `<div class="card">` + top(c, 'Halve-It', S.level, `Runde ${st.round + 1} / ${S.t.length}`) + bar(st.round, S.t.length);
+      h += `<div class="target${String(hiName(t)).length > 4 ? ' sm' : ''}">${hiName(t)}</div><div class="tcap">3 Darts · ${hiCap(t)}</div>`;
+      h += `<div class="tdarts">Stand <b>${st.score}</b>${st.halves ? ' · ' + st.halves + '× halbiert' : ''}</div>`;
+      if (S.msg) h += `<div class="msg">${S.msg}</div>`;
+      h += `<div class="disp">${c.input === '' ? '<span class="ph">Punkte auf das Ziel (0 = halbieren)</span>' : c.input}</div><div class="pad">`;
+      [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(k => { h += c.btn('key', k, k); });
+      h += c.btn('back', '⌫') + c.btn('key', 0, 0) + c.btn('drHi', 'OK', undefined, 'okk') + `</div>`;
+      if (st.round) h += `<div class="chips">${S.r.map((p, i) => `<span class="${p ? 'g' : ''}">${hiName(S.t[i])}: ${p || '½'}</span>`).slice(-10).join('')}</div>`;
+      return h + c.footer() + `</div>`;
+    },
+    act(a, v, S) {
+      if (a === 'drHi') {
+        const t = S.t[S.r.length], p = v === '' || v === undefined ? NaN : +v;
+        if (isNaN(p) || !hiValid(t, p)) { S.msg = `${isNaN(p) ? 'Bitte Punkte eingeben' : p + ' geht mit 3 Darts auf ' + hiName(t) + ' nicht'}`; return 'keep'; }
+        S.msg = ''; S.r.push(p); return S.r.length >= S.t.length ? 'finish' : '';
+      }
+      if (a === 'undoTask') { S.msg = ''; S.r.pop(); }
+      return '';
+    },
+    entry(S) {
+      if (!S.r.length) return null;
+      const st = hiState(S);
+      return { date: S.date, mode: 'hi', level: S.level, score: st.score, halves: st.halves, n: st.round, rounds: S.t.length, done: st.round >= S.t.length };
+    },
+    metric: e => ({ main: e.score + ' Pkt', det: `${e.halves}× halbiert · ${e.n}/${e.rounds} Runden` }),
+    summary: e => `<div class="sumgrid"><div><b>${e.score}</b><small>Endstand</small></div><div><b>${e.halves}</b><small>× halbiert</small></div><div><b>${e.n}/${e.rounds}</b><small>Runden</small></div></div>`,
+    series: [{ n: 'Endstand', c: '#111', k: 'score' }],
+    ov: { val: e => e.score, unit: ' Pkt', bar: v => v / 4 },
+    tip(e) {
+      const g = HI_GOAL[e.level];
+      if (e.score >= g && !e.halves && e.level < 4) return `Stark! Über ${g} und nie halbiert – probier die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
+      return `Ziel auf dieser Stufe: ${g}+ Punkte${e.halves ? ' und keine Halbierung' : ''}.`;
+    }
+  };
+
+  // ---------- Cricket-Training ----------
+  const CR_F = [20, 19, 18, 17, 16, 15, 25];
+  const CR_NEED = [1, 2, 3, 3, 3];
+  const CR_GOAL = [15, 30, 45, 40, 50];
+  function crState(S) {
+    const need = CR_NEED[S.level], mk = {}; CR_F.forEach(f => { mk[f] = 0; });
+    let marks = 0;
+    S.d.forEach(([f, m]) => { if (f && mk[f] < need) { const add = Math.min(m, need - mk[f]); mk[f] += add; marks += add; } });
+    const open = CR_F.filter(f => mk[f] < need);
+    return { mk, marks, need, open, darts: S.d.length, done: !open.length };
+  }
+  const CR = {
+    name: 'Cricket-Training', short: 'Cricket',
+    describe: L => `20 bis 15 und Bull je ${CR_NEED[L]}× markieren · Single = 1 Marke, Doppel = 2, Triple = 3 · Ziel: alles mit möglichst wenig Darts schließen`
+      + (L === 4 ? ' · feste Reihenfolge 20 → Bull' : '') + ` · Richtwert: unter ${CR_GOAL[L]} Darts`,
+    opts: () => '',
+    start: s => ({ mode: 'cr', level: s.level, d: [], date: now() }),
+    view(S, c) {
+      const st = crState(S), fields = S.level === 4 ? st.open.slice(0, 1) : st.open;
+      let h = `<div class="card">` + top(c, 'Cricket-Training', S.level, `Dart ${st.darts + 1}`) + bar(CR_F.length - st.open.length, CR_F.length);
+      h += `<div class="crboard">${CR_F.map(f => `<div class="${st.mk[f] >= st.need ? 'cl' : ''}"><b>${lbl(f)}</b><span>${'●'.repeat(st.mk[f])}${'○'.repeat(st.need - st.mk[f])}</span></div>`).join('')}</div>`;
+      h += `<div class="setlabel c">Was hast du getroffen?</div><div class="crgrid">`;
+      fields.forEach(f => {
+        (f === 25 ? [[1, '25'], [2, 'Bull']] : [[1, 'S' + f], [2, 'D' + f], [3, 'T' + f]]).forEach(([m, l]) => { h += c.btn('drCr', l, f + ':' + m, 'okb' + (f === 25 ? ' b' : '')); });
+      });
+      h += `</div><button class="big bad" data-a="drCr" data-v="0:0">✕ Daneben / anderes Feld</button>`;
+      h += `<div class="live">Marken <b>${st.marks}</b> · MPR <b>${c.f1(st.darts ? st.marks / st.darts * 3 : 0)}</b></div>`;
+      return h + c.footer() + `</div>`;
+    },
+    act(a, v, S) {
+      if (a === 'drCr') { S.d.push(String(v).split(':').map(Number)); return crState(S).done ? 'finish' : ''; }
+      if (a === 'undoTask') S.d.pop();
+      return '';
+    },
+    entry(S) {
+      if (!S.d.length) return null;
+      const st = crState(S);
+      return { date: S.date, mode: 'cr', level: S.level, done: st.done, darts: st.darts, marks: st.marks, mpr: st.darts ? st.marks / st.darts * 3 : 0,
+               closed: CR_F.length - st.open.length };
+    },
+    metric: (e, c) => ({ main: e.done ? e.darts + ' Darts' : e.closed + '/7 zu', det: `MPR ${c.f1(e.mpr)}${e.done ? '' : ' · abgebrochen'}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b>${e.done ? e.darts : '–'}</b><small>Darts bis alles zu</small></div><div><b>${c.f1(e.mpr)}</b><small>Marken pro Runde</small></div><div><b>${e.closed}/7</b><small>Felder zu</small></div></div>`,
+    series: [{ n: 'Darts bis alles zu', c: '#111', k: 'darts' }],
+    list: h => h.filter(e => e.done),
+    ov: { val: e => e.darts, unit: ' Darts', low: true, only: e => e.done, bar: v => Math.max(0, 100 - v) },
+    tip(e) {
+      if (!e.done) return 'Nicht alles geschlossen – beim nächsten Mal durchziehen, dann zählt die Darts-Zahl.';
+      const g = CR_GOAL[e.level];
+      if (e.darts <= g && e.level < 4) return `Stark! Unter ${g} Darts – probier die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
+      return `Richtwert auf dieser Stufe: unter ${g} Darts. Gute Spieler schaffen über 2 Marken pro Runde (MPR).`;
+    }
+  };
+
+  return { atc: ATC, bob: BOB, dr: DR, lad: LAD, sh: SH, hi: HI, cr: CR };
 })();

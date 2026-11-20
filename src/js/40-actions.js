@@ -44,7 +44,7 @@
       case 'submit': {
         const val = T.input === '' ? NaN : +T.input;
         if (S && S.mode === 'score') {
-          if (isNaN(val) || val > 180 || IMPOSSIBLE.includes(val)) { S.msg = 'Ungültige Punktzahl'; }
+          if (isNaN(val) || val > 180 || IMPOSSIBLE.includes(val)) { S.msg = 'Invalid score'; }
           else { S.msg = ''; S.visits.push(val); T.input = ''; if (S.visits.length >= S.n) finish(); }
         }
         break;

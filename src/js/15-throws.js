@@ -119,13 +119,13 @@
     });
     const tot = e.P && e.B ? [e.P, e.B] : null;
     return [{ id: sidOf(e), v: STATS_V, kind: 'game', mode: 'x01bot', level: e.level,
-      players: [{ name: 'Du', me: true }, { name: 'Bot ' + (BOT[e.level] ? BOT[e.level].n : ''), bot: e.level }],
+      players: [{ name: 'You', me: true }, { name: 'Bot ' + (BOT[e.level] ? BOT[e.level].n : ''), bot: e.level }],
       cfg: { start: e.start, din: !!e.din, out: 'double' }, startedAt: e.date, endedAt: null,
       result: { winner: e.won ? 0 : 1, legs: [e.lp, e.lb] }, totals: tot, legacy: true }, list];
   }
   function legacyTraining(e) {
     const r = Object.assign({}, e); delete r.date; delete r.mode; delete r.level;
-    return [{ id: sidOf(e), v: STATS_V, kind: 'training', mode: e.mode, level: e.level, players: [{ name: 'Du', me: true }],
+    return [{ id: sidOf(e), v: STATS_V, kind: 'training', mode: e.mode, level: e.level, players: [{ name: 'You', me: true }],
       cfg: {}, startedAt: e.date, endedAt: null, result: r, legacy: true }, []];
   }
   function x01Session(e, list) {

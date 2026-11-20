@@ -1,7 +1,7 @@
 // ===== Service Worker: macht die App offline-fähig =====
-// b8c0601248 und ["./", "./index.html", "./manifest.webmanifest", "./icons/apple-touch-icon.png", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png"] werden von tools/build.py ersetzt. Neue Version = neuer Cache,
+// 92c9e639e2 und ["./", "./index.html", "./manifest.webmanifest", "./icons/apple-touch-icon.png", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png"] werden von tools/build.py ersetzt. Neue Version = neuer Cache,
 // alte Caches werden beim Aktivieren gelöscht.
-const CACHE = 'darts-b8c0601248';
+const CACHE = 'darts-92c9e639e2';
 const PRECACHE = ["./", "./index.html", "./manifest.webmanifest", "./icons/apple-touch-icon.png", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png"];
 
 self.addEventListener('install', e => {

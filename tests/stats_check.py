@@ -80,10 +80,10 @@ with sync_playwright() as p:
     check('Bot-Spiel: Würfe von Spieler und Bot im Spiel', gm and sum(1 for w in gm['tl'] if w['who'] == 0) == 3 and sum(1 for w in gm['tl'] if w['who'] == 1) == 3, gm and gm['tl'])
     # Stats ansehen
     pg.click('#nav [data-route="stats"]'); A('stab', 'over'); pg.wait_for_timeout(200); pg.screenshot(path=os.path.join(OUT, 'stats_over.png'), full_page=True)
-    check('Stats: Doppel-Tabelle Spiel/Training', 'Doppel: Spiel und Training' in pg.inner_text('#viewTrainer'))
+    check('Stats: Doppel-Tabelle Spiel/Training', 'Doubles: game and training' in pg.inner_text('#viewTrainer'))
     A('stab', 'multi'); pg.screenshot(path=os.path.join(OUT, 'stats_multi.png'), full_page=True)
     txt = pg.inner_text('#viewTrainer')
-    check('Stats: Mehrspieler zeigt Spieler und Spiele', 'Anna' in txt and 'Spieler 1' in txt, txt[:300])
+    check('Stats: Mehrspieler zeigt Spieler und Spiele', 'Anna' in txt and 'Player 1' in txt, txt[:300])
     # Export / Löschen / Import
     A('stab', 'data'); pg.screenshot(path=os.path.join(OUT, 'stats_data.png'), full_page=True)
     with pg.expect_download() as dl: A('export')

@@ -21,8 +21,8 @@
   // „Daneben“-Ring rund um die Scheibe: Tipp dort = Fehlwurf (0). Tipp außerhalb = Zoom schließen, nichts eintragen.
   const MISS_R = 240;
   const MISS_RING = `<circle r="${MISS_R}" fill="#16161b" stroke="#3f3f46" stroke-width="1.5" stroke-dasharray="6 5"/>` +
-    `<text y="${-(MISS_R - 26)}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">DANEBEN</text>` +
-    `<text y="${MISS_R - 14}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">DANEBEN</text>`;
+    `<text y="${-(MISS_R - 26)}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">MISS</text>` +
+    `<text y="${MISS_R - 14}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">MISS</text>`;
   // Gezoomt: ganz dezent die Feldnamen in jedem Feld, damit man nicht daneben tippt
   const ZOOM_LABELS = (function () {
     let s = '<g class="zl" fill="#fff" fill-opacity=".38" font-size="4.2" font-weight="700" text-anchor="middle" dominant-baseline="central">';
@@ -31,7 +31,7 @@
         const [x, y] = pt(r, i * 18); s += `<text x="${x}" y="${y}">${t}</text>`;
       });
     });
-    return s + '<text x="0" y="-11">25</text><text x="0" y="0">BULL</text><text x="0" y="203" font-size="5">DANEBEN</text></g>';
+    return s + '<text x="0" y="-11">25</text><text x="0" y="0">BULL</text><text x="0" y="203" font-size="5">MISS</text></g>';
   })();
   // Nur zoomen, wenn der Tipp mehrdeutig ist: Triple/Doppel/Bull oder nah an einer Ring- bzw. Feldgrenze
   const RINGS = [6.35, 15.9, 99, 107, 162, 170];

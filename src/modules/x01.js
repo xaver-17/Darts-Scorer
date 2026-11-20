@@ -6,13 +6,13 @@
   const R20 = Array.from({ length: 20 }, (_, i) => i + 1);
   const MAXP = 8, MAXUNDO = 200;
 
-  let X = { set: { start: 501, out: 'double', legs: 1, sets: 1, players: ['Spieler 1', 'Spieler 2'] }, game: null, hist: [], mult: 1, confirm: null };
+  let X = { set: { start: 501, out: 'double', legs: 1, sets: 1, players: ['Player 1', 'Player 2'] }, game: null, hist: [], mult: 1, confirm: null };
   try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) X = Object.assign(X, s, { confirm: null }); } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(X)); } catch (e) {} };
 
   let el = null, opts = {};
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const f1 = x => (isFinite(x) ? x : 0).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const f1 = x => (isFinite(x) ? x : 0).toLocaleString('en-GB', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const btn = (a, label, v, cls = '', on = false) => `<button class="${cls}${on ? ' active' : ''}" data-a="${a}"${v !== undefined ? ` data-v="${v}"` : ''}>${label}</button>`;
 
   // ---------- Spiellogik ----------
@@ -20,7 +20,7 @@
     const s = X.set;
     X.game = {
       start: s.start, out: s.out, legsTo: s.legs, setsTo: s.sets || 1, setNo: 1, legNo: 1, starter: 0, cur: 0, phase: 'play',
-      players: s.players.map(n => ({ name: n.trim() || 'Spieler', rem: s.start, legs: 0, sets: 0, legTot: 0, darts: 0, pts: 0, legDarts: 0, best: 0, s180: 0, hiCO: 0, last: '' })),
+      players: s.players.map(n => ({ name: n.trim() || 'Player', rem: s.start, legs: 0, sets: 0, legTot: 0, darts: 0, pts: 0, legDarts: 0, best: 0, s180: 0, hiCO: 0, last: '' })),
       visit: [], undo: [], msg: '', legWinner: null, date: new Date().toISOString(), tl: []
     };
     X.mult = 1; X.confirm = null;
@@ -60,8 +60,8 @@
     if (isBust(after, d, g.out)) {
       w.flag = 'bust';
       p.darts += g.visit.length; p.legDarts += g.visit.length;
-      p.last = 'Überworfen (' + g.visit.map(x => x.l).join(' ') + ')';
-      g.msg = p.name + ': überworfen, bleibt auf ' + p.rem;
+      p.last = 'Bust (' + g.visit.map(x => x.l).join(' ') + ')';
+      g.msg = p.name + ': bust, stays on ' + p.rem;
       if (window.dartsCall) window.dartsCall(0, true, false);
       nextPlayer(); return;
     }
@@ -121,7 +121,7 @@
       case 'xLegs': s.legs = n; s.legsCustom = false; break;
       case 'xLegsCustom': s.legsCustom = true; if (s.legs <= 5 && s.legs !== 4) s.legs = 7; break;
       case 'xSets': s.sets = n; break;
-      case 'xAdd': if (s.players.length < MAXP) s.players.push('Spieler ' + (s.players.length + 1)); break;
+      case 'xAdd': if (s.players.length < MAXP) s.players.push('Player ' + (s.players.length + 1)); break;
       case 'xDel': if (s.players.length > 1) s.players.splice(n, 1); break;
       case 'xUp': if (n > 0) s.players.splice(n - 1, 0, s.players.splice(n, 1)[0]); break;
       case 'xGo': newGame(); break;
@@ -146,20 +146,20 @@
   // ---------- Ansichten ----------
   function viewSetup() {
     const s = X.set;
-    let h = `<div class="phead"><h1>Spielen</h1><p>Gegen den Bot oder mit mehreren Spielern</p></div>` + (opts.onBack ? `<div class="seg oppseg">${btn('xBack', 'Gegen Bot')}${btn('xNo', 'Mehrspieler', undefined, '', true)}</div>` : '') + `<div class="card">`;
-    h += `<div class="setlabel">Punkte</div><div class="seg">${[301, 501, 701].map(v => btn('xStart', v, v, '', s.start === v)).join('')}</div>`;
+    let h = `<div class="phead"><h1>Play</h1><p>Against the bot or with several players</p></div>` + (opts.onBack ? `<div class="seg oppseg">${btn('xBack', 'vs Bot')}${btn('xNo', 'Multiplayer', undefined, '', true)}</div>` : '') + `<div class="card">`;
+    h += `<div class="setlabel">Points</div><div class="seg">${[301, 501, 701].map(v => btn('xStart', v, v, '', s.start === v)).join('')}</div>`;
     h += `<div class="setlabel">Check-out</div><div class="seg">${btn('xOut', 'Double-Out', 'double', '', s.out === 'double')}${btn('xOut', 'Single-Out', 'single', '', s.out === 'single')}</div>`;
     h += window.legsSetsHTML ? window.legsSetsHTML(s, 'xLegs', 'xLegsCustom', 'xSets', 'xlegs') : `<div class="setlabel">First to … Legs</div><div class="seg">${[1, 2, 3, 5].map(v => btn('xLegs', v, v, '', s.legs === v)).join('')}</div>`;
-    h += `<div class="setlabel">Spieler (Reihenfolge = Wurfreihenfolge)</div><div class="xplist">`;
+    h += `<div class="setlabel">Players (order = throwing order)</div><div class="xplist">`;
     s.players.forEach((p, i) => {
-      h += `<div class="xprow"><span class="xpn">${i + 1}</span><input data-p="${i}" value="${esc(p)}" maxlength="20" aria-label="Name Spieler ${i + 1}">`
+      h += `<div class="xprow"><span class="xpn">${i + 1}</span><input data-p="${i}" value="${esc(p)}" maxlength="20" aria-label="Name player ${i + 1}">`
         + (i > 0 ? btn('xUp', '↑', i, 'xsm') : '<span class="xsm"></span>')
         + (s.players.length > 1 ? btn('xDel', '✕', i, 'xsm') : '') + `</div>`;
     });
     h += `</div>`;
-    if (s.players.length < MAXP) h += btn('xAdd', '+ Spieler hinzufügen', undefined, 'link');
-    h += `<div class="desc">${s.start} · ${s.out === 'double' ? 'Double-Out' : 'Single-Out'} · ${s.players.length} Spieler · ${window.fmtFormat ? window.fmtFormat(s.sets || 1, s.legs) : 'First to ' + s.legs + ' Legs'}. Pfeile werden einzeln eingetragen.</div>`;
-    h += `<button class="big go" data-a="xGo">Spiel starten</button>`;
+    if (s.players.length < MAXP) h += btn('xAdd', '+ Add player', undefined, 'link');
+    h += `<div class="desc">${s.start} · ${s.out === 'double' ? 'Double-Out' : 'Single-Out'} · ${s.players.length} players · ${window.fmtFormat ? window.fmtFormat(s.sets || 1, s.legs) : 'First to ' + s.legs + ' Legs'}. Darts are entered one by one.</div>`;
+    h += `<button class="big go" data-a="xGo">Start game</button>`;
     return h + `</div>`;
   }
 
@@ -172,7 +172,7 @@
       return `<div class="xp${act ? ' act' : ''}${g.legWinner === i ? ' win' : ''}">
         <div class="xpname">${esc(p.name)}${(g.setsTo || 1) > 1 ? ` <small>· Sets ${p.sets || 0}</small>` : ''}${g.legsTo > 1 || (g.setsTo || 1) > 1 ? ` <small>· Legs ${p.legs}</small>` : ''}</div>
         <div class="xprem">${rem}</div>
-        <div class="xpstat">Ø ${f1(avg)} · ${p.legDarts} Darts</div>
+        <div class="xpstat">avg ${f1(avg)} · ${p.legDarts} darts</div>
         <div class="xplast">${esc(p.last) || '&nbsp;'}</div></div>`;
     }).join('')}</div>`;
   }
@@ -184,29 +184,29 @@
     h += scoreboard();
     if (g.phase === 'play') {
       const V = g.visit, m = X.mult || 1, rem = remNow();
-      h += `<div class="xturn"><b>${esc(p.name)}</b> ist dran · Rest ${rem}</div>`;
-      h += `<div class="slots">${[0, 1, 2].map(i => `<div class="${V[i] ? 'f' : ''}">${V[i] ? V[i].l : 'Pfeil ' + (i + 1)}</div>`).join('')}<div class="sum">${visitSum()}</div></div>`;
+      h += `<div class="xturn"><b>${esc(p.name)}</b> to throw · ${rem} left</div>`;
+      h += `<div class="slots">${[0, 1, 2].map(i => `<div class="${V[i] ? 'f' : ''}">${V[i] ? V[i].l : 'Dart ' + (i + 1)}</div>`).join('')}<div class="sum">${visitSum()}</div></div>`;
       if (g.out === 'double') { const rt = route(rem, 3 - V.length); if (rt) h += `<div class="route">Checkout: ${routeText(rt)}</div>`; }
       if (g.msg) h += `<div class="msg">${esc(g.msg)}</div>`;
-      h += `<div class="mult">${btn('xMult', 'Double', 2, 'm2', m === 2)}${btn('xMult', 'Triple', 3, 'm3', m === 3)}</div>`;
+      h += `<div class="mult">${btn('xMult', 'Double', 2, 'm2', m === 2)}${btn('xMult', 'Treble', 3, 'm3', m === 3)}</div>`;
       h += `<div class="numgrid">${R20.map(n => btn('xDart', (m === 3 ? 'T' : m === 2 ? 'D' : '') + n, n, 'nb m' + m)).join('')}</div>`;
       h += `<div class="numrow">${btn('x25', '25', undefined, 'nb')}${btn('xBull', 'Bull', undefined, 'nb bullb')}${btn('xMiss', 'Miss / 0', undefined, 'nb missb')}</div>`;
     } else {
       const w = g.players[g.legWinner];
-      h += `<div class="result win">${esc(w.name)} ${g.phase === 'over' ? 'gewinnt das Spiel! 🏆' : g.setWon ? 'gewinnt das Set! 🎯' : 'gewinnt das Leg! 🎯'}</div>`;
+      h += `<div class="result win">${esc(w.name)} ${g.phase === 'over' ? 'wins the game! 🏆' : g.setWon ? 'wins the set! 🎯' : 'wins the leg! 🎯'}</div>`;
       if (g.players.length > 1 && (g.setsTo || 1) > 1) h += `<div class="live">Sets: ${g.players.map(x => esc(x.name) + ' ' + (x.sets || 0)).join(' · ')}</div>`;
       if (g.players.length > 1 && g.legsTo > 1) h += `<div class="live">Legs: ${g.players.map(x => esc(x.name) + ' ' + x.legs).join(' · ')}</div>`;
       h += statsTable(g);
-      if (g.phase === 'legover') h += `<button class="big go" data-a="xNextLeg">${g.setWon ? 'Nächstes Set' : 'Nächstes Leg'}</button>`;
-      else h += `<div class="row2">${btn('xAgain', 'Neues Spiel', undefined, 'mid')}${btn('xClose', 'Zu den Einstellungen', undefined, 'mid')}</div>`;
+      if (g.phase === 'legover') h += `<button class="big go" data-a="xNextLeg">${g.setWon ? 'Next set' : 'Next leg'}</button>`;
+      else h += `<div class="row2">${btn('xAgain', 'New game', undefined, 'mid')}${btn('xClose', 'Back to settings', undefined, 'mid')}</div>`;
     }
-    if (X.confirm === 'quit') h += `<div class="confirmbox"><p>Spiel abbrechen? Es wird nicht gespeichert.</p><div class="row2">${btn('xNo', 'Weiterspielen', undefined, 'mid')}${btn('xQuitYes', 'Abbrechen', undefined, 'mid redb')}</div></div>`;
-    else h += `<div class="row2 foot">${btn('xUndo', '↶ Rückgängig', undefined, 'mid')}${g.phase === 'over' ? '' : btn('xQuit', 'Spiel beenden', undefined, 'mid')}</div>`;
+    if (X.confirm === 'quit') h += `<div class="confirmbox"><p>Quit the game? It will not be saved.</p><div class="row2">${btn('xNo', 'Keep playing', undefined, 'mid')}${btn('xQuitYes', 'Quit', undefined, 'mid redb')}</div></div>`;
+    else h += `<div class="row2 foot">${btn('xUndo', '↶ Undo', undefined, 'mid')}${g.phase === 'over' ? '' : btn('xQuit', 'End game', undefined, 'mid')}</div>`;
     return h + `</div>`;
   }
 
   function statsTable(g) {
-    const rows = [['Average', p => f1(p.darts ? p.pts / p.darts * 3 : 0)], ['Darts', p => p.darts], ['Höchste Aufnahme', p => p.best], ['180er', p => p.s180], ['Höchstes Finish', p => p.hiCO || '–']];
+    const rows = [['Average', p => f1(p.darts ? p.pts / p.darts * 3 : 0)], ['Darts', p => p.darts], ['Highest visit', p => p.best], ['180s', p => p.s180], ['Highest finish', p => p.hiCO || '–']];
     return `<table class="cmp"><tr><th></th>${g.players.map(p => `<th>${esc(p.name)}</th>`).join('')}</tr>${rows.map(r => `<tr><td>${r[0]}</td>${g.players.map(p => `<td>${r[1](p)}</td>`).join('')}</tr>`).join('')}</table>`;
   }
 

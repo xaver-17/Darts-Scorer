@@ -22,7 +22,7 @@ window.DRILLS = (function () {
       if (L === 4) return [[2, 'Bull 50']];
       return [[1, '25'], [2, 'Bull 50']];
     }
-    if (L <= 1) return [[1, 'Single'], [2, 'Doppel'], [3, 'Triple']];
+    if (L <= 1) return [[1, 'Single'], [2, 'Double'], [3, 'Treble']];
     if (L === 3) return [[3, 'T' + n]];
     return [[2, 'D' + n]];
   }
@@ -37,24 +37,24 @@ window.DRILLS = (function () {
   }
   const ATC = {
     name: 'Around the Clock', short: 'ATC',
-    describe: L => ['1 bis 20, dann Bull · jeder Ring zählt',
-      '1 bis 20, dann Bull · jeder Ring zählt · Sprung: Doppel = 2 Felder weiter, Triple = 3',
-      '1 bis 20, dann Bull · nur Doppel zählen · Bull: 25 oder 50',
-      '1 bis 20, dann Bull · nur Triple zählen · Bull: 25 oder 50',
-      '1 bis 20, dann Bull · nur Doppel zählen · Bull nur als Bullseye (50)'][L] + ' · Ziel: so wenige Darts wie möglich',
+    describe: L => ['1 to 20, then bull · every ring counts',
+      '1 to 20, then bull · every ring counts · jump: double = 2 fields ahead, treble = 3',
+      '1 to 20, then bull · only doubles count · bull: 25 or 50',
+      '1 to 20, then bull · only trebles count · bull: 25 or 50',
+      '1 to 20, then bull · only doubles count · bull only as bullseye (50)'][L] + ' · goal: as few darts as possible',
     opts: () => '',
     start: s => ({ mode: 'atc', level: s.level, d: [], date: now() }),
     view(S, c) {
       const st = atcState(S), n = ATC_T[st.idx];
-      let h = `<div class="card">` + top(c, 'Around the Clock', S.level, `Feld ${st.idx + 1} / 21`) + bar(st.idx, 21);
-      const sub = n === 25 ? (S.level === 4 ? 'Bullseye (50) treffen' : 'Bull treffen (25 oder 50)')
+      let h = `<div class="card">` + top(c, 'Around the Clock', S.level, `Field ${st.idx + 1} / 21`) + bar(st.idx, 21);
+      const sub = n === 25 ? (S.level === 4 ? 'Hit the bullseye (50)' : 'Hit the bull (25 or 50)')
         : S.level <= 1 ? `Die ${n} treffen – egal welcher Ring` : S.level === 3 ? `Triple ${n} treffen` : `Doppel ${n} treffen`;
       h += `<div class="target">${n === 25 ? 'Bull' : (S.level === 3 ? 'T' : S.level >= 2 ? 'D' : '') + n}</div><div class="tcap">${sub}</div>`;
-      h += `<div class="tdarts">Dart ${st.darts + 1} · ${st.per[st.idx]} auf dieses Feld</div>`;
-      h += `<div class="setlabel c">Was hast du getroffen?</div><div class="okgrid">`;
+      h += `<div class="tdarts">Dart ${st.darts + 1} · ${st.per[st.idx]} on this field</div>`;
+      h += `<div class="setlabel c">What did you hit?</div><div class="okgrid">`;
       atcButtons(S.level, n).forEach(([m, l]) => { h += c.btn('drHit', l, m, 'okb'); });
-      h += `</div><button class="big bad" data-a="drHit" data-v="0">✕ Daneben</button>`;
-      h += `<div class="live">Darts <b>${st.darts}</b> · Trefferquote <b>${c.f1(pct(st.hits, st.darts))} %</b></div>`;
+      h += `</div><button class="big bad" data-a="drHit" data-v="0">✕ Miss</button>`;
+      h += `<div class="live">Darts <b>${st.darts}</b> · hit rate <b>${c.f1(pct(st.hits, st.darts))} %</b></div>`;
       return h + c.footer() + `</div>`;
     },
     act(a, v, S) {
@@ -69,18 +69,18 @@ window.DRILLS = (function () {
       return { date: S.date, mode: 'atc', level: S.level, done: st.done, reached: Math.min(st.idx, 21), darts: st.darts, hits: st.hits,
                hitPct: pct(st.hits, st.darts), worst };
     },
-    metric: (e, c) => ({ main: e.done ? e.darts + ' Darts' : 'bis ' + (e.reached ? lbl(ATC_T[e.reached - 1]) : '–'),
-                         det: `${c.f1(e.hitPct)} % Treffer${e.done ? '' : ' · abgebrochen'}${e.worst && e.worst.length ? ' · zäh: ' + e.worst.map(w => lbl(w[0])).join(', ') : ''}` }),
-    summary: (e, c) => `<div class="sumgrid"><div><b>${e.done ? e.darts : '–'}</b><small>Darts bis Bull</small></div><div><b>${c.f1(e.hitPct)} %</b><small>Trefferquote</small></div><div><b>${e.reached}/21</b><small>Felder geschafft</small></div></div>`
-      + (e.worst.length ? `<div class="hint">Am meisten Darts gekostet: ${e.worst.map(w => `<b>${lbl(w[0])}</b> (${w[1]})`).join(', ')}</div>` : ''),
-    series: [{ n: 'Darts bis Bull', c: '#ec4899', k: 'darts' }, { n: 'Trefferquote %', c: '#a1a1aa', k: 'hitPct' }],
+    metric: (e, c) => ({ main: e.done ? e.darts + ' darts' : 'to ' + (e.reached ? lbl(ATC_T[e.reached - 1]) : '–'),
+                         det: `${c.f1(e.hitPct)} % hits${e.done ? '' : ' · aborted'}${e.worst && e.worst.length ? ' · tough: ' + e.worst.map(w => lbl(w[0])).join(', ') : ''}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b>${e.done ? e.darts : '–'}</b><small>darts to bull</small></div><div><b>${c.f1(e.hitPct)} %</b><small>hit rate</small></div><div><b>${e.reached}/21</b><small>fields done</small></div></div>`
+      + (e.worst.length ? `<div class="hint">Cost the most darts: ${e.worst.map(w => `<b>${lbl(w[0])}</b> (${w[1]})`).join(', ')}</div>` : ''),
+    series: [{ n: 'Darts to bull', c: '#ec4899', k: 'darts' }, { n: 'Hit rate %', c: '#a1a1aa', k: 'hitPct' }],
     list: h => h.filter(e => e.done),
     ov: { val: e => e.darts, unit: ' Darts', low: true, only: e => e.done, bar: v => Math.max(0, 100 - (v - 21) / 1.2) },
     tip(e) {
-      if (!e.done) return 'Nicht bis zum Bull gekommen – beim nächsten Mal durchziehen, dann zählt die Darts-Zahl.';
+      if (!e.done) return 'Did not reach the bull – finish next time, then the dart count counts.';
       const goal = [60, 50, 70, 80, 70][e.level];
-      if (e.darts <= goal && e.level < 4) return `Stark! Unter ${goal} Darts – probier die nächste Stufe.`;
-      return `Ziel auf dieser Stufe: unter ${goal} Darts bis zum Bull.`;
+      if (e.darts <= goal && e.level < 4) return `Strong! Under ${goal} darts – try the next level.`;
+      return `Goal at this level: under ${goal} darts to the bull.`;
     }
   };
 
@@ -95,18 +95,18 @@ window.DRILLS = (function () {
   }
   const BOB = {
     name: "Bob's 27", short: "Bob's 27",
-    describe: L => `Start mit 27 Punkten · 21 Runden D1 bis D20, dann Bull · 3 Darts pro Doppel · Treffer = + Wert des Doppels, keine Treffer = − Wert · `
-      + (L < 2 ? 'du spielst immer bis zum Ende' : 'bei 0 oder weniger ist Schluss') + (BOB_GOAL[L] ? ` · Ziel: ${BOB_GOAL[L]}+ Punkte` : ''),
+    describe: L => `Start with 27 points · 21 rounds D1 to D20, then bull · 3 darts per double · hit = + value of the double, no hit = − value · `
+      + (L < 2 ? 'you always play to the end' : 'at 0 or less the game ends') + (BOB_GOAL[L] ? ` · goal: ${BOB_GOAL[L]}+ points` : ''),
     opts: () => '',
     start: s => ({ mode: 'bob', level: s.level, r: [], date: now() }),
     view(S, c) {
       const st = bobState(S), n = BOB_T[st.round];
-      let h = `<div class="card">` + top(c, "Bob's 27", S.level, `Runde ${st.round + 1} / 21`) + bar(st.round, 21);
-      h += `<div class="target">${dl(n)}</div><div class="tcap">3 Darts · Treffer +${dv(n)}, keiner −${dv(n)}</div>`;
-      h += `<div class="tdarts">Stand <b class="${st.score > 0 ? 'gw' : 'gl'}">${st.score}</b></div>`;
-      h += `<div class="setlabel c">Wie oft getroffen?</div><div class="okgrid">`;
+      let h = `<div class="card">` + top(c, "Bob's 27", S.level, `Round ${st.round + 1} / 21`) + bar(st.round, 21);
+      h += `<div class="target">${dl(n)}</div><div class="tcap">3 darts · hit +${dv(n)}, none −${dv(n)}</div>`;
+      h += `<div class="tdarts">Score <b class="${st.score > 0 ? 'gw' : 'gl'}">${st.score}</b></div>`;
+      h += `<div class="setlabel c">How many hits?</div><div class="okgrid">`;
       for (let k = 0; k <= 3; k++) h += c.btn('drBob', k === 0 ? '0' : '✓ ' + k, k, k === 0 ? 'okb zero' : 'okb');
-      h += `</div><div class="live">Doppelquote <b>${c.f1(pct(st.hits, st.round * 3))} %</b></div>`;
+      h += `</div><div class="live">Doubles rate <b>${c.f1(pct(st.hits, st.round * 3))} %</b></div>`;
       if (S.r.length) h += `<div class="chips">${S.r.map((k, i) => `<span class="${k ? 'g' : ''}">${dl(BOB_T[i])}: ${k}</span>`).slice(-10).join('')}</div>`;
       return h + c.footer() + `</div>`;
     },
@@ -121,25 +121,25 @@ window.DRILLS = (function () {
       return { date: S.date, mode: 'bob', level: S.level, score: st.score, round: st.round, out: st.out, done: st.done,
                hits: st.hits, darts: st.round * 3, hitPct: pct(st.hits, st.round * 3) };
     },
-    metric: (e, c) => ({ main: e.score + ' Pkt', det: `${c.f1(e.hitPct)} % Doppel · ${e.out ? 'raus in Runde ' + e.round : e.done ? 'alle 21 Runden' : 'abgebrochen nach ' + e.round}` }),
-    summary: (e, c) => `<div class="sumgrid"><div><b class="${e.score > 0 ? '' : 'gl'}">${e.score}</b><small>Endpunktzahl</small></div><div><b>${c.f1(e.hitPct)} %</b><small>Doppelquote</small></div><div><b>${e.round}/21</b><small>Runden</small></div></div>`,
-    series: [{ n: 'Punkte', c: '#ec4899', k: 'score' }],
+    metric: (e, c) => ({ main: e.score + ' pts', det: `${c.f1(e.hitPct)} % doubles · ${e.out ? 'out in round ' + e.round : e.done ? 'all 21 rounds' : 'aborted after ' + e.round}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b class="${e.score > 0 ? '' : 'gl'}">${e.score}</b><small>final score</small></div><div><b>${c.f1(e.hitPct)} %</b><small>doubles rate</small></div><div><b>${e.round}/21</b><small>rounds</small></div></div>`,
+    series: [{ n: 'Points', c: '#ec4899', k: 'score' }],
     ov: { val: e => e.score, unit: ' Pkt', bar: v => Math.max(0, v / 7) },
     tip(e) {
       const g = BOB_GOAL[e.level], ng = BOB_GOAL[Math.min(4, e.level + 1)];
-      if (e.level < 4 && e.score >= Math.max(ng, 100)) return `Stark! ${e.score} Punkte reichen für die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
-      return g ? `Ziel auf dieser Stufe: ${g}+ Punkte.` : 'Spiel alle 21 Runden durch und schau, welche Doppel dir Punkte kosten.';
+      if (e.level < 4 && e.score >= Math.max(ng, 100)) return `Strong! ${e.score} points are enough for the next level: <b>${LVN[e.level + 1]}</b>.`;
+      return g ? `Goal at this level: ${g}+ points.` : 'Play all 21 rounds and see which doubles cost you points.';
     }
   };
-  const LVN = ['Beginner', 'Leicht', 'Mittel', 'Fortgeschritten', 'Hart'];
+  const LVN = ['Beginner', 'Easy', 'Medium', 'Advanced', 'Hard'];
 
   // ---------- Doppel-Runde ----------
   const DR_POOL = L => L === 0 ? TOP_D : L === 1 ? COMMON_D : [...R20, 25];
   const DR_GOAL = [20, 25, 30, 35, 40];
   const DR = {
-    name: 'Doppel-Runde', short: 'Doppel-Runde',
-    describe: (L, cnt, s) => `${L === 0 ? 'Top-Doppel (D20, D16, D18, D12, D10, D8, D4)' : L === 1 ? '10 gängige Doppel' : 'alle Doppel D1–D20 + Bull'} · je 3 Darts · ${s.drOrder === 'rnd' ? 'zufällige' : 'feste'} Reihenfolge · Ziel: ${DR_GOAL[L]} % Doppelquote`,
-    opts: (s, c) => `<div class="setlabel">Reihenfolge</div><div class="seg">${c.btn('drOrder', 'Der Reihe nach', 'seq', '', s.drOrder !== 'rnd')}${c.btn('drOrder', 'Zufällig', 'rnd', '', s.drOrder === 'rnd')}</div>`,
+    name: 'Doubles Round', short: 'Doubles Round',
+    describe: (L, cnt, s) => `${L === 0 ? 'top doubles (D20, D16, D18, D12, D10, D8, D4)' : L === 1 ? '10 common doubles' : 'all doubles D1–D20 + bull'} · 3 darts each · ${s.drOrder === 'rnd' ? 'random' : 'fixed'} order · goal: ${DR_GOAL[L]} % doubles rate`,
+    opts: (s, c) => `<div class="setlabel">Order</div><div class="seg">${c.btn('drOrder', 'In order', 'seq', '', s.drOrder !== 'rnd')}${c.btn('drOrder', 'Random', 'rnd', '', s.drOrder === 'rnd')}</div>`,
     start(s) {
       const p = DR_POOL(s.level).slice();
       const t = s.drOrder === 'rnd' ? shuffle(p) : p.sort((a, b) => a - b);
@@ -147,11 +147,11 @@ window.DRILLS = (function () {
     },
     view(S, c) {
       const i = S.r.length, n = S.t[i], hits = S.r.reduce((a, b) => a + b, 0);
-      let h = `<div class="card">` + top(c, 'Doppel-Runde', S.level, `Doppel ${i + 1} / ${S.t.length}`) + bar(i, S.t.length);
-      h += `<div class="target">${dl(n)}</div><div class="tcap">${n === 25 ? 'Bullseye (50)' : 'Doppel ' + n} · 3 Darts</div>`;
-      h += `<div class="setlabel c">Wie oft getroffen?</div><div class="okgrid">`;
+      let h = `<div class="card">` + top(c, 'Doubles Round', S.level, `Double ${i + 1} / ${S.t.length}`) + bar(i, S.t.length);
+      h += `<div class="target">${dl(n)}</div><div class="tcap">${n === 25 ? 'Bullseye (50)' : 'Double ' + n} · 3 darts</div>`;
+      h += `<div class="setlabel c">How many hits?</div><div class="okgrid">`;
       for (let k = 0; k <= 3; k++) h += c.btn('drDR', k === 0 ? '0' : '✓ ' + k, k, k === 0 ? 'okb zero' : 'okb');
-      h += `</div><div class="live">Doppelquote <b>${c.f1(pct(hits, i * 3))} %</b> · ${hits} Treffer</div>`;
+      h += `</div><div class="live">Doubles rate <b>${c.f1(pct(hits, i * 3))} %</b> · ${hits} hits</div>`;
       if (i) h += `<div class="chips">${S.r.map((k, j) => `<span class="${k ? 'g' : ''}">${dl(S.t[j])}: ${k}</span>`).slice(-10).join('')}</div>`;
       return h + c.footer() + `</div>`;
     },
@@ -166,14 +166,14 @@ window.DRILLS = (function () {
       const hits = S.r.reduce((a, b) => a + b, 0);
       return { date: S.date, mode: 'dr', level: S.level, f, n: S.r.length, hits, darts: S.r.length * 3, hitPct: pct(hits, S.r.length * 3) };
     },
-    metric: (e, c) => ({ main: c.f1(e.hitPct) + ' %', det: `${e.hits} Treffer · ${e.n} Doppel` }),
+    metric: (e, c) => ({ main: c.f1(e.hitPct) + ' %', det: `${e.hits} hits · ${e.n} doubles` }),
     summary(e, c) {
       const fs = Object.entries(e.f).map(([n, k]) => [+n, k]);
       const best = fs.filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 3), miss = fs.filter(x => x[1] === 0).map(x => dl(x[0]));
-      return `<div class="sumgrid"><div><b>${c.f1(e.hitPct)} %</b><small>Doppelquote</small></div><div><b>${e.hits}</b><small>Treffer</small></div><div><b>${e.darts}</b><small>Darts</small></div></div>`
-        + `<div class="hint">${best.length ? 'Beste: ' + best.map(x => `<b>${dl(x[0])}</b> (${x[1]}/3)`).join(', ') + '. ' : ''}${miss.length ? 'Ohne Treffer: ' + miss.join(', ') + '.' : 'Jedes Doppel mindestens einmal getroffen!'}</div>`;
+      return `<div class="sumgrid"><div><b>${c.f1(e.hitPct)} %</b><small>doubles rate</small></div><div><b>${e.hits}</b><small>hits</small></div><div><b>${e.darts}</b><small>Darts</small></div></div>`
+        + `<div class="hint">${best.length ? 'Best: ' + best.map(x => `<b>${dl(x[0])}</b> (${x[1]}/3)`).join(', ') + '. ' : ''}${miss.length ? 'No hits: ' + miss.join(', ') + '.' : 'Hit every double at least once!'}</div>`;
     },
-    series: [{ n: 'Doppelquote %', c: '#ec4899', k: 'hitPct' }], max: 100,
+    series: [{ n: 'Doubles rate %', c: '#ec4899', k: 'hitPct' }], max: 100,
     ov: { val: e => e.hitPct, unit: ' %', bar: v => v },
     // Doppelquote pro Feld über alle Doppel-Runden
     extra(hist, c) {
@@ -181,15 +181,15 @@ window.DRILLS = (function () {
       const rows = Object.entries(agg).map(([n, [h, d]]) => [+n, pct(h, d), d]);
       if (!rows.length) return '';
       rows.sort((a, b) => b[1] - a[1] || a[0] - b[0]);
-      let h = `<h2 class="sec">Doppelquote pro Feld</h2><div class="card"><div class="bars">`;
+      let h = `<h2 class="sec">Doubles rate per field</h2><div class="card"><div class="bars">`;
       rows.forEach(([n, r, d]) => { h += `<div class="br"><span>${dl(n)}</span><i><em class="${r >= 40 ? 'g' : r >= 20 ? 'y' : 'r'}" style="width:${r}%"></em></i><b>${Math.round(r)} %</b><small>${d}</small></div>`; });
       const best = rows[0], worst = rows[rows.length - 1];
-      return h + `</div><div class="boardhint">Aus allen Doppel-Runden · Bestes: ${dl(best[0])} · Schwächstes: ${dl(worst[0])}</div></div>`;
+      return h + `</div><div class="boardhint">From all doubles rounds · best: ${dl(best[0])} · weakest: ${dl(worst[0])}</div></div>`;
     },
     tip(e) {
       const g = DR_GOAL[e.level];
-      if (e.hitPct >= g && e.level < 4) return `Stark! Über ${g} % – probier die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
-      return `Ziel auf dieser Stufe: ${g} % Doppelquote.`;
+      if (e.hitPct >= g && e.level < 4) return `Strong! Over ${g} % – try the next level: <b>${LVN[e.level + 1]}</b>.`;
+      return `Goal at this level: ${g} % doubles rate.`;
     }
   };
 
@@ -201,20 +201,20 @@ window.DRILLS = (function () {
     return { cur, high, ok, dsum, n: S.r.length };
   };
   const LAD = {
-    name: 'Checkout-Leiter', short: 'Leiter',
-    describe: (L, cnt) => `${cnt} Runden · Start bei ${LAD_START[L]} · 9 Darts (3 Aufnahmen) pro Checkout · geschafft = Ziel +1, nicht geschafft = −1 (nie unter ${LAD_START[L]}) · Double-Out · Weg wird ${L < 3 ? 'angezeigt' : 'nur auf Wunsch angezeigt'}`,
-    opts: (s, c) => `<div class="setlabel">Runden</div><div class="seg">${[10, 20, 30].map(n => c.btn('tasks', n, n, '', s.tasks === n)).join('')}</div>`,
+    name: 'Checkout Ladder', short: 'Ladder',
+    describe: (L, cnt) => `${cnt} rounds · start at ${LAD_START[L]} · 9 darts (3 visits) per checkout · done = target +1, missed = −1 (never below ${LAD_START[L]}) · Double-Out · route ${L < 3 ? 'shown' : 'shown on request only'}`,
+    opts: (s, c) => `<div class="setlabel">Rounds</div><div class="seg">${[10, 20, 30].map(n => c.btn('tasks', n, n, '', s.tasks === n)).join('')}</div>`,
     start: s => ({ mode: 'lad', level: s.level, start: LAD_START[s.level], n: s.tasks, r: [], date: now() }),
     view(S, c) {
       const st = ladState(S), rt = routeText(route(st.cur));
-      let h = `<div class="card">` + top(c, 'Checkout-Leiter', S.level, `Runde ${st.n + 1} / ${S.n}`) + bar(st.n, S.n);
-      h += `<div class="target">${st.cur}</div><div class="tcap">Checkout ${st.cur} (Double-Out) · 9 Darts</div>`;
-      if (rt) h += (S.level < 3 || c.showRoute) ? `<div class="route">Weg: ${rt}</div>` : `<button class="link" data-a="route">Weg anzeigen</button>`;
-      else h += `<div class="route">Kein 3-Dart-Finish – erst stellen</div>`;
-      h += `<div class="setlabel c">Geschafft mit Dart …</div><div class="okgrid">`;
+      let h = `<div class="card">` + top(c, 'Checkout Ladder', S.level, `Round ${st.n + 1} / ${S.n}`) + bar(st.n, S.n);
+      h += `<div class="target">${st.cur}</div><div class="tcap">Checkout ${st.cur} (Double-Out) · 9 darts</div>`;
+      if (rt) h += (S.level < 3 || c.showRoute) ? `<div class="route">Route: ${rt}</div>` : `<button class="link" data-a="route">Show route</button>`;
+      else h += `<div class="route">No 3-dart finish – set it up first</div>`;
+      h += `<div class="setlabel c">Done with dart …</div><div class="okgrid">`;
       for (let i = 1; i <= 9; i++) h += c.btn('drLad', `✓ ${i}`, i, 'okb');
       h += `</div><button class="big bad" data-a="drLad" data-v="0">✕ Nicht in 9 Darts geschafft</button>`;
-      h += `<div class="live">Geschafft <b>${st.ok}/${st.n}</b> · Höchstes Finish <b>${st.high || '–'}</b></div>`;
+      h += `<div class="live">Done <b>${st.ok}/${st.n}</b> · highest finish <b>${st.high || '–'}</b></div>`;
       return h + c.footer() + `</div>`;
     },
     act(a, v, S) {
@@ -228,13 +228,13 @@ window.DRILLS = (function () {
       return { date: S.date, mode: 'lad', level: S.level, start: S.start, n: st.n, ok: st.ok, high: st.high, end: st.cur,
                rate: pct(st.ok, st.n), dpc: st.ok ? st.dsum / st.ok : 0 };
     },
-    metric: (e, c) => ({ main: e.high ? 'bis ' + e.high : '–', det: `${e.ok}/${e.n} · ${c.f1(e.rate)} % · ${e.ok ? c.f1(e.dpc) + ' Darts/Finish' : 'kein Finish'}` }),
-    summary: (e, c) => `<div class="sumgrid"><div><b>${e.high || '–'}</b><small>Höchstes Finish</small></div><div><b>${c.f1(e.rate)} %</b><small>Erfolgsquote</small></div><div><b>${e.ok ? c.f1(e.dpc) : '–'}</b><small>Darts pro Checkout</small></div></div>`,
-    series: [{ n: 'Höchstes Finish', c: '#ec4899', k: 'high' }, { n: 'Erfolgsquote %', c: '#a1a1aa', k: 'rate' }],
+    metric: (e, c) => ({ main: e.high ? 'to ' + e.high : '–', det: `${e.ok}/${e.n} · ${c.f1(e.rate)} % · ${e.ok ? c.f1(e.dpc) + ' darts/finish' : 'no finish'}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b>${e.high || '–'}</b><small>highest finish</small></div><div><b>${c.f1(e.rate)} %</b><small>success rate</small></div><div><b>${e.ok ? c.f1(e.dpc) : '–'}</b><small>darts per checkout</small></div></div>`,
+    series: [{ n: 'Highest finish', c: '#ec4899', k: 'high' }, { n: 'Success rate %', c: '#a1a1aa', k: 'rate' }],
     ov: { val: e => e.high, unit: '', bar: v => (v - 40) / 1.3 },
     tip(e) {
-      if (e.rate >= 60 && e.level < 4) return `Stark! ${Math.round(e.rate)} % – auf <b>${LVN[e.level + 1]}</b> startest du bei ${LAD_START[e.level + 1]}.`;
-      return 'Ab 60 % Erfolgsquote lohnt sich die nächste Stufe.';
+      if (e.rate >= 60 && e.level < 4) return `Strong! ${Math.round(e.rate)} % – on <b>${LVN[e.level + 1]}</b> you start at ${LAD_START[e.level + 1]}.`;
+      return 'From a 60 % success rate the next level is worth it.';
     }
   };
 
@@ -255,19 +255,19 @@ window.DRILLS = (function () {
   }
   const SH = {
     name: 'Shanghai', short: 'Shanghai',
-    describe: L => `${['Zahlen 1–7', 'Zahlen 1–10', 'Zahlen 1–20', 'Zahlen 1–20 + Bull', 'Zahlen 1–20 + Bull'][L]} · je Runde 3 Darts auf die Zahl · Single 1×, Doppel 2×, Triple 3× · Single + Doppel + Triple in einer Runde = Shanghai (+100)`
-      + (L === 4 ? ' · Runde ohne Treffer = Schluss' : '') + ` · Ziel: ${SH_GOAL[L]}+ Punkte`,
+    describe: L => `${['numbers 1–7', 'numbers 1–10', 'numbers 1–20', 'numbers 1–20 + bull', 'numbers 1–20 + bull'][L]} · 3 darts at the number each round · single 1×, double 2×, treble 3× · single + double + treble in one round = Shanghai (+100)`
+      + (L === 4 ? ' · round without a hit = game over' : '') + ` · goal: ${SH_GOAL[L]}+ points`,
     opts: () => '',
     start: s => ({ mode: 'sh', level: s.level, d: [], date: now() }),
     view(S, c) {
       const st = shState(S), n = st.t[st.round], k = S.d.length % 3, cur = S.d.slice(st.round * 3);
-      let h = `<div class="card">` + top(c, 'Shanghai', S.level, `Runde ${st.round + 1} / ${st.t.length}`) + bar(st.round, st.t.length);
-      h += `<div class="target">${lbl(n)}</div><div class="tcap">Dart ${k + 1} von 3 · ${n === 25 ? 'Bull: 25 oder 50' : 'Single, Doppel und Triple = Shanghai'}</div>`;
-      h += `<div class="tdarts">Stand <b>${st.score}</b>${cur.length ? ' · diese Runde: ' + cur.map(m => m ? dlabel(n, m) : '–').join(' ') : ''}</div>`;
-      h += `<div class="setlabel c">Was hast du getroffen?</div><div class="okgrid">`;
+      let h = `<div class="card">` + top(c, 'Shanghai', S.level, `Round ${st.round + 1} / ${st.t.length}`) + bar(st.round, st.t.length);
+      h += `<div class="target">${lbl(n)}</div><div class="tcap">Dart ${k + 1} of 3 · ${n === 25 ? 'bull: 25 or 50' : 'single, double and treble = Shanghai'}</div>`;
+      h += `<div class="tdarts">Score <b>${st.score}</b>${cur.length ? ' · this round: ' + cur.map(m => m ? dlabel(n, m) : '–').join(' ') : ''}</div>`;
+      h += `<div class="setlabel c">What did you hit?</div><div class="okgrid">`;
       (n === 25 ? [[1, '25'], [2, 'Bull 50']] : [[1, 'S' + n], [2, 'D' + n], [3, 'T' + n]]).forEach(([m, l]) => { h += c.btn('drSh', l, m, 'okb'); });
-      h += `</div><button class="big bad" data-a="drSh" data-v="0">✕ Daneben</button>`;
-      h += `<div class="live">Trefferquote <b>${c.f1(pct(st.hits, st.darts))} %</b> · Shanghais <b>${st.sh}</b></div>`;
+      h += `</div><button class="big bad" data-a="drSh" data-v="0">✕ Miss</button>`;
+      h += `<div class="live">Hit rate <b>${c.f1(pct(st.hits, st.darts))} %</b> · Shanghais <b>${st.sh}</b></div>`;
       if (st.rs.length) h += `<div class="chips">${st.rs.slice(0, st.round).map((p, i) => `<span class="${p ? 'g' : ''}">${lbl(st.t[i])}: ${p}</span>`).slice(-10).join('')}</div>`;
       return h + c.footer() + `</div>`;
     },
@@ -282,14 +282,14 @@ window.DRILLS = (function () {
       return { date: S.date, mode: 'sh', level: S.level, score: st.score, sh: st.sh, round: st.round, out: st.out, done: st.done,
                darts: st.darts, hits: st.hits, hitPct: pct(st.hits, st.darts) };
     },
-    metric: (e, c) => ({ main: e.score + ' Pkt', det: `${c.f1(e.hitPct)} % Treffer${e.sh ? ' · ' + e.sh + '× Shanghai' : ''}${e.out ? ' · raus in Runde ' + e.round : e.done ? '' : ' · abgebrochen'}` }),
-    summary: (e, c) => `<div class="sumgrid"><div><b>${e.score}</b><small>Punkte</small></div><div><b>${c.f1(e.hitPct)} %</b><small>Trefferquote</small></div><div><b>${e.sh}</b><small>Shanghais</small></div></div>`,
-    series: [{ n: 'Punkte', c: '#ec4899', k: 'score' }, { n: 'Trefferquote %', c: '#a1a1aa', k: 'hitPct' }],
+    metric: (e, c) => ({ main: e.score + ' pts', det: `${c.f1(e.hitPct)} % hits${e.sh ? ' · ' + e.sh + '× Shanghai' : ''}${e.out ? ' · out in round ' + e.round : e.done ? '' : ' · aborted'}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b>${e.score}</b><small>points</small></div><div><b>${c.f1(e.hitPct)} %</b><small>hit rate</small></div><div><b>${e.sh}</b><small>Shanghais</small></div></div>`,
+    series: [{ n: 'Points', c: '#ec4899', k: 'score' }, { n: 'Hit rate %', c: '#a1a1aa', k: 'hitPct' }],
     ov: { val: e => e.score, unit: ' Pkt', bar: v => v / 4 },
     tip(e) {
       const g = SH_GOAL[e.level];
-      if (e.score >= g && e.level < 4) return `Stark! Über ${g} Punkte – probier die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
-      return `Ziel auf dieser Stufe: ${g}+ Punkte.`;
+      if (e.score >= g && e.level < 4) return `Strong! Over ${g} points – try the next level: <b>${LVN[e.level + 1]}</b>.`;
+      return `Goal at this level: ${g}+ points.`;
     }
   };
 
@@ -303,8 +303,8 @@ window.DRILLS = (function () {
     [20, 19, 'D', 18, 'T', 17, 'D16', 'T20', 25]
   ];
   const HI_GOAL = [80, 120, 150, 200, 200];
-  const hiName = t => t === 'D' ? 'Doppel' : t === 'T' ? 'Triple' : t === 25 ? 'Bull' : String(t);
-  const hiCap = t => t === 'D' ? 'beliebiges Doppel' : t === 'T' ? 'beliebiges Triple' : t === 25 ? '25 oder 50' : /^[DT]/.test(t) ? 'nur genau dieses Feld' : 'jeder Ring zählt';
+  const hiName = t => t === 'D' ? 'Double' : t === 'T' ? 'Treble' : t === 25 ? 'Bull' : String(t);
+  const hiCap = t => t === 'D' ? 'any double' : t === 'T' ? 'any treble' : t === 25 ? '25 or 50' : /^[DT]/.test(t) ? 'only exactly this field' : 'every ring counts';
   // Ist die Punktzahl mit 3 Darts auf dieses Ziel möglich?
   function hiValid(t, p) {
     const vals = t === 'D' ? R20.map(n => 2 * n).concat(50) : t === 'T' ? R20.map(n => 3 * n) : t === 25 ? [25, 50]
@@ -320,16 +320,16 @@ window.DRILLS = (function () {
   }
   const HI = {
     name: 'Halve-It', short: 'Halve-It',
-    describe: L => `${HI_T[L].length} Runden: ${HI_T[L].map(hiName).join(' · ')} · je 3 Darts · Treffer werden addiert, Runde ohne Treffer halbiert den Stand · Ziel: ${HI_GOAL[L]}+ Punkte`,
+    describe: L => `${HI_T[L].length} rounds: ${HI_T[L].map(hiName).join(' · ')} · 3 darts each · hits are added, a round without a hit halves your score · goal: ${HI_GOAL[L]}+ points`,
     opts: () => '',
     start: s => ({ mode: 'hi', level: s.level, t: HI_T[s.level].slice(), r: [], date: now() }),
     view(S, c) {
       const st = hiState(S), t = S.t[st.round];
-      let h = `<div class="card">` + top(c, 'Halve-It', S.level, `Runde ${st.round + 1} / ${S.t.length}`) + bar(st.round, S.t.length);
+      let h = `<div class="card">` + top(c, 'Halve-It', S.level, `Round ${st.round + 1} / ${S.t.length}`) + bar(st.round, S.t.length);
       h += `<div class="target${String(hiName(t)).length > 4 ? ' sm' : ''}">${hiName(t)}</div><div class="tcap">3 Darts · ${hiCap(t)}</div>`;
-      h += `<div class="tdarts">Stand <b>${st.score}</b>${st.halves ? ' · ' + st.halves + '× halbiert' : ''}</div>`;
+      h += `<div class="tdarts">Score <b>${st.score}</b>${st.halves ? ' · ' + st.halves + '× halved' : ''}</div>`;
       if (S.msg) h += `<div class="msg">${S.msg}</div>`;
-      h += `<div class="disp">${c.input === '' ? '<span class="ph">Punkte auf das Ziel (0 = halbieren)</span>' : c.input}</div><div class="pad">`;
+      h += `<div class="disp">${c.input === '' ? '<span class="ph">Points on target (0 = halve)</span>' : c.input}</div><div class="pad">`;
       [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(k => { h += c.btn('key', k, k); });
       h += c.btn('back', '⌫') + c.btn('key', 0, 0) + c.btn('drHi', 'OK', undefined, 'okk') + `</div>`;
       if (st.round) h += `<div class="chips">${S.r.map((p, i) => `<span class="${p ? 'g' : ''}">${hiName(S.t[i])}: ${p || '½'}</span>`).slice(-10).join('')}</div>`;
@@ -338,7 +338,7 @@ window.DRILLS = (function () {
     act(a, v, S) {
       if (a === 'drHi') {
         const t = S.t[S.r.length], p = v === '' || v === undefined ? NaN : +v;
-        if (isNaN(p) || !hiValid(t, p)) { S.msg = `${isNaN(p) ? 'Bitte Punkte eingeben' : p + ' geht mit 3 Darts auf ' + hiName(t) + ' nicht'}`; return 'keep'; }
+        if (isNaN(p) || !hiValid(t, p)) { S.msg = `${isNaN(p) ? 'Please enter points' : p + ' is not possible with 3 darts on ' + hiName(t)}`; return 'keep'; }
         S.msg = ''; S.r.push(p); return S.r.length >= S.t.length ? 'finish' : '';
       }
       if (a === 'undoTask') { S.msg = ''; S.r.pop(); }
@@ -350,13 +350,13 @@ window.DRILLS = (function () {
       return { date: S.date, mode: 'hi', level: S.level, score: st.score, halves: st.halves, n: st.round, rounds: S.t.length, done: st.round >= S.t.length };
     },
     metric: e => ({ main: e.score + ' Pkt', det: `${e.halves}× halbiert · ${e.n}/${e.rounds} Runden` }),
-    summary: e => `<div class="sumgrid"><div><b>${e.score}</b><small>Endstand</small></div><div><b>${e.halves}</b><small>× halbiert</small></div><div><b>${e.n}/${e.rounds}</b><small>Runden</small></div></div>`,
-    series: [{ n: 'Endstand', c: '#ec4899', k: 'score' }],
+    summary: e => `<div class="sumgrid"><div><b>${e.score}</b><small>final score</small></div><div><b>${e.halves}</b><small>× halved</small></div><div><b>${e.n}/${e.rounds}</b><small>rounds</small></div></div>`,
+    series: [{ n: 'Final score', c: '#ec4899', k: 'score' }],
     ov: { val: e => e.score, unit: ' Pkt', bar: v => v / 4 },
     tip(e) {
       const g = HI_GOAL[e.level];
-      if (e.score >= g && !e.halves && e.level < 4) return `Stark! Über ${g} und nie halbiert – probier die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
-      return `Ziel auf dieser Stufe: ${g}+ Punkte${e.halves ? ' und keine Halbierung' : ''}.`;
+      if (e.score >= g && !e.halves && e.level < 4) return `Strong! Over ${g} and never halved – try the next level: <b>${LVN[e.level + 1]}</b>.`;
+      return `Goal at this level: ${g}+ points${e.halves ? ' and no halving' : ''}.`;
     }
   };
 
@@ -373,7 +373,7 @@ window.DRILLS = (function () {
   }
   const CR = {
     name: 'Cricket-Training', short: 'Cricket',
-    describe: L => `20 bis 15 und Bull je ${CR_NEED[L]}× markieren · Single = 1 Marke, Doppel = 2, Triple = 3 · Ziel: alles mit möglichst wenig Darts schließen`
+    describe: L => `Mark 20 to 15 and bull ${CR_NEED[L]}× each · single = 1 mark, double = 2, treble = 3 · goal: close everything with as few darts as possible`
       + (L === 4 ? ' · feste Reihenfolge 20 → Bull' : '') + ` · Richtwert: unter ${CR_GOAL[L]} Darts`,
     opts: () => '',
     start: s => ({ mode: 'cr', level: s.level, d: [], date: now() }),
@@ -381,12 +381,12 @@ window.DRILLS = (function () {
       const st = crState(S), fields = S.level === 4 ? st.open.slice(0, 1) : st.open;
       let h = `<div class="card">` + top(c, 'Cricket-Training', S.level, `Dart ${st.darts + 1}`) + bar(CR_F.length - st.open.length, CR_F.length);
       h += `<div class="crboard">${CR_F.map(f => `<div class="${st.mk[f] >= st.need ? 'cl' : ''}"><b>${lbl(f)}</b><span>${'●'.repeat(st.mk[f])}${'○'.repeat(st.need - st.mk[f])}</span></div>`).join('')}</div>`;
-      h += `<div class="setlabel c">Was hast du getroffen?</div><div class="crgrid">`;
+      h += `<div class="setlabel c">What did you hit?</div><div class="crgrid">`;
       fields.forEach(f => {
         (f === 25 ? [[1, '25'], [2, 'Bull']] : [[1, 'S' + f], [2, 'D' + f], [3, 'T' + f]]).forEach(([m, l]) => { h += c.btn('drCr', l, f + ':' + m, 'okb' + (f === 25 ? ' b' : '')); });
       });
-      h += `</div><button class="big bad" data-a="drCr" data-v="0:0">✕ Daneben / anderes Feld</button>`;
-      h += `<div class="live">Marken <b>${st.marks}</b> · MPR <b>${c.f1(st.darts ? st.marks / st.darts * 3 : 0)}</b></div>`;
+      h += `</div><button class="big bad" data-a="drCr" data-v="0:0">✕ Miss / other field</button>`;
+      h += `<div class="live">Marks <b>${st.marks}</b> · MPR <b>${c.f1(st.darts ? st.marks / st.darts * 3 : 0)}</b></div>`;
       return h + c.footer() + `</div>`;
     },
     act(a, v, S) {
@@ -400,16 +400,16 @@ window.DRILLS = (function () {
       return { date: S.date, mode: 'cr', level: S.level, done: st.done, darts: st.darts, marks: st.marks, mpr: st.darts ? st.marks / st.darts * 3 : 0,
                closed: CR_F.length - st.open.length };
     },
-    metric: (e, c) => ({ main: e.done ? e.darts + ' Darts' : e.closed + '/7 zu', det: `MPR ${c.f1(e.mpr)}${e.done ? '' : ' · abgebrochen'}` }),
-    summary: (e, c) => `<div class="sumgrid"><div><b>${e.done ? e.darts : '–'}</b><small>Darts bis alles zu</small></div><div><b>${c.f1(e.mpr)}</b><small>Marken pro Runde</small></div><div><b>${e.closed}/7</b><small>Felder zu</small></div></div>`,
-    series: [{ n: 'Darts bis alles zu', c: '#ec4899', k: 'darts' }],
+    metric: (e, c) => ({ main: e.done ? e.darts + ' darts' : e.closed + '/7 closed', det: `MPR ${c.f1(e.mpr)}${e.done ? '' : ' · aborted'}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b>${e.done ? e.darts : '–'}</b><small>darts to close all</small></div><div><b>${c.f1(e.mpr)}</b><small>marks per round</small></div><div><b>${e.closed}/7</b><small>fields closed</small></div></div>`,
+    series: [{ n: 'Darts to close all', c: '#ec4899', k: 'darts' }],
     list: h => h.filter(e => e.done),
     ov: { val: e => e.darts, unit: ' Darts', low: true, only: e => e.done, bar: v => Math.max(0, 100 - v) },
     tip(e) {
-      if (!e.done) return 'Nicht alles geschlossen – beim nächsten Mal durchziehen, dann zählt die Darts-Zahl.';
+      if (!e.done) return 'Not everything closed – finish next time, then the dart count counts.';
       const g = CR_GOAL[e.level];
-      if (e.darts <= g && e.level < 4) return `Stark! Unter ${g} Darts – probier die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
-      return `Richtwert auf dieser Stufe: unter ${g} Darts. Gute Spieler schaffen über 2 Marken pro Runde (MPR).`;
+      if (e.darts <= g && e.level < 4) return `Strong! Under ${g} darts – try the next level: <b>${LVN[e.level + 1]}</b>.`;
+      return `Guide value at this level: under ${g} darts. Good players get over 2 marks per round (MPR).`;
     }
   };
 

@@ -2,8 +2,8 @@
   // ---------- Stats-Seite ----------
   function viewStatsPage() {
     const tab = T.stab || 'over';
-    let h = phead('Meine Stats', 'Alles aus deinen Spielen und Trainings');
-    h += `<div class="segtabs">${btn('stab', 'Übersicht', 'over', '', tab === 'over')}${btn('stab', 'Trefferquote', 'acc', '', tab === 'acc')}${btn('stab', 'Verlauf', 'hist', '', tab === 'hist')}${btn('stab', 'Mehrspieler', 'multi', '', tab === 'multi')}${btn('stab', 'Daten', 'data', '', tab === 'data')}</div>`;
+    let h = phead('My stats', 'Everything from your games and trainings');
+    h += `<div class="segtabs">${btn('stab', 'Overview', 'over', '', tab === 'over')}${btn('stab', 'Accuracy', 'acc', '', tab === 'acc')}${btn('stab', 'History', 'hist', '', tab === 'hist')}${btn('stab', 'Multiplayer', 'multi', '', tab === 'multi')}${btn('stab', 'Data', 'data', '', tab === 'data')}</div>`;
     if (tab === 'over') return h + viewOverview();
     if (tab === 'acc') return h + viewAccuracy();
     if (tab === 'data') return h + viewData();
@@ -14,18 +14,18 @@
   function viewOverview() {
     const G = games(), L = lifetime(G), F = lifetime(G.slice(-5));
     let h = '';
-    if (!G.length) h += `<div class="card empty">Noch keine Spiele. Spiel ein Spiel gegen den Bot – dann siehst du hier deinen Average.</div>`;
+    if (!G.length) h += `<div class="card empty">No games yet. Play a game against the bot – then you will see your average here.</div>`;
     else {
       const diff = F.avg - L.avg;
-      h += `<div class="card bigavg"><small>Dein Average · aus ${G.length} Spiel${G.length > 1 ? 'en' : ''}</small><div class="avgnum">${f1(L.avg)}</div>
-        <div class="form">Form (letzte ${Math.min(5, G.length)}): <b>${f1(F.avg)}</b> <span class="${diff >= 0 ? 'up' : 'down'}">${diff >= 0 ? '▲' : '▼'} ${f1(Math.abs(diff))}</span></div></div>`;
+      h += `<div class="card bigavg"><small>Your average · from ${G.length} game${G.length > 1 ? 's' : ''}</small><div class="avgnum">${f1(L.avg)}</div>
+        <div class="form">Form (last ${Math.min(5, G.length)}): <b>${f1(F.avg)}</b> <span class="${diff >= 0 ? 'up' : 'down'}">${diff >= 0 ? '▲' : '▼'} ${f1(Math.abs(diff))}</span></div></div>`;
       h += `<div class="sumgrid">
-        <div><b>${f1(L.f9)}</b><small>Ø erste 9</small></div><div><b>${f1(L.coPct)} %</b><small>Checkout (${L.coHits}/${L.coAtt})</small></div><div><b>${L.wins}/${L.n}</b><small>Siege</small></div>
-        <div><b>${L.hiCO || '–'}</b><small>Höchstes Finish</small></div><div><b>${L.bestLeg || '–'}</b><small>Bestes Leg (Darts)</small></div><div><b>${L.best}</b><small>Höchste Aufnahme</small></div>
-        <div><b>${L.s100}</b><small>100+</small></div><div><b>${L.s140}</b><small>140+</small></div><div><b>${L.s180}</b><small>180er</small></div></div>`;
+        <div><b>${f1(L.f9)}</b><small>First 9 avg</small></div><div><b>${f1(L.coPct)} %</b><small>Checkout (${L.coHits}/${L.coAtt})</small></div><div><b>${L.wins}/${L.n}</b><small>Wins</small></div>
+        <div><b>${L.hiCO || '–'}</b><small>Highest finish</small></div><div><b>${L.bestLeg || '–'}</b><small>Best leg (darts)</small></div><div><b>${L.best}</b><small>Highest visit</small></div>
+        <div><b>${L.s100}</b><small>100+</small></div><div><b>${L.s140}</b><small>140+</small></div><div><b>${L.s180}</b><small>180s</small></div></div>`;
       let run = 0, rd = 0;
       const list = G.map(e => { if (e.P) { run += e.P.pts; rd += e.P.darts; } return Object.assign({}, e, { run: rd ? run / rd * 3 : e.avg }); });
-      h += `<h2 class="sec">Entwicklung</h2>` + chart(list, [{ n: 'Ø pro Spiel', c: '#ec4899', k: 'avg' }, { n: 'Gesamt-Average', c: '#a1a1aa', k: 'run' }], null, 'Spiel Nr.');
+      h += `<h2 class="sec">Progress</h2>` + chart(list, [{ n: 'Avg per game', c: '#ec4899', k: 'avg' }, { n: 'Overall average', c: '#a1a1aa', k: 'run' }], null, 'game no.');
     }
     // Trainings
     const modes = Object.keys(TM).filter(k => k !== 'game' && T.hist.some(e => e.mode === k));
@@ -39,7 +39,7 @@
         const avg = last5.reduce((a, e) => a + val(e), 0) / last5.length, best = (O && O.low ? Math.min : Math.max)(...l.map(val));
         const u = O ? O.unit : k === 'score' ? '' : ' %';
         const w = O ? O.bar(avg) : k === 'score' ? avg / 1.2 : avg;
-        h += `<div class="trc"><small>${TM[k]}</small><b>${f1(avg)}${u}</b><span>Ø letzte ${last5.length} · Best ${f1(best)}${u} · ${l.length}×${trainTrend(l, val)}</span>${levelHint(k, l)}<i style="width:${Math.max(0, Math.min(100, w))}%"></i></div>`;
+        h += `<div class="trc"><small>${TM[k]}</small><b>${f1(avg)}${u}</b><span>avg last ${last5.length} · best ${f1(best)}${u} · ${l.length}×${trainTrend(l, val)}</span>${levelHint(k, l)}<i style="width:${Math.max(0, Math.min(100, w))}%"></i></div>`;
       });
       h += `</div>`;
     }
@@ -79,33 +79,33 @@
     const rms = Math.sqrt(ds.reduce((a, d) => a + (d.x - mx) ** 2 + (d.y - my) ** 2, 0) / N);
     let txt = [];
     if (n === 25) {
-      if (Math.abs(mx) > 2) txt.push(`${f1(Math.abs(mx))} mm zu weit ${mx < 0 ? 'links' : 'rechts'}`);
-      if (Math.abs(my) > 2) txt.push(`${f1(Math.abs(my))} mm zu ${my < 0 ? 'tief' : 'hoch'}`);
+      if (Math.abs(mx) > 2) txt.push(`${f1(Math.abs(mx))} mm too far ${mx < 0 ? 'left' : 'right'}`);
+      if (Math.abs(my) > 2) txt.push(`${f1(Math.abs(my))} mm too ${my < 0 ? 'low' : 'high'}`);
     } else {
       const i = ORDER.indexOf(n), rt = m === 3 ? 103 : m === 2 ? 166 : 134;
       const rm = Math.hypot(mx, my), cwm = Math.atan2(mx, my) * 180 / Math.PI;
       let da = ((cwm - i * 18 + 540) % 360) - 180; const tang = rm * da * Math.PI / 180;
-      if (m !== 1 && Math.abs(rm - rt) > 2) txt.push(`${f1(Math.abs(rm - rt))} mm zu weit ${rm > rt ? 'außen' : 'innen'}`);
-      if (Math.abs(tang) > 2) txt.push(`${f1(Math.abs(tang))} mm Richtung ${ORDER[(i + (tang > 0 ? 1 : 19)) % 20]}`);
+      if (m !== 1 && Math.abs(rm - rt) > 2) txt.push(`${f1(Math.abs(rm - rt))} mm too far ${rm > rt ? 'out' : 'in'}`);
+      if (Math.abs(tang) > 2) txt.push(`${f1(Math.abs(tang))} mm towards ${ORDER[(i + (tang > 0 ? 1 : 19)) % 20]}`);
     }
-    return { mean: { x: mx.toFixed(1), y: my.toFixed(1), r: Math.max(4, rms).toFixed(1) }, rms, txt: txt.length ? txt.join(', ') : 'sehr zentral – kaum Abweichung' };
+    return { mean: { x: mx.toFixed(1), y: my.toFixed(1), r: Math.max(4, rms).toFixed(1) }, rms, txt: txt.length ? txt.join(', ') : 'very central – hardly any deviation' };
   }
 
   function viewAccuracy() {
     const D = allDots().filter(d => d.aim);
-    if (!D.length) return `<div class="card empty">Noch keine Pfeil-Daten. Spiel ein Spiel gegen den Bot und tipp deine Treffer auf der Scheibe an – dann siehst du hier, wo du hinwirfst.</div>`;
+    if (!D.length) return `<div class="card empty">No dart data yet. Play a game against the bot and tap your hits on the board – then you will see where your darts land.</div>`;
     const cnt = {}; D.forEach(d => { cnt[d.aim] = (cnt[d.aim] || 0) + 1; });
     const targets = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
     const sel = T.tgt === '__all' ? '__all' : (T.tgt && cnt[T.tgt] ? T.tgt : targets[0]);
     const rate = t => D.filter(d => d.aim === t && d.l === t).length / cnt[t] * 100;
-    let h = `<div class="card"><div class="setlabel">Ziel wählen</div><div class="tchips">${btn('tgt', 'Alle Pfeile', '__all', 'all', sel === '__all')}`;
+    let h = `<div class="card"><div class="setlabel">Choose target</div><div class="tchips">${btn('tgt', 'All darts', '__all', 'all', sel === '__all')}`;
     targets.slice(0, 16).forEach(t => { const r = rate(t); h += btn('tgt', `${disp(t)}<small class="${r >= 40 ? 'gw' : r >= 20 ? 'mid' : 'gl'}">${Math.round(r)} %</small>`, t, '', sel === t); });
     h += `</div>`;
     if (sel === '__all') {
       const dots = D.map(d => ({ x: d.x, y: d.y, c: '#facc15', o: .55, r: 3.5, s: '#000', sw: .4 }));
-      h += `<div class="boardwrap">${boardSVG({ dots })}</div><div class="live">${D.length} Pfeile – jeder Punkt ist ein Wurf, den du eingetragen hast.</div>`;
+      h += `<div class="boardwrap">${boardSVG({ dots })}</div><div class="live">${D.length} darts – each dot is a throw you entered.</div>`;
       const lc = {}; D.forEach(d => { lc[d.l] = (lc[d.l] || 0) + 1; });
-      h += fieldTable(lc, D.length, 'Wo du am meisten hintriffst') + `</div>`;
+      h += fieldTable(lc, D.length, 'Where you hit most') + `</div>`;
       return h + targetList(targets, cnt, rate);
     }
     const ds = D.filter(d => d.aim === sel), N = ds.length, { n } = parseLab(sel);
@@ -114,15 +114,15 @@
     const tdc = tendency(ds, sel);
     const dots = ds.map(d => ({ x: d.x, y: d.y, c: d.l === sel ? '#22c55e' : (d.l !== 'Miss' && parseLab(d.l).n === n) ? '#facc15' : '#ef4444', o: .85, r: 4, s: '#000', sw: .5 }));
     h += `<div class="boardwrap">${boardSVG({ dots, mean: tdc.mean, extra: targetShape(sel) })}</div>`;
-    h += `<div class="legend2"><span style="--c:#22c55e">${disp(sel)} getroffen</span><span style="--c:#facc15">richtige Zahl</span><span style="--c:#ef4444">daneben</span></div>`;
-    h += `<div class="sumgrid"><div><b>${N}</b><small>Würfe auf ${disp(sel)}</small></div><div><b class="${hits / N >= .4 ? 'gw' : hits / N >= .2 ? '' : 'gl'}">${f1(hits / N * 100)} %</b><small>Trefferquote</small></div><div><b>${f1(num / N * 100)} %</b><small>richtige Zahl</small></div></div>`;
+    h += `<div class="legend2"><span style="--c:#22c55e">${disp(sel)} hit</span><span style="--c:#facc15">right number</span><span style="--c:#ef4444">miss</span></div>`;
+    h += `<div class="sumgrid"><div><b>${N}</b><small>darts at ${disp(sel)}</small></div><div><b class="${hits / N >= .4 ? 'gw' : hits / N >= .2 ? '' : 'gl'}">${f1(hits / N * 100)} %</b><small>hit rate</small></div><div><b>${f1(num / N * 100)} %</b><small>right number</small></div></div>`;
     const miss = {}; ds.filter(d => d.l !== sel).forEach(d => { miss[d.l] = (miss[d.l] || 0) + 1; });
     const topMiss = Object.entries(miss).sort((a, b) => b[1] - a[1])[0];
-    let tip = `<b>Tendenz:</b> ${tdc.txt}. Streuung ${f1(tdc.rms)} mm.`;
-    if (topMiss) tip += `<br><b>Häufigster Fehlwurf:</b> ${disp(topMiss[0])} (${f1(topMiss[1] / N * 100)} %).`;
-    if (sel[0] === 'D' && hits / N < .25 && N >= 5) tip += `<br>👉 Auf ${disp(sel)} liegst du unter 25 %. Übe ihn gezielt im Doppel-Training.`;
+    let tip = `<b>Tendency:</b> ${tdc.txt}. Spread ${f1(tdc.rms)} mm.`;
+    if (topMiss) tip += `<br><b>Most common miss:</b> ${disp(topMiss[0])} (${f1(topMiss[1] / N * 100)} %).`;
+    if (sel[0] === 'D' && hits / N < .25 && N >= 5) tip += `<br>👉 You are under 25 % on ${disp(sel)}. Practise it in doubles training.`;
     h += `<div class="hint">${tip}</div>`;
-    h += fieldTable(miss, N, 'Wohin deine Fehlwürfe gehen') + `</div>`;
+    h += fieldTable(miss, N, 'Where your misses go') + `</div>`;
     return h + targetList(targets, cnt, rate);
   }
   function fieldTable(c, N, title) {
@@ -131,23 +131,23 @@
     return `<div class="setlabel">${title}</div><div class="bars">${top.map(([l, k]) => `<div class="br"><span>${disp(l)}</span><i><em style="width:${k / N * 100}%"></em></i><b>${f1(k / N * 100)} %</b></div>`).join('')}</div>`;
   }
   function targetList(targets, cnt, rate) {
-    let h = `<h2 class="sec">Alle Ziele</h2><div class="card"><div class="bars">`;
+    let h = `<h2 class="sec">All targets</h2><div class="card"><div class="bars">`;
     targets.forEach(t => { const r = rate(t); h += `<div class="br clk" data-a="tgt" data-v="${t}"><span>${disp(t)}</span><i><em class="${r >= 40 ? 'g' : r >= 20 ? 'y' : 'r'}" style="width:${r}%"></em></i><b>${Math.round(r)} %</b><small>${cnt[t]}×</small></div>`; });
-    return h + `</div><div class="boardhint">Ziel = dein Checkout-Weg, sonst T20. Treffer = genau dieses Feld.</div></div>`;
+    return h + `</div><div class="boardhint">Target = your checkout route, otherwise T20. Hit = exactly this field.</div></div>`;
   }
 
   function viewHistory() {
-    let h = `<div class="chipsel">${btn('filter', 'Alle', 'all', '', T.filter === 'all')}`;
+    let h = `<div class="chipsel">${btn('filter', 'All', 'all', '', T.filter === 'all')}`;
     Object.entries(TM).forEach(([k, v]) => { h += btn('filter', v, k, '', T.filter === k); });
     h += `</div>`;
     const list = T.hist.map((e, i) => Object.assign({ i }, e)).filter(e => T.filter === 'all' || e.mode === T.filter);
-    if (!list.length) return h + `<div class="card empty">Noch keine Einträge${T.filter !== 'all' ? ' für ' + TM[T.filter] : ''}.</div>`;
+    if (!list.length) return h + `<div class="card empty">No entries yet${T.filter !== 'all' ? ' for ' + TM[T.filter] : ''}.</div>`;
     if (T.filter !== 'all') { const cl = DR[T.filter] && DR[T.filter].list ? DR[T.filter].list(list) : list; if (cl.length) h += chart(cl); }
-    if (T.filter === 'game') h += `<div class="boardhint">Tippe auf ein Spiel für die komplette Statistik</div>`;
-    h += `<div class="card tablecard"><table><tr><th>Datum</th><th>Modus</th><th>Stufe</th><th>Ergebnis</th><th></th></tr>`;
+    if (T.filter === 'game') h += `<div class="boardhint">Tap a game for the full stats</div>`;
+    h += `<div class="card tablecard"><table><tr><th>Date</th><th>Mode</th><th>Level</th><th>Result</th><th></th></tr>`;
     list.slice().reverse().forEach(e => {
       const d = new Date(e.date), m = metric(e);
-      const ds = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + '<br><small>' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + '</small>';
+      const ds = d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) + '<br><small>' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + '</small>';
       const ex = e.mode === 'game' && e.P;
       h += `<tr${ex ? ` data-a="exp" data-v="${e.i}" class="clk"` : ''}><td>${ds}</td><td>${TM[e.mode]}${ex ? ' ▾' : ''}</td><td>${e.level + 1}</td><td><b class="${e.mode === 'game' ? (e.won ? 'gw' : 'gl') : 'gw'}">${m.main}</b><br><small>${m.det}</small></td><td>${btn('del', '×', e.i, 'del')}</td></tr>`;
       if (ex && T.exp === e.i) h += `<tr><td colspan="5">${cmpTable(e.P, e.B)}</td></tr>`;

@@ -20,16 +20,16 @@
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
       document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     }
-    T.dataMsg = { ok: true, t: 'Sicherung erstellt: ' + name };
+    T.dataMsg = { ok: true, t: 'Backup created: ' + name };
   }
 
   function importData(text) {
     let d;
     try { d = JSON.parse(text); } catch (e) { d = null; }
     if (!d || d.app !== 'darts-scorer' || typeof d.dartsTrainer !== 'string') {
-      T.dataMsg = { ok: false, t: 'Das ist keine gültige Darts-Scorer-Sicherung.' }; render(); return;
+      T.dataMsg = { ok: false, t: 'This is not a valid Darts Scorer backup.' }; render(); return;
     }
-    try { JSON.parse(d.dartsTrainer); } catch (e) { T.dataMsg = { ok: false, t: 'Sicherung ist beschädigt.' }; render(); return; }
+    try { JSON.parse(d.dartsTrainer); } catch (e) { T.dataMsg = { ok: false, t: 'Backup is damaged.' }; render(); return; }
     dataKeys().forEach(k => { if (typeof d[k] === 'string') localStorage.setItem(k, d[k]); else localStorage.removeItem(k); });
     // Alte Sicherung ohne Wurf-Datenbank: Sessions werden nach dem Neuladen aus den Einträgen neu angelegt
     TS.restore(d.statsDb && Array.isArray(d.statsDb.sessions) ? d.statsDb : null).then(() => location.reload());
@@ -43,15 +43,15 @@
   function viewData() {
     const G = games().length, Tr = T.hist.length - G, xn = x01Hist().length;
     const wn = TS.sessions().reduce((a, s) => a + TS.throws(s.id).length, 0);
-    let h = `<div class="card datacard"><div class="setlabel">Sicherung</div>
-      <p>Deine Daten liegen nur auf diesem Gerät (im Browser). Sichere sie ab und zu – vor allem, bevor du den Browser-Verlauf löschst oder das Handy wechselst.<br>Aktuell gespeichert: <b>${G}</b> Spiel${G === 1 ? '' : 'e'} und <b>${Tr}</b> Training${Tr === 1 ? '' : 's'}${xn ? `, <b>${xn}</b> Mehrspieler-Spiel${xn === 1 ? '' : 'e'}` : ''} · <b>${wn.toLocaleString('de-DE')}</b> einzelne Würfe.</p>
-      ${btn('export', '⤓ Sicherung exportieren', undefined, 'big go')}
-      ${btn('importPick', '⤒ Sicherung importieren', undefined, 'big ghost')}
+    let h = `<div class="card datacard"><div class="setlabel">Backup</div>
+      <p>Your data is stored only on this device (in the browser). Back it up now and then – especially before clearing your browser history or switching phones.<br>Currently saved: <b>${G}</b> game${G === 1 ? '' : 's'} and <b>${Tr}</b> training${Tr === 1 ? '' : 's'}${xn ? `, <b>${xn}</b> multiplayer game${xn === 1 ? '' : 's'}` : ''} · <b>${wn.toLocaleString('en-GB')}</b> single darts.</p>
+      ${btn('export', '⤓ Export backup', undefined, 'big go')}
+      ${btn('importPick', '⤒ Import backup', undefined, 'big ghost')}
       <div class="datamsg${T.dataMsg && !T.dataMsg.ok ? ' err' : ''}">${T.dataMsg ? T.dataMsg.t : ''}</div></div>`;
-    h += `<div class="card datacard"><div class="setlabel">Zurücksetzen</div><p>Löscht alle Spiele, Trainings, Einstellungen und den Zähler auf diesem Gerät.</p>`;
+    h += `<div class="card datacard"><div class="setlabel">Reset</div><p>Deletes all games, trainings, settings and the counter on this device.</p>`;
     h += T.confirm === 'wipe'
-      ? `<div class="confirmbox"><p>Wirklich alles löschen? Das lässt sich nicht rückgängig machen.</p><div class="row2">${btn('no', 'Abbrechen', undefined, 'mid')}${btn('wipeYes', 'Alles löschen', undefined, 'mid redb')}</div></div>`
-      : btn('wipe', 'Alle Daten löschen', undefined, 'big danger');
+      ? `<div class="confirmbox"><p>Really delete everything? This cannot be undone.</p><div class="row2">${btn('no', 'Cancel', undefined, 'mid')}${btn('wipeYes', 'Delete everything', undefined, 'mid redb')}</div></div>`
+      : btn('wipe', 'Delete all data', undefined, 'big danger');
     h += `</div><div class="appver">Darts-Scorer · Version ${window.APP_VERSION || 'dev'}</div>`;
     return h;
   }

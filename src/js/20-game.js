@@ -43,7 +43,7 @@
     const g = T.game, P = g.p, V = g.visit;
     const score = bust ? 0 : V.start - P.rem;
     g.vis.p.push({ leg: g.legNo, score, n: V.darts.length, bust, co: checked ? V.start : 0 });
-    g.last.p = visitText(V.darts) + (bust ? ' → Überworfen' : (g.din && !P.in) ? ' → nicht drin' : ' = ' + score) + (checked ? ' ✓' : '');
+    g.last.p = visitText(V.darts) + (bust ? ' → bust' : (g.din && !P.in) ? ' → not in' : ' = ' + score) + (checked ? ' ✓' : '');
     g.lastVisit = V.darts; g.visit = null;
     callVisit('p', score, bust, checked);
     if (!checked) endPlayerTurn();
@@ -62,10 +62,10 @@
       if (T.game !== g || g.botPending !== r) return;
       const d = r.darts[i];
       g.bLast.push({ x: d.x, y: d.y });
-      let txt = d.l === 'Miss' ? 'Daneben (0)' : (d.m === 1 && d.n < 25 ? 'S' + d.n : d.l) + ' = ' + d.v;
-      if (!g.bShowIn) { if (d.m === 2) g.bShowIn = true; else txt += ' · nicht drin'; }
+      let txt = d.l === 'Miss' ? 'Miss (0)' : (d.m === 1 && d.n < 25 ? 'S' + d.n : d.l) + ' = ' + d.v;
+      if (!g.bShowIn) { if (d.m === 2) g.bShowIn = true; else txt += ' · not in'; }
       if (g.bShowIn && !(r.bust && i === r.darts.length - 1)) g.bShowRem -= (g.bShowIn ? d.v : 0);
-      if (r.bust && i === r.darts.length - 1) txt += ' → Überworfen!';
+      if (r.bust && i === r.darts.length - 1) txt += ' → bust!';
       if (r.checked && i === r.darts.length - 1) { g.bShowRem = 0; txt += ' → Checkout! ✓'; }
       g.botPop = { i: i + 1, txt };
       render(); animateBot(g, r, i + 1);
@@ -83,7 +83,7 @@
       (g.tl = g.tl || []).push(mkThrow({ who: 1, leg: g.legNo, visit: vn, dart: i + 1, n: d.n, m: d.m, pts: d.v, x: d.x, y: d.y, rem: d.rb, dbl: d.att ? 1 : null, flag }));
     });
     g.vis.b.push({ leg: g.legNo, score: scored, n: r.darts.length, bust: !!r.bust, co: r.checked ? g.b.rem : 0 });
-    g.last.b = visitText(r.darts) + (r.bust ? ' → Überworfen' : (g.din && !r.isIn) ? ' → nicht drin' : ' = ' + scored) + (r.checked ? ' ✓' : '');
+    g.last.b = visitText(r.darts) + (r.bust ? ' → bust' : (g.din && !r.isIn) ? ' → not in' : ' = ' + scored) + (r.checked ? ' ✓' : '');
     g.bLast = r.darts.map(d => ({ x: d.x, y: d.y }));
     g.b.rem = r.rem; g.b.in = r.isIn; g.busy = false; g.botPending = null; g.botPop = null;
     T.zoom = null;
@@ -100,7 +100,7 @@
       g.phase = 'over';
       const P = pstats(g, 'p'), B = pstats(g, 'b'), sid = 'g_' + g.date, list = g.tl || [];
       TS.put({ id: sid, v: STATS_V, kind: 'game', mode: 'x01bot', level: g.bot,
-        players: [{ name: 'Du', me: true }, { name: 'Bot ' + BOT[g.bot].n, bot: g.bot }],
+        players: [{ name: 'You', me: true }, { name: 'Bot ' + BOT[g.bot].n, bot: g.bot }],
         cfg: { start: g.start, din: g.din, out: 'double', legsTo: g.legsTo, setsTo: g.setsTo }, startedAt: g.date, endedAt: nowIso(),
         result: { winner: w === 'p' ? 0 : 1, legs: [g.legTot.p, g.legTot.b], sets: [g.sets.p, g.sets.b] }, totals: totalsFrom(list, 2) }, list);
       T.hist.push({ sid, date: g.date, mode: 'game', level: g.bot, won: w === 'p', lp: g.legTot.p, lb: g.legTot.b, sp: g.sets.p, sb: g.sets.b, setsTo: g.setsTo, avg: P.avg, botAvg: B.avg,

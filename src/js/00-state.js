@@ -1,11 +1,11 @@
 // Konstanten, Zustand (T), Speichern, Hilfsfunktionen
   const KEY = 'dartsTrainer';
-  const LV = ['Beginner', 'Leicht', 'Mittel', 'Fortgeschritten', 'Hart'];
+  const LV = ['Beginner', 'Easy', 'Medium', 'Advanced', 'Hard'];
   const BOT = [
-    { n: 'Beginner', a: 25, s: 38 }, { n: 'Leicht', a: 40, s: 23 }, { n: 'Mittel', a: 55, s: 15.5 },
-    { n: 'Fortgeschritten', a: 70, s: 11.5 }, { n: 'Profi', a: 90, s: 8 }
+    { n: 'Beginner', a: 25, s: 38 }, { n: 'Easy', a: 40, s: 23 }, { n: 'Medium', a: 55, s: 15.5 },
+    { n: 'Advanced', a: 70, s: 11.5 }, { n: 'Pro', a: 90, s: 8 }
   ];
-  const TM = { hit: 'Treffen', single: 'Single', double: 'Doppel', triple: 'Triple', checkout: 'Checkouts', score: 'Punkte', game: 'Spiel vs. Bot' };
+  const TM = { hit: 'Hitting', single: 'Singles', double: 'Doubles', triple: 'Trebles', checkout: 'Checkouts', score: 'Scoring', game: 'Game vs. bot' };
   const IMPOSSIBLE = [163, 166, 169, 172, 173, 175, 176, 178, 179];
   const R20 = Array.from({ length: 20 }, (_, i) => i + 1);
   const FAV_D = [20, 16, 10, 8], TOP_D = [20, 16, 18, 12, 10, 8, 4];
@@ -25,7 +25,7 @@
     home: '<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>'
   };
   const LOGO = '<svg viewBox="-20 -20 40 40"><circle r="18.5" fill="#ec4899"/><circle r="13" fill="none" stroke="#fff" stroke-width="2"/><circle r="7" fill="none" stroke="#fff" stroke-width="2"/><circle r="2.4" fill="#fff"/></svg>';
-  const BLOCKNAME = { A: 'Zahlen treffen', S: 'Single', T: 'Triple', D: 'Doppel', B: 'Bull' };
+  const BLOCKNAME = { A: 'Hit numbers', S: 'Singles', T: 'Trebles', D: 'Doubles', B: 'Bull' };
 
   let T = { set: { mode: 'hit', level: 0, tasks: 10, bot: 2, start: 501, din: false, legs: 1 },
             sess: null, game: null, hist: [], filter: 'all', input: '', summary: null, confirm: null, showRoute: false, route: 'home', stab: 'over', tgt: null };
@@ -42,7 +42,7 @@
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(T)); } catch (e) {} };
 
   const el = document.getElementById('viewTrainer');
-  const f1 = x => (isFinite(x) ? x : 0).toLocaleString('de-DE', { maximumFractionDigits: 1 });
+  const f1 = x => (isFinite(x) ? x : 0).toLocaleString('en-GB', { maximumFractionDigits: 1 });
   const rnd = a => a[Math.floor(Math.random() * a.length)];
   const pickSeq = (pool, count) => { const out = []; let prev = null; for (let i = 0; i < count; i++) { let c, g = 0; do { c = rnd(pool); } while (pool.length > 1 && c === prev && g++ < 20); out.push(c); prev = c; } return out; };
 

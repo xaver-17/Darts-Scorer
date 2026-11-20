@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -125,91 +125,91 @@
 </head>
 <body>
 <div class="app">
-  <div class="label">Gesamt <span class="modebadge" id="modebadge">Normal</span></div>
+  <div class="label">Total <span class="modebadge" id="modebadge">Normal</span></div>
   <div class="total" id="total">0</div>
-  <div class="sub" id="sub">0 Eingaben</div>
+  <div class="sub" id="sub">0 entries</div>
 
   <div class="choices" id="choices"></div>
   <div class="lockhint" id="lockhint"></div>
   <button class="add" id="add">+1</button>
 
-  <h2 class="fh">Felder · <span class="done-count" id="doneCount">0</span> / <span id="activeCount">22</span> abgeschlossen</h2>
+  <h2 class="fh">Fields · <span class="done-count" id="doneCount">0</span> / <span id="activeCount">22</span> done</h2>
   <div class="tapmode">
-    <button id="tapHit" class="active">🎯 Treffen</button>
+    <button id="tapHit" class="active">🎯 Hit</button>
     <button id="tapExtra" class="extra">+ Extra</button>
-    <button id="tapLock" class="lock">✕ Sperren</button>
+    <button id="tapLock" class="lock">✕ Block</button>
   </div>
   <div class="numbers" id="numbers"></div>
   <div class="row">
-    <button id="undo">↶ Rückgängig</button>
-    <button id="reset">Runde zurücksetzen</button>
+    <button id="undo">↶ Undo</button>
+    <button id="reset">Reset round</button>
   </div>
   <div class="confirm" id="confirm">
-    <p>Aktuelle Runde (Summe, Felder, Sperren) zurücksetzen?</p>
+    <p>Reset the current round (total, fields, blocks)?</p>
     <div class="row" style="margin-top:0">
-      <button id="no">Abbrechen</button>
-      <button class="yes" id="yes">Ja, zurücksetzen</button>
+      <button id="no">Cancel</button>
+      <button class="yes" id="yes">Yes, reset</button>
     </div>
   </div>
   <div class="banner" id="banner"></div>
   <div class="log" id="log"></div>
 
   <details id="settings">
-    <summary>⚙️ Einstellungen</summary>
+    <summary>⚙️ Settings</summary>
     <div class="setbody">
-      <div class="setlabel">Wurfart</div>
+      <div class="setlabel">Throw type</div>
       <div class="seg" id="modeSeg"></div>
 
-      <div class="setlabel">Treffer pro Zahl (1–20)</div>
+      <div class="setlabel">Hits per number (1–20)</div>
       <div class="seg" id="needSeg"></div>
 
       <div class="two">
-        <div><div class="setlabel">25 treffen</div><div class="seg" data-field="25"></div></div>
-        <div><div class="setlabel">50 treffen</div><div class="seg" data-field="50"></div></div>
+        <div><div class="setlabel">Hit 25</div><div class="seg" data-field="25"></div></div>
+        <div><div class="setlabel">Hit 50</div><div class="seg" data-field="50"></div></div>
       </div>
 
-      <div class="setlabel">Zahlen im Spiel</div>
+      <div class="setlabel">Numbers in play</div>
       <div class="pick" id="pick"></div>
       <div class="presets">
-        <button data-p="all">Alle</button>
-        <button data-p="none">Keine</button>
+        <button data-p="all">All</button>
+        <button data-p="none">None</button>
         <button data-p="1-20">1–20</button>
         <button data-p="15-20">15–20 + Bull</button>
-        <button data-p="bull">Nur Bull</button>
+        <button data-p="bull">Bull only</button>
       </div>
-      <div class="hint">Gilt dauerhaft. Zum Sperren nur für eine Runde oben „✕ Sperren“ nutzen.</div>
+      <div class="hint">Applies permanently. To block a number for one round only, use "✕ Block" above.</div>
     </div>
   </details>
 
-  <h2>Ergebnisse</h2>
+  <h2>Results</h2>
   <div class="filter" id="filter"></div>
   <div id="results"></div>
-  <div class="row" id="clearRow" style="display:none"><button id="clearAll">Tabelle leeren</button></div>
+  <div class="row" id="clearRow" style="display:none"><button id="clearAll">Clear table</button></div>
   <div class="confirm" id="confirm2">
-    <p>Alle Ergebnisse löschen?</p>
+    <p>Delete all results?</p>
     <div class="row" style="margin-top:0">
-      <button id="no2">Abbrechen</button>
-      <button class="yes" id="yes2">Ja, löschen</button>
+      <button id="no2">Cancel</button>
+      <button class="yes" id="yes2">Yes, delete</button>
     </div>
   </div>
 
-  <h2>Extra-Treffer</h2>
+  <h2>Extra hits</h2>
   <div class="chartbox" style="padding:12px 14px">
     <div id="extras"></div>
-    <div class="chartnote">Zahlen, die du geworfen hast, obwohl sie schon abgeschlossen waren</div>
+    <div class="chartnote">Numbers you hit even though they were already done</div>
   </div>
 
-  <h2>Verlauf</h2>
+  <h2>Progress</h2>
   <div class="chartbox">
-    <div class="legend"><span style="--c:#60a5fa">Gesamtzahl</span><span style="--c:#4ade80">Geteilte Zahl</span></div>
+    <div class="legend"><span style="--c:#60a5fa">Total</span><span style="--c:#4ade80">Divided</span></div>
     <div id="chart"></div>
-    <div class="chartnote">Je höher die Linie, desto niedriger die Zahl</div>
+    <div class="chartnote">The higher the line, the lower the number</div>
   </div>
 </div>
 
 <script>
   const FIELDS = [...Array.from({ length: 20 }, (_, i) => i + 1), 25, 50];
-  const MODES = { N: 'Normal', D: 'Doppel', T: 'Triple' };
+  const MODES = { N: 'Normal', D: 'Double', T: 'Treble' };
   let step = 1, history = [], need = { 25: 3, 50: 3, n: 3 }, results = [];
   let mode = 'N', inPlay = [...FIELDS], locked = [], tap = 'hit', filter = 'all';
   try {
@@ -228,7 +228,7 @@
   const req = k => (k === 25 || k === 50) ? need[k] : (need.n || 3);
   const extrasOf = k => history.filter(h => h.t === 'extra' && h.k === k).length;
   const hits = k => Math.min(req(k), history.filter(h => h.t === 'hit' && h.k === k).length);
-  const fmt = x => x.toLocaleString('de-DE', { maximumFractionDigits: 2 });
+  const fmt = x => x.toLocaleString('en-GB', { maximumFractionDigits: 2 });
   const adds = () => history.filter(h => h.t === 'add');
   const stepLocked = () => adds().length > 0;
   const active = () => FIELDS.filter(k => inPlay.includes(k) && !locked.includes(k));
@@ -296,7 +296,7 @@
   });
 
   // Ergebnis-Filter
-  [['all', 'Alle'], ['N', 'Normal'], ['D', 'Doppel'], ['T', 'Triple']].forEach(([k, v]) => {
+  [['all', 'All'], ['N', 'Normal'], ['D', 'Double'], ['T', 'Treble']].forEach(([k, v]) => {
     const b = document.createElement('button');
     b.textContent = v; b.dataset.f = k;
     b.onclick = () => { filter = k; render(); };
@@ -327,7 +327,7 @@
     results.push({ date: new Date().toISOString(), total, count: a.length, div, result, mode,
                    fields: act, n25: need[25], n50: need[50], need: need.n, extras });
     history = []; locked = []; tap = 'hit';
-    showBanner('Abgeschlossen (' + MODES[mode] + ', ' + act.length + ' Felder)! ' + total + ' ÷ ' + div + ' = ' + fmt(result));
+    showBanner('Done (' + MODES[mode] + ', ' + act.length + ' fields)! ' + total + ' ÷ ' + div + ' = ' + fmt(result));
     render();
   }
   function showBanner(t) { $('banner').textContent = t; $('banner').classList.add('show'); }
@@ -342,18 +342,18 @@
   function renderResults() {
     const box = $('results'), list = shown();
     $('clearRow').style.display = results.length ? 'flex' : 'none';
-    if (!list.length) { box.innerHTML = '<div class="empty">' + (results.length ? 'Keine Runden mit dieser Wurfart.' : 'Noch keine abgeschlossenen Runden.') + '</div>'; return; }
-    let html = '<table><tr><th>#</th><th>Datum</th><th>Art</th><th>Summe</th><th>÷</th><th>Ergebnis</th><th></th></tr>';
+    if (!list.length) { box.innerHTML = '<div class="empty">' + (results.length ? 'No rounds with this throw type.' : 'No completed rounds yet.') + '</div>'; return; }
+    let html = '<table><tr><th>#</th><th>Date</th><th>Type</th><th>Total</th><th>÷</th><th>Result</th><th></th></tr>';
     list.forEach(r => {
       const d = new Date(r.date);
-      const ds = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      const ds = d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
       const md = r.mode ? MODES[r.mode] : '–';
       const fl = r.fields ? ' · ' + r.fields.length + 'F' : '';
       html += `<tr><td>${r.nr}</td><td>${ds}</td><td class="md">${md}${fl}</td><td class="tot">${r.total}</td><td>${r.div}</td><td class="res">${fmt(r.result)}</td><td><button class="del" data-i="${r.idx}">×</button></td></tr>`;
     });
     html += '</table>';
-    html += '<div class="avg">Durchschnitt: Gesamt <b>' + fmt(list.reduce((s, r) => s + r.total, 0) / list.length) +
-            '</b> · Geteilt <b>' + fmt(list.reduce((s, r) => s + r.result, 0) / list.length) + '</b></div>';
+    html += '<div class="avg">Average: total <b>' + fmt(list.reduce((s, r) => s + r.total, 0) / list.length) +
+            '</b> · divided <b>' + fmt(list.reduce((s, r) => s + r.result, 0) / list.length) + '</b></div>';
     box.innerHTML = html;
     box.querySelectorAll('.del').forEach(b => b.onclick = () => { results.splice(+b.dataset.i, 1); render(); });
   }
@@ -364,10 +364,10 @@
     shown().forEach(r => Object.entries(r.extras || {}).forEach(([k, n]) => { c[k] = (c[k] || 0) + n; }));
     history.filter(h => h.t === 'extra').forEach(h => { c[h.k] = (c[h.k] || 0) + 1; });
     const list = Object.entries(c).sort((a, b) => b[1] - a[1]);
-    if (!list.length) { $('extras').innerHTML = '<div class="empty" style="padding:4px 0">Noch keine Extra-Treffer markiert. Im Zähler „+ Extra“ wählen und eine fertige Zahl antippen.</div>'; return; }
+    if (!list.length) { $('extras').innerHTML = '<div class="empty" style="padding:4px 0">No extra hits marked yet. Choose "+ Extra" and tap a finished number.</div>'; return; }
     const max = list[0][1], tot = list.reduce((s, x) => s + x[1], 0);
     $('extras').innerHTML = '<div class="xlist">' + list.slice(0, 10).map(([k, n]) => `<div class="xrow"><span>${k}</span><span class="xbar"><i style="width:${n / max * 100}%"></i></span><b>${n}</b></div>`).join('') + '</div>'
-      + `<div class="avg">Gesamt <b>${tot}</b> Extra-Treffer</div>`;
+      + `<div class="avg">Total <b>${tot}</b> extra hits</div>`;
   }
 
   function niceMax(v) {
@@ -379,7 +379,7 @@
 
   function renderChart() {
     const box = $('chart'), list = shown();
-    if (!list.length) { box.innerHTML = '<div class="empty">Der Graph erscheint nach der ersten Runde.</div>'; return; }
+    if (!list.length) { box.innerHTML = '<div class="empty">The chart appears after the first round.</div>'; return; }
     const W = 400, H = 240, L = 36, R = 14, T = 14, B = 26;
     const pw = W - L - R, ph = H - T - B;
     const max = niceMax(Math.max(...list.map(r => Math.max(r.total, r.result))));
@@ -402,7 +402,7 @@
       const pts = list.map((r, i) => `${x(i).toFixed(1)},${y(r[key]).toFixed(1)}`).join(' ');
       let out = n > 1 ? `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>` : '';
       list.forEach((r, i) => {
-        out += `<circle cx="${x(i)}" cy="${y(r[key])}" r="4" fill="${color}" stroke="#1e293b" stroke-width="2"><title>Runde ${r.nr}: ${fmt(r[key])}</title></circle>`;
+        out += `<circle cx="${x(i)}" cy="${y(r[key])}" r="4" fill="${color}" stroke="#1e293b" stroke-width="2"><title>Round ${r.nr}: ${fmt(r[key])}</title></circle>`;
       });
       return out;
     };
@@ -414,12 +414,12 @@
   function render() {
     const a = adds();
     $('total').textContent = a.reduce((s, h) => s + h.n, 0);
-    $('sub').textContent = a.length + (a.length === 1 ? ' Eingabe' : ' Eingaben');
+    $('sub').textContent = a.length + (a.length === 1 ? ' entry' : ' entries');
     $('add').textContent = '+' + step;
     $('modebadge').textContent = MODES[mode];
     const lk = stepLocked();
     [...choices.children].forEach((b, i) => { b.classList.toggle('active', i + 1 === step); b.disabled = lk && i + 1 !== step; });
-    $('lockhint').textContent = lk ? 'Zahl für diese Runde festgelegt: ÷ ' + step : '';
+    $('lockhint').textContent = lk ? 'Number fixed for this round: ÷ ' + step : '';
 
     $('tapHit').classList.toggle('active', tap === 'hit');
     $('tapLock').classList.toggle('active', tap === 'lock');
@@ -441,7 +441,7 @@
       b.onclick = () => tapField(k);
       numbers.appendChild(b);
     });
-    if (!shownFields.length) numbers.innerHTML = '<div class="empty" style="grid-column:1/-1">Keine Zahlen im Spiel – in den Einstellungen auswählen.</div>';
+    if (!shownFields.length) numbers.innerHTML = '<div class="empty" style="grid-column:1/-1">No numbers in play – choose them in the settings.</div>';
     $('doneCount').textContent = done;
     $('activeCount').textContent = active().length;
 
@@ -453,7 +453,7 @@
     document.querySelectorAll('#pick button').forEach(b => b.classList.toggle('on', inPlay.includes(+b.dataset.k)));
     document.querySelectorAll('#filter button').forEach(b => b.classList.toggle('active', b.dataset.f === filter));
 
-    $('log').textContent = a.length ? 'Verlauf: ' + a.slice(-15).map(h => '+' + h.n).join(' ') : '';
+    $('log').textContent = a.length ? 'Log: ' + a.slice(-15).map(h => '+' + h.n).join(' ') : '';
     renderResults();
     renderExtras();
     renderChart();

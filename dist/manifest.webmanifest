@@ -1,7 +1,7 @@
 {
   "name": "Darts-Scorer",
   "short_name": "Darts",
-  "description": "X01 gegen den Bot, Training und Statistiken",
+  "description": "X01 vs the bot, training and stats",
   "lang": "de",
   "start_url": "./",
   "scope": "./",

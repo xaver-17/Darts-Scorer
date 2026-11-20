@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Darts-Scorer</title>
 <meta name="theme-color" content="#0a0a0c">
-<meta name="description" content="Darts-Scorer: X01 gegen den Bot, Training und Statistiken">
+<meta name="description" content="Darts Scorer: X01 vs the bot, training and stats">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Darts">
@@ -749,7 +749,7 @@ window.DRILLS = (function () {
       if (L === 4) return [[2, 'Bull 50']];
       return [[1, '25'], [2, 'Bull 50']];
     }
-    if (L <= 1) return [[1, 'Single'], [2, 'Doppel'], [3, 'Triple']];
+    if (L <= 1) return [[1, 'Single'], [2, 'Double'], [3, 'Treble']];
     if (L === 3) return [[3, 'T' + n]];
     return [[2, 'D' + n]];
   }
@@ -764,24 +764,24 @@ window.DRILLS = (function () {
   }
   const ATC = {
     name: 'Around the Clock', short: 'ATC',
-    describe: L => ['1 bis 20, dann Bull · jeder Ring zählt',
-      '1 bis 20, dann Bull · jeder Ring zählt · Sprung: Doppel = 2 Felder weiter, Triple = 3',
-      '1 bis 20, dann Bull · nur Doppel zählen · Bull: 25 oder 50',
-      '1 bis 20, dann Bull · nur Triple zählen · Bull: 25 oder 50',
-      '1 bis 20, dann Bull · nur Doppel zählen · Bull nur als Bullseye (50)'][L] + ' · Ziel: so wenige Darts wie möglich',
+    describe: L => ['1 to 20, then bull · every ring counts',
+      '1 to 20, then bull · every ring counts · jump: double = 2 fields ahead, treble = 3',
+      '1 to 20, then bull · only doubles count · bull: 25 or 50',
+      '1 to 20, then bull · only trebles count · bull: 25 or 50',
+      '1 to 20, then bull · only doubles count · bull only as bullseye (50)'][L] + ' · goal: as few darts as possible',
     opts: () => '',
     start: s => ({ mode: 'atc', level: s.level, d: [], date: now() }),
     view(S, c) {
       const st = atcState(S), n = ATC_T[st.idx];
-      let h = `<div class="card">` + top(c, 'Around the Clock', S.level, `Feld ${st.idx + 1} / 21`) + bar(st.idx, 21);
-      const sub = n === 25 ? (S.level === 4 ? 'Bullseye (50) treffen' : 'Bull treffen (25 oder 50)')
+      let h = `<div class="card">` + top(c, 'Around the Clock', S.level, `Field ${st.idx + 1} / 21`) + bar(st.idx, 21);
+      const sub = n === 25 ? (S.level === 4 ? 'Hit the bullseye (50)' : 'Hit the bull (25 or 50)')
         : S.level <= 1 ? `Die ${n} treffen – egal welcher Ring` : S.level === 3 ? `Triple ${n} treffen` : `Doppel ${n} treffen`;
       h += `<div class="target">${n === 25 ? 'Bull' : (S.level === 3 ? 'T' : S.level >= 2 ? 'D' : '') + n}</div><div class="tcap">${sub}</div>`;
-      h += `<div class="tdarts">Dart ${st.darts + 1} · ${st.per[st.idx]} auf dieses Feld</div>`;
-      h += `<div class="setlabel c">Was hast du getroffen?</div><div class="okgrid">`;
+      h += `<div class="tdarts">Dart ${st.darts + 1} · ${st.per[st.idx]} on this field</div>`;
+      h += `<div class="setlabel c">What did you hit?</div><div class="okgrid">`;
       atcButtons(S.level, n).forEach(([m, l]) => { h += c.btn('drHit', l, m, 'okb'); });
-      h += `</div><button class="big bad" data-a="drHit" data-v="0">✕ Daneben</button>`;
-      h += `<div class="live">Darts <b>${st.darts}</b> · Trefferquote <b>${c.f1(pct(st.hits, st.darts))} %</b></div>`;
+      h += `</div><button class="big bad" data-a="drHit" data-v="0">✕ Miss</button>`;
+      h += `<div class="live">Darts <b>${st.darts}</b> · hit rate <b>${c.f1(pct(st.hits, st.darts))} %</b></div>`;
       return h + c.footer() + `</div>`;
     },
     act(a, v, S) {
@@ -796,18 +796,18 @@ window.DRILLS = (function () {
       return { date: S.date, mode: 'atc', level: S.level, done: st.done, reached: Math.min(st.idx, 21), darts: st.darts, hits: st.hits,
                hitPct: pct(st.hits, st.darts), worst };
     },
-    metric: (e, c) => ({ main: e.done ? e.darts + ' Darts' : 'bis ' + (e.reached ? lbl(ATC_T[e.reached - 1]) : '–'),
-                         det: `${c.f1(e.hitPct)} % Treffer${e.done ? '' : ' · abgebrochen'}${e.worst && e.worst.length ? ' · zäh: ' + e.worst.map(w => lbl(w[0])).join(', ') : ''}` }),
-    summary: (e, c) => `<div class="sumgrid"><div><b>${e.done ? e.darts : '–'}</b><small>Darts bis Bull</small></div><div><b>${c.f1(e.hitPct)} %</b><small>Trefferquote</small></div><div><b>${e.reached}/21</b><small>Felder geschafft</small></div></div>`
-      + (e.worst.length ? `<div class="hint">Am meisten Darts gekostet: ${e.worst.map(w => `<b>${lbl(w[0])}</b> (${w[1]})`).join(', ')}</div>` : ''),
-    series: [{ n: 'Darts bis Bull', c: '#ec4899', k: 'darts' }, { n: 'Trefferquote %', c: '#a1a1aa', k: 'hitPct' }],
+    metric: (e, c) => ({ main: e.done ? e.darts + ' darts' : 'to ' + (e.reached ? lbl(ATC_T[e.reached - 1]) : '–'),
+                         det: `${c.f1(e.hitPct)} % hits${e.done ? '' : ' · aborted'}${e.worst && e.worst.length ? ' · tough: ' + e.worst.map(w => lbl(w[0])).join(', ') : ''}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b>${e.done ? e.darts : '–'}</b><small>darts to bull</small></div><div><b>${c.f1(e.hitPct)} %</b><small>hit rate</small></div><div><b>${e.reached}/21</b><small>fields done</small></div></div>`
+      + (e.worst.length ? `<div class="hint">Cost the most darts: ${e.worst.map(w => `<b>${lbl(w[0])}</b> (${w[1]})`).join(', ')}</div>` : ''),
+    series: [{ n: 'Darts to bull', c: '#ec4899', k: 'darts' }, { n: 'Hit rate %', c: '#a1a1aa', k: 'hitPct' }],
     list: h => h.filter(e => e.done),
     ov: { val: e => e.darts, unit: ' Darts', low: true, only: e => e.done, bar: v => Math.max(0, 100 - (v - 21) / 1.2) },
     tip(e) {
-      if (!e.done) return 'Nicht bis zum Bull gekommen – beim nächsten Mal durchziehen, dann zählt die Darts-Zahl.';
+      if (!e.done) return 'Did not reach the bull – finish next time, then the dart count counts.';
       const goal = [60, 50, 70, 80, 70][e.level];
-      if (e.darts <= goal && e.level < 4) return `Stark! Unter ${goal} Darts – probier die nächste Stufe.`;
-      return `Ziel auf dieser Stufe: unter ${goal} Darts bis zum Bull.`;
+      if (e.darts <= goal && e.level < 4) return `Strong! Under ${goal} darts – try the next level.`;
+      return `Goal at this level: under ${goal} darts to the bull.`;
     }
   };
 
@@ -822,18 +822,18 @@ window.DRILLS = (function () {
   }
   const BOB = {
     name: "Bob's 27", short: "Bob's 27",
-    describe: L => `Start mit 27 Punkten · 21 Runden D1 bis D20, dann Bull · 3 Darts pro Doppel · Treffer = + Wert des Doppels, keine Treffer = − Wert · `
-      + (L < 2 ? 'du spielst immer bis zum Ende' : 'bei 0 oder weniger ist Schluss') + (BOB_GOAL[L] ? ` · Ziel: ${BOB_GOAL[L]}+ Punkte` : ''),
+    describe: L => `Start with 27 points · 21 rounds D1 to D20, then bull · 3 darts per double · hit = + value of the double, no hit = − value · `
+      + (L < 2 ? 'you always play to the end' : 'at 0 or less the game ends') + (BOB_GOAL[L] ? ` · goal: ${BOB_GOAL[L]}+ points` : ''),
     opts: () => '',
     start: s => ({ mode: 'bob', level: s.level, r: [], date: now() }),
     view(S, c) {
       const st = bobState(S), n = BOB_T[st.round];
-      let h = `<div class="card">` + top(c, "Bob's 27", S.level, `Runde ${st.round + 1} / 21`) + bar(st.round, 21);
-      h += `<div class="target">${dl(n)}</div><div class="tcap">3 Darts · Treffer +${dv(n)}, keiner −${dv(n)}</div>`;
-      h += `<div class="tdarts">Stand <b class="${st.score > 0 ? 'gw' : 'gl'}">${st.score}</b></div>`;
-      h += `<div class="setlabel c">Wie oft getroffen?</div><div class="okgrid">`;
+      let h = `<div class="card">` + top(c, "Bob's 27", S.level, `Round ${st.round + 1} / 21`) + bar(st.round, 21);
+      h += `<div class="target">${dl(n)}</div><div class="tcap">3 darts · hit +${dv(n)}, none −${dv(n)}</div>`;
+      h += `<div class="tdarts">Score <b class="${st.score > 0 ? 'gw' : 'gl'}">${st.score}</b></div>`;
+      h += `<div class="setlabel c">How many hits?</div><div class="okgrid">`;
       for (let k = 0; k <= 3; k++) h += c.btn('drBob', k === 0 ? '0' : '✓ ' + k, k, k === 0 ? 'okb zero' : 'okb');
-      h += `</div><div class="live">Doppelquote <b>${c.f1(pct(st.hits, st.round * 3))} %</b></div>`;
+      h += `</div><div class="live">Doubles rate <b>${c.f1(pct(st.hits, st.round * 3))} %</b></div>`;
       if (S.r.length) h += `<div class="chips">${S.r.map((k, i) => `<span class="${k ? 'g' : ''}">${dl(BOB_T[i])}: ${k}</span>`).slice(-10).join('')}</div>`;
       return h + c.footer() + `</div>`;
     },
@@ -848,25 +848,25 @@ window.DRILLS = (function () {
       return { date: S.date, mode: 'bob', level: S.level, score: st.score, round: st.round, out: st.out, done: st.done,
                hits: st.hits, darts: st.round * 3, hitPct: pct(st.hits, st.round * 3) };
     },
-    metric: (e, c) => ({ main: e.score + ' Pkt', det: `${c.f1(e.hitPct)} % Doppel · ${e.out ? 'raus in Runde ' + e.round : e.done ? 'alle 21 Runden' : 'abgebrochen nach ' + e.round}` }),
-    summary: (e, c) => `<div class="sumgrid"><div><b class="${e.score > 0 ? '' : 'gl'}">${e.score}</b><small>Endpunktzahl</small></div><div><b>${c.f1(e.hitPct)} %</b><small>Doppelquote</small></div><div><b>${e.round}/21</b><small>Runden</small></div></div>`,
-    series: [{ n: 'Punkte', c: '#ec4899', k: 'score' }],
+    metric: (e, c) => ({ main: e.score + ' pts', det: `${c.f1(e.hitPct)} % doubles · ${e.out ? 'out in round ' + e.round : e.done ? 'all 21 rounds' : 'aborted after ' + e.round}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b class="${e.score > 0 ? '' : 'gl'}">${e.score}</b><small>final score</small></div><div><b>${c.f1(e.hitPct)} %</b><small>doubles rate</small></div><div><b>${e.round}/21</b><small>rounds</small></div></div>`,
+    series: [{ n: 'Points', c: '#ec4899', k: 'score' }],
     ov: { val: e => e.score, unit: ' Pkt', bar: v => Math.max(0, v / 7) },
     tip(e) {
       const g = BOB_GOAL[e.level], ng = BOB_GOAL[Math.min(4, e.level + 1)];
-      if (e.level < 4 && e.score >= Math.max(ng, 100)) return `Stark! ${e.score} Punkte reichen für die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
-      return g ? `Ziel auf dieser Stufe: ${g}+ Punkte.` : 'Spiel alle 21 Runden durch und schau, welche Doppel dir Punkte kosten.';
+      if (e.level < 4 && e.score >= Math.max(ng, 100)) return `Strong! ${e.score} points are enough for the next level: <b>${LVN[e.level + 1]}</b>.`;
+      return g ? `Goal at this level: ${g}+ points.` : 'Play all 21 rounds and see which doubles cost you points.';
     }
   };
-  const LVN = ['Beginner', 'Leicht', 'Mittel', 'Fortgeschritten', 'Hart'];
+  const LVN = ['Beginner', 'Easy', 'Medium', 'Advanced', 'Hard'];
 
   // ---------- Doppel-Runde ----------
   const DR_POOL = L => L === 0 ? TOP_D : L === 1 ? COMMON_D : [...R20, 25];
   const DR_GOAL = [20, 25, 30, 35, 40];
   const DR = {
-    name: 'Doppel-Runde', short: 'Doppel-Runde',
-    describe: (L, cnt, s) => `${L === 0 ? 'Top-Doppel (D20, D16, D18, D12, D10, D8, D4)' : L === 1 ? '10 gängige Doppel' : 'alle Doppel D1–D20 + Bull'} · je 3 Darts · ${s.drOrder === 'rnd' ? 'zufällige' : 'feste'} Reihenfolge · Ziel: ${DR_GOAL[L]} % Doppelquote`,
-    opts: (s, c) => `<div class="setlabel">Reihenfolge</div><div class="seg">${c.btn('drOrder', 'Der Reihe nach', 'seq', '', s.drOrder !== 'rnd')}${c.btn('drOrder', 'Zufällig', 'rnd', '', s.drOrder === 'rnd')}</div>`,
+    name: 'Doubles Round', short: 'Doubles Round',
+    describe: (L, cnt, s) => `${L === 0 ? 'top doubles (D20, D16, D18, D12, D10, D8, D4)' : L === 1 ? '10 common doubles' : 'all doubles D1–D20 + bull'} · 3 darts each · ${s.drOrder === 'rnd' ? 'random' : 'fixed'} order · goal: ${DR_GOAL[L]} % doubles rate`,
+    opts: (s, c) => `<div class="setlabel">Order</div><div class="seg">${c.btn('drOrder', 'In order', 'seq', '', s.drOrder !== 'rnd')}${c.btn('drOrder', 'Random', 'rnd', '', s.drOrder === 'rnd')}</div>`,
     start(s) {
       const p = DR_POOL(s.level).slice();
       const t = s.drOrder === 'rnd' ? shuffle(p) : p.sort((a, b) => a - b);
@@ -874,11 +874,11 @@ window.DRILLS = (function () {
     },
     view(S, c) {
       const i = S.r.length, n = S.t[i], hits = S.r.reduce((a, b) => a + b, 0);
-      let h = `<div class="card">` + top(c, 'Doppel-Runde', S.level, `Doppel ${i + 1} / ${S.t.length}`) + bar(i, S.t.length);
-      h += `<div class="target">${dl(n)}</div><div class="tcap">${n === 25 ? 'Bullseye (50)' : 'Doppel ' + n} · 3 Darts</div>`;
-      h += `<div class="setlabel c">Wie oft getroffen?</div><div class="okgrid">`;
+      let h = `<div class="card">` + top(c, 'Doubles Round', S.level, `Double ${i + 1} / ${S.t.length}`) + bar(i, S.t.length);
+      h += `<div class="target">${dl(n)}</div><div class="tcap">${n === 25 ? 'Bullseye (50)' : 'Double ' + n} · 3 darts</div>`;
+      h += `<div class="setlabel c">How many hits?</div><div class="okgrid">`;
       for (let k = 0; k <= 3; k++) h += c.btn('drDR', k === 0 ? '0' : '✓ ' + k, k, k === 0 ? 'okb zero' : 'okb');
-      h += `</div><div class="live">Doppelquote <b>${c.f1(pct(hits, i * 3))} %</b> · ${hits} Treffer</div>`;
+      h += `</div><div class="live">Doubles rate <b>${c.f1(pct(hits, i * 3))} %</b> · ${hits} hits</div>`;
       if (i) h += `<div class="chips">${S.r.map((k, j) => `<span class="${k ? 'g' : ''}">${dl(S.t[j])}: ${k}</span>`).slice(-10).join('')}</div>`;
       return h + c.footer() + `</div>`;
     },
@@ -893,14 +893,14 @@ window.DRILLS = (function () {
       const hits = S.r.reduce((a, b) => a + b, 0);
       return { date: S.date, mode: 'dr', level: S.level, f, n: S.r.length, hits, darts: S.r.length * 3, hitPct: pct(hits, S.r.length * 3) };
     },
-    metric: (e, c) => ({ main: c.f1(e.hitPct) + ' %', det: `${e.hits} Treffer · ${e.n} Doppel` }),
+    metric: (e, c) => ({ main: c.f1(e.hitPct) + ' %', det: `${e.hits} hits · ${e.n} doubles` }),
     summary(e, c) {
       const fs = Object.entries(e.f).map(([n, k]) => [+n, k]);
       const best = fs.filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 3), miss = fs.filter(x => x[1] === 0).map(x => dl(x[0]));
-      return `<div class="sumgrid"><div><b>${c.f1(e.hitPct)} %</b><small>Doppelquote</small></div><div><b>${e.hits}</b><small>Treffer</small></div><div><b>${e.darts}</b><small>Darts</small></div></div>`
-        + `<div class="hint">${best.length ? 'Beste: ' + best.map(x => `<b>${dl(x[0])}</b> (${x[1]}/3)`).join(', ') + '. ' : ''}${miss.length ? 'Ohne Treffer: ' + miss.join(', ') + '.' : 'Jedes Doppel mindestens einmal getroffen!'}</div>`;
+      return `<div class="sumgrid"><div><b>${c.f1(e.hitPct)} %</b><small>doubles rate</small></div><div><b>${e.hits}</b><small>hits</small></div><div><b>${e.darts}</b><small>Darts</small></div></div>`
+        + `<div class="hint">${best.length ? 'Best: ' + best.map(x => `<b>${dl(x[0])}</b> (${x[1]}/3)`).join(', ') + '. ' : ''}${miss.length ? 'No hits: ' + miss.join(', ') + '.' : 'Hit every double at least once!'}</div>`;
     },
-    series: [{ n: 'Doppelquote %', c: '#ec4899', k: 'hitPct' }], max: 100,
+    series: [{ n: 'Doubles rate %', c: '#ec4899', k: 'hitPct' }], max: 100,
     ov: { val: e => e.hitPct, unit: ' %', bar: v => v },
     // Doppelquote pro Feld über alle Doppel-Runden
     extra(hist, c) {
@@ -908,15 +908,15 @@ window.DRILLS = (function () {
       const rows = Object.entries(agg).map(([n, [h, d]]) => [+n, pct(h, d), d]);
       if (!rows.length) return '';
       rows.sort((a, b) => b[1] - a[1] || a[0] - b[0]);
-      let h = `<h2 class="sec">Doppelquote pro Feld</h2><div class="card"><div class="bars">`;
+      let h = `<h2 class="sec">Doubles rate per field</h2><div class="card"><div class="bars">`;
       rows.forEach(([n, r, d]) => { h += `<div class="br"><span>${dl(n)}</span><i><em class="${r >= 40 ? 'g' : r >= 20 ? 'y' : 'r'}" style="width:${r}%"></em></i><b>${Math.round(r)} %</b><small>${d}</small></div>`; });
       const best = rows[0], worst = rows[rows.length - 1];
-      return h + `</div><div class="boardhint">Aus allen Doppel-Runden · Bestes: ${dl(best[0])} · Schwächstes: ${dl(worst[0])}</div></div>`;
+      return h + `</div><div class="boardhint">From all doubles rounds · best: ${dl(best[0])} · weakest: ${dl(worst[0])}</div></div>`;
     },
     tip(e) {
       const g = DR_GOAL[e.level];
-      if (e.hitPct >= g && e.level < 4) return `Stark! Über ${g} % – probier die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
-      return `Ziel auf dieser Stufe: ${g} % Doppelquote.`;
+      if (e.hitPct >= g && e.level < 4) return `Strong! Over ${g} % – try the next level: <b>${LVN[e.level + 1]}</b>.`;
+      return `Goal at this level: ${g} % doubles rate.`;
     }
   };
 
@@ -928,20 +928,20 @@ window.DRILLS = (function () {
     return { cur, high, ok, dsum, n: S.r.length };
   };
   const LAD = {
-    name: 'Checkout-Leiter', short: 'Leiter',
-    describe: (L, cnt) => `${cnt} Runden · Start bei ${LAD_START[L]} · 9 Darts (3 Aufnahmen) pro Checkout · geschafft = Ziel +1, nicht geschafft = −1 (nie unter ${LAD_START[L]}) · Double-Out · Weg wird ${L < 3 ? 'angezeigt' : 'nur auf Wunsch angezeigt'}`,
-    opts: (s, c) => `<div class="setlabel">Runden</div><div class="seg">${[10, 20, 30].map(n => c.btn('tasks', n, n, '', s.tasks === n)).join('')}</div>`,
+    name: 'Checkout Ladder', short: 'Ladder',
+    describe: (L, cnt) => `${cnt} rounds · start at ${LAD_START[L]} · 9 darts (3 visits) per checkout · done = target +1, missed = −1 (never below ${LAD_START[L]}) · Double-Out · route ${L < 3 ? 'shown' : 'shown on request only'}`,
+    opts: (s, c) => `<div class="setlabel">Rounds</div><div class="seg">${[10, 20, 30].map(n => c.btn('tasks', n, n, '', s.tasks === n)).join('')}</div>`,
     start: s => ({ mode: 'lad', level: s.level, start: LAD_START[s.level], n: s.tasks, r: [], date: now() }),
     view(S, c) {
       const st = ladState(S), rt = routeText(route(st.cur));
-      let h = `<div class="card">` + top(c, 'Checkout-Leiter', S.level, `Runde ${st.n + 1} / ${S.n}`) + bar(st.n, S.n);
-      h += `<div class="target">${st.cur}</div><div class="tcap">Checkout ${st.cur} (Double-Out) · 9 Darts</div>`;
-      if (rt) h += (S.level < 3 || c.showRoute) ? `<div class="route">Weg: ${rt}</div>` : `<button class="link" data-a="route">Weg anzeigen</button>`;
-      else h += `<div class="route">Kein 3-Dart-Finish – erst stellen</div>`;
-      h += `<div class="setlabel c">Geschafft mit Dart …</div><div class="okgrid">`;
+      let h = `<div class="card">` + top(c, 'Checkout Ladder', S.level, `Round ${st.n + 1} / ${S.n}`) + bar(st.n, S.n);
+      h += `<div class="target">${st.cur}</div><div class="tcap">Checkout ${st.cur} (Double-Out) · 9 darts</div>`;
+      if (rt) h += (S.level < 3 || c.showRoute) ? `<div class="route">Route: ${rt}</div>` : `<button class="link" data-a="route">Show route</button>`;
+      else h += `<div class="route">No 3-dart finish – set it up first</div>`;
+      h += `<div class="setlabel c">Done with dart …</div><div class="okgrid">`;
       for (let i = 1; i <= 9; i++) h += c.btn('drLad', `✓ ${i}`, i, 'okb');
       h += `</div><button class="big bad" data-a="drLad" data-v="0">✕ Nicht in 9 Darts geschafft</button>`;
-      h += `<div class="live">Geschafft <b>${st.ok}/${st.n}</b> · Höchstes Finish <b>${st.high || '–'}</b></div>`;
+      h += `<div class="live">Done <b>${st.ok}/${st.n}</b> · highest finish <b>${st.high || '–'}</b></div>`;
       return h + c.footer() + `</div>`;
     },
     act(a, v, S) {
@@ -955,13 +955,13 @@ window.DRILLS = (function () {
       return { date: S.date, mode: 'lad', level: S.level, start: S.start, n: st.n, ok: st.ok, high: st.high, end: st.cur,
                rate: pct(st.ok, st.n), dpc: st.ok ? st.dsum / st.ok : 0 };
     },
-    metric: (e, c) => ({ main: e.high ? 'bis ' + e.high : '–', det: `${e.ok}/${e.n} · ${c.f1(e.rate)} % · ${e.ok ? c.f1(e.dpc) + ' Darts/Finish' : 'kein Finish'}` }),
-    summary: (e, c) => `<div class="sumgrid"><div><b>${e.high || '–'}</b><small>Höchstes Finish</small></div><div><b>${c.f1(e.rate)} %</b><small>Erfolgsquote</small></div><div><b>${e.ok ? c.f1(e.dpc) : '–'}</b><small>Darts pro Checkout</small></div></div>`,
-    series: [{ n: 'Höchstes Finish', c: '#ec4899', k: 'high' }, { n: 'Erfolgsquote %', c: '#a1a1aa', k: 'rate' }],
+    metric: (e, c) => ({ main: e.high ? 'to ' + e.high : '–', det: `${e.ok}/${e.n} · ${c.f1(e.rate)} % · ${e.ok ? c.f1(e.dpc) + ' darts/finish' : 'no finish'}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b>${e.high || '–'}</b><small>highest finish</small></div><div><b>${c.f1(e.rate)} %</b><small>success rate</small></div><div><b>${e.ok ? c.f1(e.dpc) : '–'}</b><small>darts per checkout</small></div></div>`,
+    series: [{ n: 'Highest finish', c: '#ec4899', k: 'high' }, { n: 'Success rate %', c: '#a1a1aa', k: 'rate' }],
     ov: { val: e => e.high, unit: '', bar: v => (v - 40) / 1.3 },
     tip(e) {
-      if (e.rate >= 60 && e.level < 4) return `Stark! ${Math.round(e.rate)} % – auf <b>${LVN[e.level + 1]}</b> startest du bei ${LAD_START[e.level + 1]}.`;
-      return 'Ab 60 % Erfolgsquote lohnt sich die nächste Stufe.';
+      if (e.rate >= 60 && e.level < 4) return `Strong! ${Math.round(e.rate)} % – on <b>${LVN[e.level + 1]}</b> you start at ${LAD_START[e.level + 1]}.`;
+      return 'From a 60 % success rate the next level is worth it.';
     }
   };
 
@@ -982,19 +982,19 @@ window.DRILLS = (function () {
   }
   const SH = {
     name: 'Shanghai', short: 'Shanghai',
-    describe: L => `${['Zahlen 1–7', 'Zahlen 1–10', 'Zahlen 1–20', 'Zahlen 1–20 + Bull', 'Zahlen 1–20 + Bull'][L]} · je Runde 3 Darts auf die Zahl · Single 1×, Doppel 2×, Triple 3× · Single + Doppel + Triple in einer Runde = Shanghai (+100)`
-      + (L === 4 ? ' · Runde ohne Treffer = Schluss' : '') + ` · Ziel: ${SH_GOAL[L]}+ Punkte`,
+    describe: L => `${['numbers 1–7', 'numbers 1–10', 'numbers 1–20', 'numbers 1–20 + bull', 'numbers 1–20 + bull'][L]} · 3 darts at the number each round · single 1×, double 2×, treble 3× · single + double + treble in one round = Shanghai (+100)`
+      + (L === 4 ? ' · round without a hit = game over' : '') + ` · goal: ${SH_GOAL[L]}+ points`,
     opts: () => '',
     start: s => ({ mode: 'sh', level: s.level, d: [], date: now() }),
     view(S, c) {
       const st = shState(S), n = st.t[st.round], k = S.d.length % 3, cur = S.d.slice(st.round * 3);
-      let h = `<div class="card">` + top(c, 'Shanghai', S.level, `Runde ${st.round + 1} / ${st.t.length}`) + bar(st.round, st.t.length);
-      h += `<div class="target">${lbl(n)}</div><div class="tcap">Dart ${k + 1} von 3 · ${n === 25 ? 'Bull: 25 oder 50' : 'Single, Doppel und Triple = Shanghai'}</div>`;
-      h += `<div class="tdarts">Stand <b>${st.score}</b>${cur.length ? ' · diese Runde: ' + cur.map(m => m ? dlabel(n, m) : '–').join(' ') : ''}</div>`;
-      h += `<div class="setlabel c">Was hast du getroffen?</div><div class="okgrid">`;
+      let h = `<div class="card">` + top(c, 'Shanghai', S.level, `Round ${st.round + 1} / ${st.t.length}`) + bar(st.round, st.t.length);
+      h += `<div class="target">${lbl(n)}</div><div class="tcap">Dart ${k + 1} of 3 · ${n === 25 ? 'bull: 25 or 50' : 'single, double and treble = Shanghai'}</div>`;
+      h += `<div class="tdarts">Score <b>${st.score}</b>${cur.length ? ' · this round: ' + cur.map(m => m ? dlabel(n, m) : '–').join(' ') : ''}</div>`;
+      h += `<div class="setlabel c">What did you hit?</div><div class="okgrid">`;
       (n === 25 ? [[1, '25'], [2, 'Bull 50']] : [[1, 'S' + n], [2, 'D' + n], [3, 'T' + n]]).forEach(([m, l]) => { h += c.btn('drSh', l, m, 'okb'); });
-      h += `</div><button class="big bad" data-a="drSh" data-v="0">✕ Daneben</button>`;
-      h += `<div class="live">Trefferquote <b>${c.f1(pct(st.hits, st.darts))} %</b> · Shanghais <b>${st.sh}</b></div>`;
+      h += `</div><button class="big bad" data-a="drSh" data-v="0">✕ Miss</button>`;
+      h += `<div class="live">Hit rate <b>${c.f1(pct(st.hits, st.darts))} %</b> · Shanghais <b>${st.sh}</b></div>`;
       if (st.rs.length) h += `<div class="chips">${st.rs.slice(0, st.round).map((p, i) => `<span class="${p ? 'g' : ''}">${lbl(st.t[i])}: ${p}</span>`).slice(-10).join('')}</div>`;
       return h + c.footer() + `</div>`;
     },
@@ -1009,14 +1009,14 @@ window.DRILLS = (function () {
       return { date: S.date, mode: 'sh', level: S.level, score: st.score, sh: st.sh, round: st.round, out: st.out, done: st.done,
                darts: st.darts, hits: st.hits, hitPct: pct(st.hits, st.darts) };
     },
-    metric: (e, c) => ({ main: e.score + ' Pkt', det: `${c.f1(e.hitPct)} % Treffer${e.sh ? ' · ' + e.sh + '× Shanghai' : ''}${e.out ? ' · raus in Runde ' + e.round : e.done ? '' : ' · abgebrochen'}` }),
-    summary: (e, c) => `<div class="sumgrid"><div><b>${e.score}</b><small>Punkte</small></div><div><b>${c.f1(e.hitPct)} %</b><small>Trefferquote</small></div><div><b>${e.sh}</b><small>Shanghais</small></div></div>`,
-    series: [{ n: 'Punkte', c: '#ec4899', k: 'score' }, { n: 'Trefferquote %', c: '#a1a1aa', k: 'hitPct' }],
+    metric: (e, c) => ({ main: e.score + ' pts', det: `${c.f1(e.hitPct)} % hits${e.sh ? ' · ' + e.sh + '× Shanghai' : ''}${e.out ? ' · out in round ' + e.round : e.done ? '' : ' · aborted'}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b>${e.score}</b><small>points</small></div><div><b>${c.f1(e.hitPct)} %</b><small>hit rate</small></div><div><b>${e.sh}</b><small>Shanghais</small></div></div>`,
+    series: [{ n: 'Points', c: '#ec4899', k: 'score' }, { n: 'Hit rate %', c: '#a1a1aa', k: 'hitPct' }],
     ov: { val: e => e.score, unit: ' Pkt', bar: v => v / 4 },
     tip(e) {
       const g = SH_GOAL[e.level];
-      if (e.score >= g && e.level < 4) return `Stark! Über ${g} Punkte – probier die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
-      return `Ziel auf dieser Stufe: ${g}+ Punkte.`;
+      if (e.score >= g && e.level < 4) return `Strong! Over ${g} points – try the next level: <b>${LVN[e.level + 1]}</b>.`;
+      return `Goal at this level: ${g}+ points.`;
     }
   };
 
@@ -1030,8 +1030,8 @@ window.DRILLS = (function () {
     [20, 19, 'D', 18, 'T', 17, 'D16', 'T20', 25]
   ];
   const HI_GOAL = [80, 120, 150, 200, 200];
-  const hiName = t => t === 'D' ? 'Doppel' : t === 'T' ? 'Triple' : t === 25 ? 'Bull' : String(t);
-  const hiCap = t => t === 'D' ? 'beliebiges Doppel' : t === 'T' ? 'beliebiges Triple' : t === 25 ? '25 oder 50' : /^[DT]/.test(t) ? 'nur genau dieses Feld' : 'jeder Ring zählt';
+  const hiName = t => t === 'D' ? 'Double' : t === 'T' ? 'Treble' : t === 25 ? 'Bull' : String(t);
+  const hiCap = t => t === 'D' ? 'any double' : t === 'T' ? 'any treble' : t === 25 ? '25 or 50' : /^[DT]/.test(t) ? 'only exactly this field' : 'every ring counts';
   // Ist die Punktzahl mit 3 Darts auf dieses Ziel möglich?
   function hiValid(t, p) {
     const vals = t === 'D' ? R20.map(n => 2 * n).concat(50) : t === 'T' ? R20.map(n => 3 * n) : t === 25 ? [25, 50]
@@ -1047,16 +1047,16 @@ window.DRILLS = (function () {
   }
   const HI = {
     name: 'Halve-It', short: 'Halve-It',
-    describe: L => `${HI_T[L].length} Runden: ${HI_T[L].map(hiName).join(' · ')} · je 3 Darts · Treffer werden addiert, Runde ohne Treffer halbiert den Stand · Ziel: ${HI_GOAL[L]}+ Punkte`,
+    describe: L => `${HI_T[L].length} rounds: ${HI_T[L].map(hiName).join(' · ')} · 3 darts each · hits are added, a round without a hit halves your score · goal: ${HI_GOAL[L]}+ points`,
     opts: () => '',
     start: s => ({ mode: 'hi', level: s.level, t: HI_T[s.level].slice(), r: [], date: now() }),
     view(S, c) {
       const st = hiState(S), t = S.t[st.round];
-      let h = `<div class="card">` + top(c, 'Halve-It', S.level, `Runde ${st.round + 1} / ${S.t.length}`) + bar(st.round, S.t.length);
+      let h = `<div class="card">` + top(c, 'Halve-It', S.level, `Round ${st.round + 1} / ${S.t.length}`) + bar(st.round, S.t.length);
       h += `<div class="target${String(hiName(t)).length > 4 ? ' sm' : ''}">${hiName(t)}</div><div class="tcap">3 Darts · ${hiCap(t)}</div>`;
-      h += `<div class="tdarts">Stand <b>${st.score}</b>${st.halves ? ' · ' + st.halves + '× halbiert' : ''}</div>`;
+      h += `<div class="tdarts">Score <b>${st.score}</b>${st.halves ? ' · ' + st.halves + '× halved' : ''}</div>`;
       if (S.msg) h += `<div class="msg">${S.msg}</div>`;
-      h += `<div class="disp">${c.input === '' ? '<span class="ph">Punkte auf das Ziel (0 = halbieren)</span>' : c.input}</div><div class="pad">`;
+      h += `<div class="disp">${c.input === '' ? '<span class="ph">Points on target (0 = halve)</span>' : c.input}</div><div class="pad">`;
       [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(k => { h += c.btn('key', k, k); });
       h += c.btn('back', '⌫') + c.btn('key', 0, 0) + c.btn('drHi', 'OK', undefined, 'okk') + `</div>`;
       if (st.round) h += `<div class="chips">${S.r.map((p, i) => `<span class="${p ? 'g' : ''}">${hiName(S.t[i])}: ${p || '½'}</span>`).slice(-10).join('')}</div>`;
@@ -1065,7 +1065,7 @@ window.DRILLS = (function () {
     act(a, v, S) {
       if (a === 'drHi') {
         const t = S.t[S.r.length], p = v === '' || v === undefined ? NaN : +v;
-        if (isNaN(p) || !hiValid(t, p)) { S.msg = `${isNaN(p) ? 'Bitte Punkte eingeben' : p + ' geht mit 3 Darts auf ' + hiName(t) + ' nicht'}`; return 'keep'; }
+        if (isNaN(p) || !hiValid(t, p)) { S.msg = `${isNaN(p) ? 'Please enter points' : p + ' is not possible with 3 darts on ' + hiName(t)}`; return 'keep'; }
         S.msg = ''; S.r.push(p); return S.r.length >= S.t.length ? 'finish' : '';
       }
       if (a === 'undoTask') { S.msg = ''; S.r.pop(); }
@@ -1077,13 +1077,13 @@ window.DRILLS = (function () {
       return { date: S.date, mode: 'hi', level: S.level, score: st.score, halves: st.halves, n: st.round, rounds: S.t.length, done: st.round >= S.t.length };
     },
     metric: e => ({ main: e.score + ' Pkt', det: `${e.halves}× halbiert · ${e.n}/${e.rounds} Runden` }),
-    summary: e => `<div class="sumgrid"><div><b>${e.score}</b><small>Endstand</small></div><div><b>${e.halves}</b><small>× halbiert</small></div><div><b>${e.n}/${e.rounds}</b><small>Runden</small></div></div>`,
-    series: [{ n: 'Endstand', c: '#ec4899', k: 'score' }],
+    summary: e => `<div class="sumgrid"><div><b>${e.score}</b><small>final score</small></div><div><b>${e.halves}</b><small>× halved</small></div><div><b>${e.n}/${e.rounds}</b><small>rounds</small></div></div>`,
+    series: [{ n: 'Final score', c: '#ec4899', k: 'score' }],
     ov: { val: e => e.score, unit: ' Pkt', bar: v => v / 4 },
     tip(e) {
       const g = HI_GOAL[e.level];
-      if (e.score >= g && !e.halves && e.level < 4) return `Stark! Über ${g} und nie halbiert – probier die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
-      return `Ziel auf dieser Stufe: ${g}+ Punkte${e.halves ? ' und keine Halbierung' : ''}.`;
+      if (e.score >= g && !e.halves && e.level < 4) return `Strong! Over ${g} and never halved – try the next level: <b>${LVN[e.level + 1]}</b>.`;
+      return `Goal at this level: ${g}+ points${e.halves ? ' and no halving' : ''}.`;
     }
   };
 
@@ -1100,7 +1100,7 @@ window.DRILLS = (function () {
   }
   const CR = {
     name: 'Cricket-Training', short: 'Cricket',
-    describe: L => `20 bis 15 und Bull je ${CR_NEED[L]}× markieren · Single = 1 Marke, Doppel = 2, Triple = 3 · Ziel: alles mit möglichst wenig Darts schließen`
+    describe: L => `Mark 20 to 15 and bull ${CR_NEED[L]}× each · single = 1 mark, double = 2, treble = 3 · goal: close everything with as few darts as possible`
       + (L === 4 ? ' · feste Reihenfolge 20 → Bull' : '') + ` · Richtwert: unter ${CR_GOAL[L]} Darts`,
     opts: () => '',
     start: s => ({ mode: 'cr', level: s.level, d: [], date: now() }),
@@ -1108,12 +1108,12 @@ window.DRILLS = (function () {
       const st = crState(S), fields = S.level === 4 ? st.open.slice(0, 1) : st.open;
       let h = `<div class="card">` + top(c, 'Cricket-Training', S.level, `Dart ${st.darts + 1}`) + bar(CR_F.length - st.open.length, CR_F.length);
       h += `<div class="crboard">${CR_F.map(f => `<div class="${st.mk[f] >= st.need ? 'cl' : ''}"><b>${lbl(f)}</b><span>${'●'.repeat(st.mk[f])}${'○'.repeat(st.need - st.mk[f])}</span></div>`).join('')}</div>`;
-      h += `<div class="setlabel c">Was hast du getroffen?</div><div class="crgrid">`;
+      h += `<div class="setlabel c">What did you hit?</div><div class="crgrid">`;
       fields.forEach(f => {
         (f === 25 ? [[1, '25'], [2, 'Bull']] : [[1, 'S' + f], [2, 'D' + f], [3, 'T' + f]]).forEach(([m, l]) => { h += c.btn('drCr', l, f + ':' + m, 'okb' + (f === 25 ? ' b' : '')); });
       });
-      h += `</div><button class="big bad" data-a="drCr" data-v="0:0">✕ Daneben / anderes Feld</button>`;
-      h += `<div class="live">Marken <b>${st.marks}</b> · MPR <b>${c.f1(st.darts ? st.marks / st.darts * 3 : 0)}</b></div>`;
+      h += `</div><button class="big bad" data-a="drCr" data-v="0:0">✕ Miss / other field</button>`;
+      h += `<div class="live">Marks <b>${st.marks}</b> · MPR <b>${c.f1(st.darts ? st.marks / st.darts * 3 : 0)}</b></div>`;
       return h + c.footer() + `</div>`;
     },
     act(a, v, S) {
@@ -1127,16 +1127,16 @@ window.DRILLS = (function () {
       return { date: S.date, mode: 'cr', level: S.level, done: st.done, darts: st.darts, marks: st.marks, mpr: st.darts ? st.marks / st.darts * 3 : 0,
                closed: CR_F.length - st.open.length };
     },
-    metric: (e, c) => ({ main: e.done ? e.darts + ' Darts' : e.closed + '/7 zu', det: `MPR ${c.f1(e.mpr)}${e.done ? '' : ' · abgebrochen'}` }),
-    summary: (e, c) => `<div class="sumgrid"><div><b>${e.done ? e.darts : '–'}</b><small>Darts bis alles zu</small></div><div><b>${c.f1(e.mpr)}</b><small>Marken pro Runde</small></div><div><b>${e.closed}/7</b><small>Felder zu</small></div></div>`,
-    series: [{ n: 'Darts bis alles zu', c: '#ec4899', k: 'darts' }],
+    metric: (e, c) => ({ main: e.done ? e.darts + ' darts' : e.closed + '/7 closed', det: `MPR ${c.f1(e.mpr)}${e.done ? '' : ' · aborted'}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b>${e.done ? e.darts : '–'}</b><small>darts to close all</small></div><div><b>${c.f1(e.mpr)}</b><small>marks per round</small></div><div><b>${e.closed}/7</b><small>fields closed</small></div></div>`,
+    series: [{ n: 'Darts to close all', c: '#ec4899', k: 'darts' }],
     list: h => h.filter(e => e.done),
     ov: { val: e => e.darts, unit: ' Darts', low: true, only: e => e.done, bar: v => Math.max(0, 100 - v) },
     tip(e) {
-      if (!e.done) return 'Nicht alles geschlossen – beim nächsten Mal durchziehen, dann zählt die Darts-Zahl.';
+      if (!e.done) return 'Not everything closed – finish next time, then the dart count counts.';
       const g = CR_GOAL[e.level];
-      if (e.darts <= g && e.level < 4) return `Stark! Unter ${g} Darts – probier die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
-      return `Richtwert auf dieser Stufe: unter ${g} Darts. Gute Spieler schaffen über 2 Marken pro Runde (MPR).`;
+      if (e.darts <= g && e.level < 4) return `Strong! Under ${g} darts – try the next level: <b>${LVN[e.level + 1]}</b>.`;
+      return `Guide value at this level: under ${g} darts. Good players get over 2 marks per round (MPR).`;
     }
   };
 
@@ -1152,13 +1152,13 @@ window.DRILLS = (function () {
   const R20 = Array.from({ length: 20 }, (_, i) => i + 1);
   const MAXP = 8, MAXUNDO = 200;
 
-  let X = { set: { start: 501, out: 'double', legs: 1, sets: 1, players: ['Spieler 1', 'Spieler 2'] }, game: null, hist: [], mult: 1, confirm: null };
+  let X = { set: { start: 501, out: 'double', legs: 1, sets: 1, players: ['Player 1', 'Player 2'] }, game: null, hist: [], mult: 1, confirm: null };
   try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) X = Object.assign(X, s, { confirm: null }); } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(X)); } catch (e) {} };
 
   let el = null, opts = {};
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const f1 = x => (isFinite(x) ? x : 0).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const f1 = x => (isFinite(x) ? x : 0).toLocaleString('en-GB', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const btn = (a, label, v, cls = '', on = false) => `<button class="${cls}${on ? ' active' : ''}" data-a="${a}"${v !== undefined ? ` data-v="${v}"` : ''}>${label}</button>`;
 
   // ---------- Spiellogik ----------
@@ -1166,7 +1166,7 @@ window.DRILLS = (function () {
     const s = X.set;
     X.game = {
       start: s.start, out: s.out, legsTo: s.legs, setsTo: s.sets || 1, setNo: 1, legNo: 1, starter: 0, cur: 0, phase: 'play',
-      players: s.players.map(n => ({ name: n.trim() || 'Spieler', rem: s.start, legs: 0, sets: 0, legTot: 0, darts: 0, pts: 0, legDarts: 0, best: 0, s180: 0, hiCO: 0, last: '' })),
+      players: s.players.map(n => ({ name: n.trim() || 'Player', rem: s.start, legs: 0, sets: 0, legTot: 0, darts: 0, pts: 0, legDarts: 0, best: 0, s180: 0, hiCO: 0, last: '' })),
       visit: [], undo: [], msg: '', legWinner: null, date: new Date().toISOString(), tl: []
     };
     X.mult = 1; X.confirm = null;
@@ -1206,8 +1206,8 @@ window.DRILLS = (function () {
     if (isBust(after, d, g.out)) {
       w.flag = 'bust';
       p.darts += g.visit.length; p.legDarts += g.visit.length;
-      p.last = 'Überworfen (' + g.visit.map(x => x.l).join(' ') + ')';
-      g.msg = p.name + ': überworfen, bleibt auf ' + p.rem;
+      p.last = 'Bust (' + g.visit.map(x => x.l).join(' ') + ')';
+      g.msg = p.name + ': bust, stays on ' + p.rem;
       if (window.dartsCall) window.dartsCall(0, true, false);
       nextPlayer(); return;
     }
@@ -1267,7 +1267,7 @@ window.DRILLS = (function () {
       case 'xLegs': s.legs = n; s.legsCustom = false; break;
       case 'xLegsCustom': s.legsCustom = true; if (s.legs <= 5 && s.legs !== 4) s.legs = 7; break;
       case 'xSets': s.sets = n; break;
-      case 'xAdd': if (s.players.length < MAXP) s.players.push('Spieler ' + (s.players.length + 1)); break;
+      case 'xAdd': if (s.players.length < MAXP) s.players.push('Player ' + (s.players.length + 1)); break;
       case 'xDel': if (s.players.length > 1) s.players.splice(n, 1); break;
       case 'xUp': if (n > 0) s.players.splice(n - 1, 0, s.players.splice(n, 1)[0]); break;
       case 'xGo': newGame(); break;
@@ -1292,20 +1292,20 @@ window.DRILLS = (function () {
   // ---------- Ansichten ----------
   function viewSetup() {
     const s = X.set;
-    let h = `<div class="phead"><h1>Spielen</h1><p>Gegen den Bot oder mit mehreren Spielern</p></div>` + (opts.onBack ? `<div class="seg oppseg">${btn('xBack', 'Gegen Bot')}${btn('xNo', 'Mehrspieler', undefined, '', true)}</div>` : '') + `<div class="card">`;
-    h += `<div class="setlabel">Punkte</div><div class="seg">${[301, 501, 701].map(v => btn('xStart', v, v, '', s.start === v)).join('')}</div>`;
+    let h = `<div class="phead"><h1>Play</h1><p>Against the bot or with several players</p></div>` + (opts.onBack ? `<div class="seg oppseg">${btn('xBack', 'vs Bot')}${btn('xNo', 'Multiplayer', undefined, '', true)}</div>` : '') + `<div class="card">`;
+    h += `<div class="setlabel">Points</div><div class="seg">${[301, 501, 701].map(v => btn('xStart', v, v, '', s.start === v)).join('')}</div>`;
     h += `<div class="setlabel">Check-out</div><div class="seg">${btn('xOut', 'Double-Out', 'double', '', s.out === 'double')}${btn('xOut', 'Single-Out', 'single', '', s.out === 'single')}</div>`;
     h += window.legsSetsHTML ? window.legsSetsHTML(s, 'xLegs', 'xLegsCustom', 'xSets', 'xlegs') : `<div class="setlabel">First to … Legs</div><div class="seg">${[1, 2, 3, 5].map(v => btn('xLegs', v, v, '', s.legs === v)).join('')}</div>`;
-    h += `<div class="setlabel">Spieler (Reihenfolge = Wurfreihenfolge)</div><div class="xplist">`;
+    h += `<div class="setlabel">Players (order = throwing order)</div><div class="xplist">`;
     s.players.forEach((p, i) => {
-      h += `<div class="xprow"><span class="xpn">${i + 1}</span><input data-p="${i}" value="${esc(p)}" maxlength="20" aria-label="Name Spieler ${i + 1}">`
+      h += `<div class="xprow"><span class="xpn">${i + 1}</span><input data-p="${i}" value="${esc(p)}" maxlength="20" aria-label="Name player ${i + 1}">`
         + (i > 0 ? btn('xUp', '↑', i, 'xsm') : '<span class="xsm"></span>')
         + (s.players.length > 1 ? btn('xDel', '✕', i, 'xsm') : '') + `</div>`;
     });
     h += `</div>`;
-    if (s.players.length < MAXP) h += btn('xAdd', '+ Spieler hinzufügen', undefined, 'link');
-    h += `<div class="desc">${s.start} · ${s.out === 'double' ? 'Double-Out' : 'Single-Out'} · ${s.players.length} Spieler · ${window.fmtFormat ? window.fmtFormat(s.sets || 1, s.legs) : 'First to ' + s.legs + ' Legs'}. Pfeile werden einzeln eingetragen.</div>`;
-    h += `<button class="big go" data-a="xGo">Spiel starten</button>`;
+    if (s.players.length < MAXP) h += btn('xAdd', '+ Add player', undefined, 'link');
+    h += `<div class="desc">${s.start} · ${s.out === 'double' ? 'Double-Out' : 'Single-Out'} · ${s.players.length} players · ${window.fmtFormat ? window.fmtFormat(s.sets || 1, s.legs) : 'First to ' + s.legs + ' Legs'}. Darts are entered one by one.</div>`;
+    h += `<button class="big go" data-a="xGo">Start game</button>`;
     return h + `</div>`;
   }
 
@@ -1318,7 +1318,7 @@ window.DRILLS = (function () {
       return `<div class="xp${act ? ' act' : ''}${g.legWinner === i ? ' win' : ''}">
         <div class="xpname">${esc(p.name)}${(g.setsTo || 1) > 1 ? ` <small>· Sets ${p.sets || 0}</small>` : ''}${g.legsTo > 1 || (g.setsTo || 1) > 1 ? ` <small>· Legs ${p.legs}</small>` : ''}</div>
         <div class="xprem">${rem}</div>
-        <div class="xpstat">Ø ${f1(avg)} · ${p.legDarts} Darts</div>
+        <div class="xpstat">avg ${f1(avg)} · ${p.legDarts} darts</div>
         <div class="xplast">${esc(p.last) || '&nbsp;'}</div></div>`;
     }).join('')}</div>`;
   }
@@ -1330,29 +1330,29 @@ window.DRILLS = (function () {
     h += scoreboard();
     if (g.phase === 'play') {
       const V = g.visit, m = X.mult || 1, rem = remNow();
-      h += `<div class="xturn"><b>${esc(p.name)}</b> ist dran · Rest ${rem}</div>`;
-      h += `<div class="slots">${[0, 1, 2].map(i => `<div class="${V[i] ? 'f' : ''}">${V[i] ? V[i].l : 'Pfeil ' + (i + 1)}</div>`).join('')}<div class="sum">${visitSum()}</div></div>`;
+      h += `<div class="xturn"><b>${esc(p.name)}</b> to throw · ${rem} left</div>`;
+      h += `<div class="slots">${[0, 1, 2].map(i => `<div class="${V[i] ? 'f' : ''}">${V[i] ? V[i].l : 'Dart ' + (i + 1)}</div>`).join('')}<div class="sum">${visitSum()}</div></div>`;
       if (g.out === 'double') { const rt = route(rem, 3 - V.length); if (rt) h += `<div class="route">Checkout: ${routeText(rt)}</div>`; }
       if (g.msg) h += `<div class="msg">${esc(g.msg)}</div>`;
-      h += `<div class="mult">${btn('xMult', 'Double', 2, 'm2', m === 2)}${btn('xMult', 'Triple', 3, 'm3', m === 3)}</div>`;
+      h += `<div class="mult">${btn('xMult', 'Double', 2, 'm2', m === 2)}${btn('xMult', 'Treble', 3, 'm3', m === 3)}</div>`;
       h += `<div class="numgrid">${R20.map(n => btn('xDart', (m === 3 ? 'T' : m === 2 ? 'D' : '') + n, n, 'nb m' + m)).join('')}</div>`;
       h += `<div class="numrow">${btn('x25', '25', undefined, 'nb')}${btn('xBull', 'Bull', undefined, 'nb bullb')}${btn('xMiss', 'Miss / 0', undefined, 'nb missb')}</div>`;
     } else {
       const w = g.players[g.legWinner];
-      h += `<div class="result win">${esc(w.name)} ${g.phase === 'over' ? 'gewinnt das Spiel! 🏆' : g.setWon ? 'gewinnt das Set! 🎯' : 'gewinnt das Leg! 🎯'}</div>`;
+      h += `<div class="result win">${esc(w.name)} ${g.phase === 'over' ? 'wins the game! 🏆' : g.setWon ? 'wins the set! 🎯' : 'wins the leg! 🎯'}</div>`;
       if (g.players.length > 1 && (g.setsTo || 1) > 1) h += `<div class="live">Sets: ${g.players.map(x => esc(x.name) + ' ' + (x.sets || 0)).join(' · ')}</div>`;
       if (g.players.length > 1 && g.legsTo > 1) h += `<div class="live">Legs: ${g.players.map(x => esc(x.name) + ' ' + x.legs).join(' · ')}</div>`;
       h += statsTable(g);
-      if (g.phase === 'legover') h += `<button class="big go" data-a="xNextLeg">${g.setWon ? 'Nächstes Set' : 'Nächstes Leg'}</button>`;
-      else h += `<div class="row2">${btn('xAgain', 'Neues Spiel', undefined, 'mid')}${btn('xClose', 'Zu den Einstellungen', undefined, 'mid')}</div>`;
+      if (g.phase === 'legover') h += `<button class="big go" data-a="xNextLeg">${g.setWon ? 'Next set' : 'Next leg'}</button>`;
+      else h += `<div class="row2">${btn('xAgain', 'New game', undefined, 'mid')}${btn('xClose', 'Back to settings', undefined, 'mid')}</div>`;
     }
-    if (X.confirm === 'quit') h += `<div class="confirmbox"><p>Spiel abbrechen? Es wird nicht gespeichert.</p><div class="row2">${btn('xNo', 'Weiterspielen', undefined, 'mid')}${btn('xQuitYes', 'Abbrechen', undefined, 'mid redb')}</div></div>`;
-    else h += `<div class="row2 foot">${btn('xUndo', '↶ Rückgängig', undefined, 'mid')}${g.phase === 'over' ? '' : btn('xQuit', 'Spiel beenden', undefined, 'mid')}</div>`;
+    if (X.confirm === 'quit') h += `<div class="confirmbox"><p>Quit the game? It will not be saved.</p><div class="row2">${btn('xNo', 'Keep playing', undefined, 'mid')}${btn('xQuitYes', 'Quit', undefined, 'mid redb')}</div></div>`;
+    else h += `<div class="row2 foot">${btn('xUndo', '↶ Undo', undefined, 'mid')}${g.phase === 'over' ? '' : btn('xQuit', 'End game', undefined, 'mid')}</div>`;
     return h + `</div>`;
   }
 
   function statsTable(g) {
-    const rows = [['Average', p => f1(p.darts ? p.pts / p.darts * 3 : 0)], ['Darts', p => p.darts], ['Höchste Aufnahme', p => p.best], ['180er', p => p.s180], ['Höchstes Finish', p => p.hiCO || '–']];
+    const rows = [['Average', p => f1(p.darts ? p.pts / p.darts * 3 : 0)], ['Darts', p => p.darts], ['Highest visit', p => p.best], ['180s', p => p.s180], ['Highest finish', p => p.hiCO || '–']];
     return `<table class="cmp"><tr><th></th>${g.players.map(p => `<th>${esc(p.name)}</th>`).join('')}</tr>${rows.map(r => `<tr><td>${r[0]}</td>${g.players.map(p => `<td>${r[1](p)}</td>`).join('')}</tr>`).join('')}</table>`;
   }
 
@@ -1385,86 +1385,86 @@ window.DRILLS = (function () {
 <nav id="nav"></nav>
 <div class="app">
   <div id="viewCounter" style="display:none">
-  <div class="phead"><h1>Zähler</h1><p>Felder abwerfen, Summe wird geteilt</p></div>
-  <div class="label">Gesamt <span class="modebadge" id="modebadge">Normal</span></div>
+  <div class="phead"><h1>Counter</h1><p>Clear the fields, the total gets divided</p></div>
+  <div class="label">Total <span class="modebadge" id="modebadge">Normal</span></div>
   <div class="total" id="total">0</div>
-  <div class="sub" id="sub">0 Eingaben</div>
+  <div class="sub" id="sub">0 entries</div>
 
   <div class="choices" id="choices"></div>
   <div class="lockhint" id="lockhint"></div>
   <button class="add" id="add">+1</button>
 
-  <h2 class="fh">Felder · <span class="done-count" id="doneCount">0</span> / <span id="activeCount">22</span> abgeschlossen</h2>
+  <h2 class="fh">Fields · <span class="done-count" id="doneCount">0</span> / <span id="activeCount">22</span> done</h2>
   <div class="tapmode">
-    <button id="tapHit" class="active">🎯 Treffen</button>
+    <button id="tapHit" class="active">🎯 Hit</button>
     <button id="tapExtra" class="extra">+ Extra</button>
-    <button id="tapLock" class="lock">✕ Sperren</button>
+    <button id="tapLock" class="lock">✕ Block</button>
   </div>
   <div class="numbers" id="numbers"></div>
   <div class="row">
-    <button id="undo">↶ Rückgängig</button>
-    <button id="reset">Runde zurücksetzen</button>
+    <button id="undo">↶ Undo</button>
+    <button id="reset">Reset round</button>
   </div>
   <div class="confirm" id="confirm">
-    <p>Aktuelle Runde (Summe, Felder, Sperren) zurücksetzen?</p>
+    <p>Reset the current round (total, fields, blocks)?</p>
     <div class="row" style="margin-top:0">
-      <button id="no">Abbrechen</button>
-      <button class="yes" id="yes">Ja, zurücksetzen</button>
+      <button id="no">Cancel</button>
+      <button class="yes" id="yes">Yes, reset</button>
     </div>
   </div>
   <div class="banner" id="banner"></div>
   <div class="log" id="log"></div>
 
   <details id="settings">
-    <summary>⚙️ Einstellungen</summary>
+    <summary>⚙️ Settings</summary>
     <div class="setbody">
-      <div class="setlabel">Wurfart</div>
+      <div class="setlabel">Throw type</div>
       <div class="seg" id="modeSeg"></div>
 
-      <div class="setlabel">Treffer pro Zahl (1–20)</div>
+      <div class="setlabel">Hits per number (1–20)</div>
       <div class="seg" id="needSeg"></div>
 
       <div class="two">
-        <div><div class="setlabel">25 treffen</div><div class="seg" data-field="25"></div></div>
-        <div><div class="setlabel">50 treffen</div><div class="seg" data-field="50"></div></div>
+        <div><div class="setlabel">Hit 25</div><div class="seg" data-field="25"></div></div>
+        <div><div class="setlabel">Hit 50</div><div class="seg" data-field="50"></div></div>
       </div>
 
-      <div class="setlabel">Zahlen im Spiel</div>
+      <div class="setlabel">Numbers in play</div>
       <div class="pick" id="pick"></div>
       <div class="presets">
-        <button data-p="all">Alle</button>
-        <button data-p="none">Keine</button>
+        <button data-p="all">All</button>
+        <button data-p="none">None</button>
         <button data-p="1-20">1–20</button>
         <button data-p="15-20">15–20 + Bull</button>
-        <button data-p="bull">Nur Bull</button>
+        <button data-p="bull">Bull only</button>
       </div>
-      <div class="hint">Gilt dauerhaft. Zum Sperren nur für eine Runde oben „✕ Sperren“ nutzen.</div>
+      <div class="hint">Applies permanently. To block a number for one round only, use "✕ Block" above.</div>
     </div>
   </details>
 
-  <h2>Ergebnisse</h2>
+  <h2>Results</h2>
   <div class="filter" id="filter"></div>
   <div id="results"></div>
-  <div class="row" id="clearRow" style="display:none"><button id="clearAll">Tabelle leeren</button></div>
+  <div class="row" id="clearRow" style="display:none"><button id="clearAll">Clear table</button></div>
   <div class="confirm" id="confirm2">
-    <p>Alle Ergebnisse löschen?</p>
+    <p>Delete all results?</p>
     <div class="row" style="margin-top:0">
-      <button id="no2">Abbrechen</button>
-      <button class="yes" id="yes2">Ja, löschen</button>
+      <button id="no2">Cancel</button>
+      <button class="yes" id="yes2">Yes, delete</button>
     </div>
   </div>
 
-  <h2>Extra-Treffer</h2>
+  <h2>Extra hits</h2>
   <div class="chartbox" style="padding:12px 14px">
     <div id="extras"></div>
-    <div class="chartnote">Zahlen, die du geworfen hast, obwohl sie schon abgeschlossen waren</div>
+    <div class="chartnote">Numbers you hit even though they were already done</div>
   </div>
 
-  <h2>Verlauf</h2>
+  <h2>Progress</h2>
   <div class="chartbox">
-    <div class="legend"><span style="--c:#60a5fa">Gesamtzahl</span><span style="--c:#4ade80">Geteilte Zahl</span></div>
+    <div class="legend"><span style="--c:#60a5fa">Total</span><span style="--c:#4ade80">Divided</span></div>
     <div id="chart"></div>
-    <div class="chartnote">Je höher die Linie, desto niedriger die Zahl</div>
+    <div class="chartnote">The higher the line, the lower the number</div>
   </div>
 </div>
   <div id="viewTrainer"></div>
@@ -1472,7 +1472,7 @@ window.DRILLS = (function () {
 
 <script>
   const FIELDS = [...Array.from({ length: 20 }, (_, i) => i + 1), 25, 50];
-  const MODES = { N: 'Normal', D: 'Doppel', T: 'Triple' };
+  const MODES = { N: 'Normal', D: 'Double', T: 'Treble' };
   let step = 1, history = [], need = { 25: 3, 50: 3, n: 3 }, results = [];
   let mode = 'N', inPlay = [...FIELDS], locked = [], tap = 'hit', filter = 'all';
   try {
@@ -1491,7 +1491,7 @@ window.DRILLS = (function () {
   const req = k => (k === 25 || k === 50) ? need[k] : (need.n || 3);
   const extrasOf = k => history.filter(h => h.t === 'extra' && h.k === k).length;
   const hits = k => Math.min(req(k), history.filter(h => h.t === 'hit' && h.k === k).length);
-  const fmt = x => x.toLocaleString('de-DE', { maximumFractionDigits: 2 });
+  const fmt = x => x.toLocaleString('en-GB', { maximumFractionDigits: 2 });
   const adds = () => history.filter(h => h.t === 'add');
   const stepLocked = () => adds().length > 0;
   const active = () => FIELDS.filter(k => inPlay.includes(k) && !locked.includes(k));
@@ -1559,7 +1559,7 @@ window.DRILLS = (function () {
   });
 
   // Ergebnis-Filter
-  [['all', 'Alle'], ['N', 'Normal'], ['D', 'Doppel'], ['T', 'Triple']].forEach(([k, v]) => {
+  [['all', 'All'], ['N', 'Normal'], ['D', 'Double'], ['T', 'Treble']].forEach(([k, v]) => {
     const b = document.createElement('button');
     b.textContent = v; b.dataset.f = k;
     b.onclick = () => { filter = k; render(); };
@@ -1590,7 +1590,7 @@ window.DRILLS = (function () {
     results.push({ date: new Date().toISOString(), total, count: a.length, div, result, mode,
                    fields: act, n25: need[25], n50: need[50], need: need.n, extras });
     history = []; locked = []; tap = 'hit';
-    showBanner('Abgeschlossen (' + MODES[mode] + ', ' + act.length + ' Felder)! ' + total + ' ÷ ' + div + ' = ' + fmt(result));
+    showBanner('Done (' + MODES[mode] + ', ' + act.length + ' fields)! ' + total + ' ÷ ' + div + ' = ' + fmt(result));
     render();
   }
   function showBanner(t) { $('banner').textContent = t; $('banner').classList.add('show'); }
@@ -1605,18 +1605,18 @@ window.DRILLS = (function () {
   function renderResults() {
     const box = $('results'), list = shown();
     $('clearRow').style.display = results.length ? 'flex' : 'none';
-    if (!list.length) { box.innerHTML = '<div class="empty">' + (results.length ? 'Keine Runden mit dieser Wurfart.' : 'Noch keine abgeschlossenen Runden.') + '</div>'; return; }
-    let html = '<table><tr><th>#</th><th>Datum</th><th>Art</th><th>Summe</th><th>÷</th><th>Ergebnis</th><th></th></tr>';
+    if (!list.length) { box.innerHTML = '<div class="empty">' + (results.length ? 'No rounds with this throw type.' : 'No completed rounds yet.') + '</div>'; return; }
+    let html = '<table><tr><th>#</th><th>Date</th><th>Type</th><th>Total</th><th>÷</th><th>Result</th><th></th></tr>';
     list.forEach(r => {
       const d = new Date(r.date);
-      const ds = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      const ds = d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
       const md = r.mode ? MODES[r.mode] : '–';
       const fl = r.fields ? ' · ' + r.fields.length + 'F' : '';
       html += `<tr><td>${r.nr}</td><td>${ds}</td><td class="md">${md}${fl}</td><td class="tot">${r.total}</td><td>${r.div}</td><td class="res">${fmt(r.result)}</td><td><button class="del" data-i="${r.idx}">×</button></td></tr>`;
     });
     html += '</table>';
-    html += '<div class="avg">Durchschnitt: Gesamt <b>' + fmt(list.reduce((s, r) => s + r.total, 0) / list.length) +
-            '</b> · Geteilt <b>' + fmt(list.reduce((s, r) => s + r.result, 0) / list.length) + '</b></div>';
+    html += '<div class="avg">Average: total <b>' + fmt(list.reduce((s, r) => s + r.total, 0) / list.length) +
+            '</b> · divided <b>' + fmt(list.reduce((s, r) => s + r.result, 0) / list.length) + '</b></div>';
     box.innerHTML = html;
     box.querySelectorAll('.del').forEach(b => b.onclick = () => { results.splice(+b.dataset.i, 1); render(); });
   }
@@ -1627,10 +1627,10 @@ window.DRILLS = (function () {
     shown().forEach(r => Object.entries(r.extras || {}).forEach(([k, n]) => { c[k] = (c[k] || 0) + n; }));
     history.filter(h => h.t === 'extra').forEach(h => { c[h.k] = (c[h.k] || 0) + 1; });
     const list = Object.entries(c).sort((a, b) => b[1] - a[1]);
-    if (!list.length) { $('extras').innerHTML = '<div class="empty" style="padding:4px 0">Noch keine Extra-Treffer markiert. Im Zähler „+ Extra“ wählen und eine fertige Zahl antippen.</div>'; return; }
+    if (!list.length) { $('extras').innerHTML = '<div class="empty" style="padding:4px 0">No extra hits marked yet. Choose "+ Extra" and tap a finished number.</div>'; return; }
     const max = list[0][1], tot = list.reduce((s, x) => s + x[1], 0);
     $('extras').innerHTML = '<div class="xlist">' + list.slice(0, 10).map(([k, n]) => `<div class="xrow"><span>${k}</span><span class="xbar"><i style="width:${n / max * 100}%"></i></span><b>${n}</b></div>`).join('') + '</div>'
-      + `<div class="avg">Gesamt <b>${tot}</b> Extra-Treffer</div>`;
+      + `<div class="avg">Total <b>${tot}</b> extra hits</div>`;
   }
 
   function niceMax(v) {
@@ -1642,7 +1642,7 @@ window.DRILLS = (function () {
 
   function renderChart() {
     const box = $('chart'), list = shown();
-    if (!list.length) { box.innerHTML = '<div class="empty">Der Graph erscheint nach der ersten Runde.</div>'; return; }
+    if (!list.length) { box.innerHTML = '<div class="empty">The chart appears after the first round.</div>'; return; }
     const W = 400, H = 240, L = 36, R = 14, T = 14, B = 26;
     const pw = W - L - R, ph = H - T - B;
     const max = niceMax(Math.max(...list.map(r => Math.max(r.total, r.result))));
@@ -1665,7 +1665,7 @@ window.DRILLS = (function () {
       const pts = list.map((r, i) => `${x(i).toFixed(1)},${y(r[key]).toFixed(1)}`).join(' ');
       let out = n > 1 ? `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>` : '';
       list.forEach((r, i) => {
-        out += `<circle cx="${x(i)}" cy="${y(r[key])}" r="4" fill="${color}" stroke="#1e293b" stroke-width="2"><title>Runde ${r.nr}: ${fmt(r[key])}</title></circle>`;
+        out += `<circle cx="${x(i)}" cy="${y(r[key])}" r="4" fill="${color}" stroke="#1e293b" stroke-width="2"><title>Round ${r.nr}: ${fmt(r[key])}</title></circle>`;
       });
       return out;
     };
@@ -1677,12 +1677,12 @@ window.DRILLS = (function () {
   function render() {
     const a = adds();
     $('total').textContent = a.reduce((s, h) => s + h.n, 0);
-    $('sub').textContent = a.length + (a.length === 1 ? ' Eingabe' : ' Eingaben');
+    $('sub').textContent = a.length + (a.length === 1 ? ' entry' : ' entries');
     $('add').textContent = '+' + step;
     $('modebadge').textContent = MODES[mode];
     const lk = stepLocked();
     [...choices.children].forEach((b, i) => { b.classList.toggle('active', i + 1 === step); b.disabled = lk && i + 1 !== step; });
-    $('lockhint').textContent = lk ? 'Zahl für diese Runde festgelegt: ÷ ' + step : '';
+    $('lockhint').textContent = lk ? 'Number fixed for this round: ÷ ' + step : '';
 
     $('tapHit').classList.toggle('active', tap === 'hit');
     $('tapLock').classList.toggle('active', tap === 'lock');
@@ -1704,7 +1704,7 @@ window.DRILLS = (function () {
       b.onclick = () => tapField(k);
       numbers.appendChild(b);
     });
-    if (!shownFields.length) numbers.innerHTML = '<div class="empty" style="grid-column:1/-1">Keine Zahlen im Spiel – in den Einstellungen auswählen.</div>';
+    if (!shownFields.length) numbers.innerHTML = '<div class="empty" style="grid-column:1/-1">No numbers in play – choose them in the settings.</div>';
     $('doneCount').textContent = done;
     $('activeCount').textContent = active().length;
 
@@ -1716,7 +1716,7 @@ window.DRILLS = (function () {
     document.querySelectorAll('#pick button').forEach(b => b.classList.toggle('on', inPlay.includes(+b.dataset.k)));
     document.querySelectorAll('#filter button').forEach(b => b.classList.toggle('active', b.dataset.f === filter));
 
-    $('log').textContent = a.length ? 'Verlauf: ' + a.slice(-15).map(h => '+' + h.n).join(' ') : '';
+    $('log').textContent = a.length ? 'Log: ' + a.slice(-15).map(h => '+' + h.n).join(' ') : '';
     renderResults();
     renderExtras();
     renderChart();
@@ -1740,12 +1740,12 @@ window.DRILLS = (function () {
   // ===== 00-state.js =====
 // Konstanten, Zustand (T), Speichern, Hilfsfunktionen
   const KEY = 'dartsTrainer';
-  const LV = ['Beginner', 'Leicht', 'Mittel', 'Fortgeschritten', 'Hart'];
+  const LV = ['Beginner', 'Easy', 'Medium', 'Advanced', 'Hard'];
   const BOT = [
-    { n: 'Beginner', a: 25, s: 38 }, { n: 'Leicht', a: 40, s: 23 }, { n: 'Mittel', a: 55, s: 15.5 },
-    { n: 'Fortgeschritten', a: 70, s: 11.5 }, { n: 'Profi', a: 90, s: 8 }
+    { n: 'Beginner', a: 25, s: 38 }, { n: 'Easy', a: 40, s: 23 }, { n: 'Medium', a: 55, s: 15.5 },
+    { n: 'Advanced', a: 70, s: 11.5 }, { n: 'Pro', a: 90, s: 8 }
   ];
-  const TM = { hit: 'Treffen', single: 'Single', double: 'Doppel', triple: 'Triple', checkout: 'Checkouts', score: 'Punkte', game: 'Spiel vs. Bot' };
+  const TM = { hit: 'Hitting', single: 'Singles', double: 'Doubles', triple: 'Trebles', checkout: 'Checkouts', score: 'Scoring', game: 'Game vs. bot' };
   const IMPOSSIBLE = [163, 166, 169, 172, 173, 175, 176, 178, 179];
   const R20 = Array.from({ length: 20 }, (_, i) => i + 1);
   const FAV_D = [20, 16, 10, 8], TOP_D = [20, 16, 18, 12, 10, 8, 4];
@@ -1765,7 +1765,7 @@ window.DRILLS = (function () {
     home: '<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>'
   };
   const LOGO = '<svg viewBox="-20 -20 40 40"><circle r="18.5" fill="#ec4899"/><circle r="13" fill="none" stroke="#fff" stroke-width="2"/><circle r="7" fill="none" stroke="#fff" stroke-width="2"/><circle r="2.4" fill="#fff"/></svg>';
-  const BLOCKNAME = { A: 'Zahlen treffen', S: 'Single', T: 'Triple', D: 'Doppel', B: 'Bull' };
+  const BLOCKNAME = { A: 'Hit numbers', S: 'Singles', T: 'Trebles', D: 'Doubles', B: 'Bull' };
 
   let T = { set: { mode: 'hit', level: 0, tasks: 10, bot: 2, start: 501, din: false, legs: 1 },
             sess: null, game: null, hist: [], filter: 'all', input: '', summary: null, confirm: null, showRoute: false, route: 'home', stab: 'over', tgt: null };
@@ -1782,7 +1782,7 @@ window.DRILLS = (function () {
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(T)); } catch (e) {} };
 
   const el = document.getElementById('viewTrainer');
-  const f1 = x => (isFinite(x) ? x : 0).toLocaleString('de-DE', { maximumFractionDigits: 1 });
+  const f1 = x => (isFinite(x) ? x : 0).toLocaleString('en-GB', { maximumFractionDigits: 1 });
   const rnd = a => a[Math.floor(Math.random() * a.length)];
   const pickSeq = (pool, count) => { const out = []; let prev = null; for (let i = 0; i < count; i++) { let c, g = 0; do { c = rnd(pool); } while (pool.length > 1 && c === prev && g++ < 20); out.push(c); prev = c; } return out; };
 
@@ -1791,7 +1791,7 @@ window.DRILLS = (function () {
 // Trainingsspiele aus src/modules/drills.js (Around the Clock, Bob's 27, Doppel-Runde, Checkout-Leiter, Shanghai, Halve-It, Cricket-Training)
 // Die Regeln und Ansichten stehen dort; hier werden sie in TM eingetragen und mit Helfern versorgt.
   const DR = window.DRILLS || {};
-  delete TM.game; Object.keys(DR).forEach(k => { TM[k] = DR[k].name; }); TM.game = 'Spiel vs. Bot';
+  delete TM.game; Object.keys(DR).forEach(k => { TM[k] = DR[k].name; }); TM.game = 'Game vs. bot';
   const ctx = { btn: (...a) => btn(...a), f1, LV, footer: () => footer(), get showRoute() { return T.showRoute; }, get input() { return T.input; } };
   // Eingaben während eines Trainingsspiels. drHi (Halve-It) nimmt die Zahl aus dem Tastenfeld (T.input).
   ['drHit', 'drBob', 'drDR', 'drLad', 'drSh', 'drHi', 'drCr'].forEach(a => {
@@ -1813,18 +1813,18 @@ window.DRILLS = (function () {
   // ---------- Bereiche und Zielwerte pro Stufe ----------
   // Jeder Bereich: Wert aus den letzten Ergebnissen (Ø der letzten 5) und Ziel pro Stufe 0..4
   const CO_AREAS = {
-    acc: { n: 'Treffsicherheit', u: ' %', goal: [35, 45, 55, 65, 75], modes: ['atc', 'hit', 'single'],
+    acc: { n: 'Accuracy', u: ' %', goal: [35, 45, 55, 65, 75], modes: ['atc', 'hit', 'single'],
            val: e => e.mode === 'atc' ? e.hitPct : e.mode === 'hit' || e.mode === 'single' ? e.hitPct : null,
-           why: v => `Deine Trefferquote auf einzelne Zahlen liegt bei ${f1(v)} %` },
-    score: { n: 'Punkte', u: '', goal: [30, 40, 50, 60, 75], modes: ['score', 'sh'],
+           why: v => `Your hit rate on single numbers is ${f1(v)} %` },
+    score: { n: 'Scoring', u: '', goal: [30, 40, 50, 60, 75], modes: ['score', 'sh'],
              val: e => e.mode === 'score' ? e.avg : e.mode === 'game' ? e.avg : null,
-             why: v => `Dein Schnitt pro Aufnahme liegt bei ${f1(v)}` },
-    dbl: { n: 'Doppel', u: ' %', goal: [10, 15, 22, 28, 35], modes: ['dr', 'bob', 'double'],
+             why: v => `Your average per visit is ${f1(v)}` },
+    dbl: { n: 'Doubles', u: ' %', goal: [10, 15, 22, 28, 35], modes: ['dr', 'bob', 'double'],
            val: e => e.mode === 'dr' || e.mode === 'bob' || e.mode === 'double' ? e.hitPct : null,
-           why: v => `Deine Doppelquote liegt bei ${f1(v)} %` },
+           why: v => `Your doubles rate is ${f1(v)} %` },
     co: { n: 'Checkouts', u: ' %', goal: [20, 30, 40, 50, 60], modes: ['lad', 'checkout'],
           val: e => e.mode === 'lad' || e.mode === 'checkout' ? e.rate : e.mode === 'game' && e.P && e.P.coAtt ? e.P.coHits / e.P.coAtt * 100 : null,
-          why: v => `Deine Checkout-Quote liegt bei ${f1(v)} %` }
+          why: v => `Your checkout rate is ${f1(v)} %` }
   };
   function coArea(k) {
     const A = CO_AREAS[k], vals = T.hist.map(A.val).filter(v => v !== null && v !== undefined && isFinite(v)).slice(-5);
@@ -1844,7 +1844,7 @@ window.DRILLS = (function () {
     if (e.mode === 'score') return e.goalPct >= 70 ? 1 : e.goalPct < 30 ? -1 : 0;
     if (e.mode === 'lad') return e.rate >= 60 ? 1 : e.rate < 25 ? -1 : 0;
     const tip = DR[e.mode] ? DR[e.mode].tip(e) : '';
-    return /Stark!/.test(tip) ? 1 : 0;
+    return /Strong!/.test(tip) ? 1 : 0;
   }
   function coSuggestLevel(mode) {
     const l = T.hist.filter(e => e.mode === mode), last = l[l.length - 1];
@@ -1859,19 +1859,19 @@ window.DRILLS = (function () {
   function coBuild() {
     if (CO.level === null) {
       return { day: coDay(), test: true, idx: 0, items: [
-        { mode: 'atc', level: 0, why: 'Einstufung: Wie sicher triffst du einzelne Zahlen?' },
-        { mode: 'score', level: 0, tasks: 10, why: 'Einstufung: Wie viele Punkte machst du pro Aufnahme?' },
-        { mode: 'dr', level: 0, why: 'Einstufung: Wie gut triffst du die Doppel?' }] };
+        { mode: 'atc', level: 0, why: 'Placement: how reliably do you hit single numbers?' },
+        { mode: 'score', level: 0, tasks: 10, why: 'Placement: how many points do you score per visit?' },
+        { mode: 'dr', level: 0, why: 'Placement: how well do you hit doubles?' }] };
     }
     const areas = Object.keys(CO_AREAS).map(coArea).sort((a, b) => a.ratio - b.ratio);
     const items = [];
     areas.slice(0, 2).forEach(a => {
       const m = coPick(a.A.modes, items.map(i => i.mode));
       items.push({ mode: m, level: coSuggestLevel(m), area: a.k,
-                   why: a.v === null ? `${a.A.n}: dazu gibt es noch keine Daten` : `${a.A.why(a.v)}, Ziel auf deiner Stufe: ${a.goal}${a.A.u}` });
+                   why: a.v === null ? `${a.A.n}: no data yet` : `${a.A.why(a.v)}, goal at your level: ${a.goal}${a.A.u}` });
     });
     const f = coPick(CO_FUN, items.map(i => i.mode));
-    items.push({ mode: f, level: coSuggestLevel(f), why: 'Zur Abwechslung ein Trainingsspiel' });
+    items.push({ mode: f, level: coSuggestLevel(f), why: 'A training game for some variety' });
     return { day: coDay(), idx: 0, items };
   }
   function coPlan() { if (!CO.plan || CO.plan.day !== coDay()) CO.plan = coBuild(); return CO.plan; }
@@ -1920,98 +1920,98 @@ window.DRILLS = (function () {
   // ---------- Karte „Heute empfohlen“ ----------
   function coCard() {
     const P = coPlan(), wd = coWeekDone(), next = P.items.findIndex(x => !x.done);
-    let h = `<div class="card coach"><div class="cohead"><b>${P.test ? 'Einstufung' : 'Heute empfohlen'}</b><span>Woche ${Math.min(wd, CO.weekGoal)}/${CO.weekGoal}</span></div>`;
-    if (P.test && !P.placed) h += `<p class="cosub">Drei kurze Einheiten, danach kennt die App deine Stufe und schlägt dir passende Trainings vor.</p>`;
-    if (P.placed !== undefined && next < 0) h += `<p class="cosub">Einstufung fertig: Deine Stufe ist <b>${LV[P.placed]}</b>. Ab morgen gibt es hier deinen Trainingsplan.</p>`;
+    let h = `<div class="card coach"><div class="cohead"><b>${P.test ? 'Placement' : 'Recommended today'}</b><span>Week ${Math.min(wd, CO.weekGoal)}/${CO.weekGoal}</span></div>`;
+    if (P.test && !P.placed) h += `<p class="cosub">Three short sessions, then the app knows your level and suggests matching trainings.</p>`;
+    if (P.placed !== undefined && next < 0) h += `<p class="cosub">Placement done: your level is <b>${LV[P.placed]}</b>. From tomorrow your training plan appears here.</p>`;
     h += `<div class="coitems">`;
     P.items.forEach((it, i) => {
       h += `<button class="coit${it.done ? ' done' : ''}${i === next ? ' next' : ''}" data-a="coGo" data-v="${i}"><span class="con">${it.done ? '✓' : i + 1}</span><span class="cot"><b>${TM[it.mode]} · ${LV[it.level]}</b><small>${it.why}</small></span></button>`;
     });
     h += `</div>`;
-    if (next >= 0) h += btn('coNext', next === 0 ? 'Plan starten' : `Weiter mit Einheit ${next + 1}`, undefined, 'big go');
-    else if (!P.test) h += `<p class="cosub">Plan für heute geschafft. ${wd >= CO.weekGoal ? 'Wochenziel erreicht!' : `Noch ${CO.weekGoal - wd} bis zum Wochenziel.`}</p>`;
-    h += `<div class="corow">${btn('coLearn', `Lernen: <b>${coLearn() ? 'an' : 'aus'}</b>`, undefined, 'cochip' + (coLearn() ? ' on' : ''))}`;
-    h += `${btn('coLesson', `Grundlagen ${Object.keys(CO.lessons).length}/${CO_LESSONS.length}`, 'list', 'cochip')}`;
-    if (!P.test) h += btn('coNew', 'Anderer Plan', undefined, 'cochip');
+    if (next >= 0) h += btn('coNext', next === 0 ? 'Start plan' : `Continue with session ${next + 1}`, undefined, 'big go');
+    else if (!P.test) h += `<p class="cosub">Today's plan done. ${wd >= CO.weekGoal ? 'Weekly goal reached!' : `${CO.weekGoal - wd} more to your weekly goal.`}</p>`;
+    h += `<div class="corow">${btn('coLearn', `Learn mode: <b>${coLearn() ? 'on' : 'off'}</b>`, undefined, 'cochip' + (coLearn() ? ' on' : ''))}`;
+    h += `${btn('coLesson', `Basics ${Object.keys(CO.lessons).length}/${CO_LESSONS.length}`, 'list', 'cochip')}`;
+    if (!P.test) h += btn('coNew', 'Different plan', undefined, 'cochip');
     h += `</div>`;
-    if (CO.level !== null) h += `<div class="colv"><span>Deine Stufe</span>${LV.map((l, i) => btn('coLevel', i + 1, i, '', CO.level === i)).join('')}</div>`;
+    if (CO.level !== null) h += `<div class="colv"><span>Your level</span>${LV.map((l, i) => btn('coLevel', i + 1, i, '', CO.level === i)).join('')}</div>`;
     return h + `</div>`;
   }
 
   // ---------- Lernmodus: Lektionen ----------
   const CO_LESSONS = [
-    { id: 'stand', t: 'Stand', p: [
-      'Stell dich seitlich zur Scheibe: Rechtshänder mit dem rechten Fuß vorne an der Abwurflinie, Linkshänder umgekehrt.',
-      'Der vordere Fuß zeigt etwa 45 bis 90 Grad zur Scheibe, das Gewicht liegt zu etwa 70 % vorne. Der hintere Fuß hält nur das Gleichgewicht.',
-      'Lehn dich leicht nach vorne, aber so, dass du ruhig stehst. Wichtig ist, dass du jedes Mal genau gleich stehst – markier dir den Platz.'],
+    { id: 'stand', t: 'Stance', p: [
+      'Stand side-on to the board: right-handers with the right foot forward at the oche, left-handers the other way round.',
+      'Your front foot points about 45 to 90 degrees to the board, with about 70 % of your weight on it. The back foot just keeps your balance.',
+      'Lean slightly forward, but stay steady. What matters is standing exactly the same way every time – mark your spot.'],
       ex: { mode: 'single', level: 0, tasks: 10 } },
-    { id: 'grip', t: 'Griff', p: [
-      'Halt den Dart locker mit drei Fingern: Daumen, Zeige- und Mittelfinger. So fest, dass er nicht wegrutscht, aber ohne Druck.',
-      'Die Spitze zeigt beim Ausholen leicht nach oben. Zeigt sie nach unten, fliegt der Dart unruhig.',
-      'Probier zwei, drei Griffe aus und bleib dann bei einem. Ein gleichbleibender Griff ist wichtiger als der „perfekte“.'],
+    { id: 'grip', t: 'Grip', p: [
+      'Hold the dart loosely with three fingers: thumb, index and middle finger. Firm enough that it does not slip, but without pressure.',
+      'The tip points slightly upwards as you draw back. If it points down, the dart flies unsteadily.',
+      'Try two or three grips, then stick with one. A consistent grip matters more than the "perfect" one.'],
       ex: { mode: 'single', level: 0, tasks: 10 } },
-    { id: 'align', t: 'Ausrichtung', p: [
-      'Auge, Dart und Ziel bilden eine Linie. Die meisten zielen mit dem Auge auf der Wurfseite.',
-      'Der Ellbogen zeigt Richtung Ziel und bleibt beim Wurf möglichst an derselben Stelle. Er ist der Drehpunkt.',
-      'Wenn deine Darts immer auf einer Seite landen: nicht nachzielen, sondern den Stand ein kleines Stück verschieben.'],
+    { id: 'align', t: 'Alignment', p: [
+      'Eye, dart and target form one line. Most players aim with the eye on their throwing side.',
+      'Your elbow points at the target and stays in the same place during the throw. It is the pivot.',
+      'If your darts always land on one side: do not re-aim, move your stance a little instead.'],
       ex: { mode: 'atc', level: 0 } },
-    { id: 'throw', t: 'Wurfbewegung', p: [
-      'Der Wurf kommt aus dem Unterarm: Ausholen zum Gesicht, dann gerade nach vorne Richtung Ziel. Oberarm und Schulter bleiben ruhig.',
-      'Lass den Arm nach dem Loslassen weiter Richtung Ziel durchschwingen, als würdest du auf das Feld zeigen.',
-      'Nicht werfen wie einen Ball: kein Schwung aus der Schulter, kein Ruck aus dem Handgelenk am Ende.'],
+    { id: 'throw', t: 'Throwing motion', p: [
+      'The throw comes from the forearm: draw back towards your face, then straight forward to the target. Upper arm and shoulder stay still.',
+      'After releasing, let your arm follow through towards the target, as if you were pointing at the field.',
+      'Do not throw it like a ball: no swing from the shoulder, no flick of the wrist at the end.'],
       ex: { mode: 'atc', level: 0 } },
-    { id: 'aim', t: 'Wohin zielen', p: [
-      'Als Anfänger zielst du auf die große Single-20 statt auf T20: Du triffst sie viel öfter, und Fehlwürfe landen trotzdem oft in der 20.',
-      'Landen deine Darts oft links von der 20 (in der 5 und 1)? Dann zieh auf die 19: Ihre Nachbarn 7 und 3 sind etwas besser, und viele Spieler streuen dort weniger.',
-      'Beim Doppel zielst du auf die Mitte des Doppels, nicht auf die Innenkante. Lieblingsdoppel sind D16 und D20: D16 lässt sich nach einem Fehlwurf gut halbieren (32 → 16 → 8 → 4).',
-      'Beim Checkout gilt: Stell dir einen geraden Rest, der mit einem Doppel geht (z. B. 32 oder 40), und meide das Bull, solange es einen anderen Weg gibt.'],
+    { id: 'aim', t: 'Where to aim', p: [
+      'As a beginner, aim at the big single 20 instead of T20: you hit it far more often, and misses still often land in the 20.',
+      'Do your darts often land left of the 20 (in the 5 and 1)? Then switch to the 19: its neighbours 7 and 3 are a bit better, and many players scatter less there.',
+      'On doubles, aim at the middle of the double, not the inner edge. Favourite doubles are D16 and D20: D16 halves nicely after a miss (32 → 16 → 8 → 4).',
+      'For checkouts: leave yourself an even number that finishes on a double (e.g. 32 or 40), and avoid the bull as long as there is another way.'],
       ex: { mode: 'score', level: 0, tasks: 10 } },
-    { id: 'rhythm', t: 'Rhythmus', p: [
-      'Wirf alle drei Darts im gleichen Tempo, ohne lange Pausen dazwischen. Zu langes Zielen macht unsicher.',
-      'Atme vor der Aufnahme einmal ruhig aus, dann wirf. Nach jedem Dart nicht ärgern, sofort den nächsten vorbereiten.',
-      'Übe lieber 15 Minuten täglich als einmal pro Woche zwei Stunden. Kurze, regelmäßige Einheiten bringen am meisten.'],
+    { id: 'rhythm', t: 'Rhythm', p: [
+      'Throw all three darts at the same pace, without long pauses. Aiming too long makes you unsure.',
+      'Breathe out calmly before the visit, then throw. Do not get annoyed after a dart, get ready for the next one right away.',
+      'Practise 15 minutes a day rather than two hours once a week. Short, regular sessions help the most.'],
       ex: { mode: 'dr', level: 0 } }
   ];
   EXT.views.learn = () => {
     const id = T.lesson;
     if (!id || id === 'list') {
-      let h = phead('Grundlagen', 'Kurze Lektionen zu Stand, Griff und Wurf') + `<div class="card list">`;
+      let h = phead('Basics', 'Short lessons on stance, grip and throw') + `<div class="card list">`;
       CO_LESSONS.forEach((L, i) => { h += `<button class="coit${CO.lessons[L.id] ? ' done' : ''}" data-a="coLesson" data-v="${L.id}"><span class="con">${CO.lessons[L.id] ? '✓' : i + 1}</span><span class="cot"><b>${L.t}</b><small>${L.p[0].slice(0, 70)} …</small></span></button>`; });
-      return h + `</div>` + btn('nav', '← Zurück zum Training', 'train', 'link');
+      return h + `</div>` + btn('nav', '← Back to training', 'train', 'link');
     }
     const i = CO_LESSONS.findIndex(x => x.id === id), L = CO_LESSONS[i];
-    let h = phead(`${i + 1}. ${L.t}`, `Lektion ${i + 1} von ${CO_LESSONS.length}`) + `<div class="card lesson">`;
+    let h = phead(`${i + 1}. ${L.t}`, `Lesson ${i + 1} of ${CO_LESSONS.length}`) + `<div class="card lesson">`;
     L.p.forEach(p => { h += `<p>${p}</p>`; });
-    h += btn('coLessonDone', `Verstanden · Übung starten (${TM[L.ex.mode]})`, L.id, 'big go');
-    if (CO_LESSONS[i + 1]) h += btn('coLesson', `Nächste Lektion: ${CO_LESSONS[i + 1].t} →`, CO_LESSONS[i + 1].id, 'link');
-    return h + `</div>` + btn('coLesson', '← Alle Lektionen', 'list', 'link');
+    h += btn('coLessonDone', `Got it · start exercise (${TM[L.ex.mode]})`, L.id, 'big go');
+    if (CO_LESSONS[i + 1]) h += btn('coLesson', `Next lesson: ${CO_LESSONS[i + 1].t} →`, CO_LESSONS[i + 1].id, 'link');
+    return h + `</div>` + btn('coLesson', '← All lessons', 'list', 'link');
   };
 
   // ---------- Lernmodus: Tipps vor und während des Trainings ----------
   const CO_INTRO = {
-    hit: 'Ein gemischter Plan: erst Zahlen, dann Single, Triple und Doppel. Steh bei jedem Wurf gleich und zieh nicht nach, wenn ein Dart danebengeht.',
-    single: 'Ziel auf die Mitte des großen Single-Felds, nicht auf den Rand. Dort ist am meisten Platz.',
-    double: 'Ziel auf die Mitte des Doppels. Fällt ein Dart knapp darüber ins Aus, ist das normal – lieber etwas tiefer ansetzen als zu hoch.',
-    triple: 'Triple sind schmal. Ziel genau auf die Mitte, und wirf in ruhigem Rhythmus. Ein Single daneben ist kein Fehler, sondern normale Streuung.',
-    checkout: 'Lies erst den Weg, dann wirf. Merk dir die Wege für deine Lieblingsdoppel – mit der Zeit brauchst du die Anzeige nicht mehr.',
-    score: 'Auf deiner Stufe zielst du auf die große Single-20 (bzw. T20 ab Mittel). Landen viele Darts links in der 5 und 1, probier die 19.',
-    atc: 'Ein Feld nach dem anderen. Schau vor jedem Dart kurz auf das neue Ziel und richte Stand und Blick neu aus.',
-    bob: 'Jedes Doppel zählt. Ziel auf die Mitte des Doppels. Die erste Runde (D1) ist am schwersten – keine Sorge, wenn sie danebengeht.',
-    dr: 'Ziel immer auf die Mitte des Doppels. Merk dir, welche Doppel dir liegen – die werden deine Checkout-Doppel.',
-    lad: 'Plane 9 Darts als drei Aufnahmen: erst Punkte, dann einen geraden Rest stellen, zum Schluss das Doppel.',
-    sh: 'Pro Runde eine Zahl. Versuch bewusst einmal Triple, dann Doppel – ein Shanghai bringt 100 Bonuspunkte.',
-    hi: 'Wichtiger als viele Punkte ist, jede Runde wenigstens einmal zu treffen – sonst wird halbiert. Lieber sicher auf die Single zielen.',
-    cr: 'Triple bringen drei Marken auf einmal. Auf den hohen Zahlen (20, 19) lohnt sich der Triple-Versuch am meisten.'
+    hit: 'A mixed plan: numbers first, then singles, trebles and doubles. Stand the same way for every throw and do not adjust when a dart misses.',
+    single: 'Aim at the middle of the big single field, not the edge. That is where there is most room.',
+    double: 'Aim at the middle of the double. A dart just outside is normal – better aim a little low than too high.',
+    triple: 'Trebles are narrow. Aim right at the middle and throw in a calm rhythm. A single next to it is not a mistake, just normal spread.',
+    checkout: 'Read the route first, then throw. Learn the routes to your favourite doubles – over time you will not need the hint.',
+    score: 'At your level you aim at the big single 20 (or T20 from Medium). If many darts land left in the 5 and 1, try the 19.',
+    atc: 'One field after another. Before each dart, look at the new target and realign stance and eyes.',
+    bob: 'Every double counts. Aim at the middle of the double. The first round (D1) is the hardest – do not worry if it misses.',
+    dr: 'Always aim at the middle of the double. Note which doubles suit you – they become your checkout doubles.',
+    lad: 'Plan 9 darts as three visits: score first, then leave an even number, finally the double.',
+    sh: 'One number per round. Deliberately go for a treble, then a double – a Shanghai gives 100 bonus points.',
+    hi: 'Hitting at least once every round matters more than big scores – otherwise you are halved. Better aim safely at the single.',
+    cr: 'Trebles give three marks at once. On the high numbers (20, 19) going for the treble pays off most.'
   };
   function coLiveTip(S) {
     const m = S.mode;
     if (['atc', 'sh', 'cr'].includes(m) && S.d && S.d.length >= 6) {
       const last = S.d.slice(-6), miss = last.filter(x => Array.isArray(x) ? !x[0] : !x).length;
-      if (miss >= 5) return 'Viele Fehlwürfe hintereinander: kurz durchatmen, Stand prüfen und den Wurf ruhig zu Ende führen. Nicht schneller werfen.';
+      if (miss >= 5) return 'Lots of misses in a row: take a breath, check your stance and follow through calmly. Do not throw faster.';
     }
-    if (m === 'double' || m === 'dr' || m === 'bob') return 'Tipp: D16 und D20 sind beliebte Lieblingsdoppel. D16 lässt sich nach einem Fehlwurf gut halbieren: 32 → 16 → 8.';
-    if (m === 'checkout' || m === 'lad') return 'Tipp: Stell dir einen geraden Rest, der mit einem Doppel geht (z. B. 32, 40, 36). Meide das Bull, wenn es einen anderen Weg gibt.';
-    if (m === 'score') return 'Tipp: Zähl nicht mit, sondern konzentrier dich nur auf den nächsten Dart. Gleicher Stand, gleicher Rhythmus.';
+    if (m === 'double' || m === 'dr' || m === 'bob') return 'Tip: D16 and D20 are popular favourite doubles. D16 halves nicely after a miss: 32 → 16 → 8.';
+    if (m === 'checkout' || m === 'lad') return 'Tip: leave an even number that finishes on a double (e.g. 32, 40, 36). Avoid the bull if there is another way.';
+    if (m === 'score') return 'Tip: do not count along, just focus on the next dart. Same stance, same rhythm.';
     return '';
   }
   EXT.after.train = box => {
@@ -2021,14 +2021,14 @@ window.DRILLS = (function () {
       const ph = box.querySelector('.phead'); const c = box.querySelector('.coach'); if (ph && c) ph.after(c);
     } else if (T.summary && CO.plan && CO.plan.items.some(x => x.done)) {
       const P = CO.plan, next = P.items.findIndex(x => !x.done);
-      const html = `<div class="card coach"><div class="cohead"><b>${P.test ? 'Einstufung' : 'Heute empfohlen'}</b><span>${P.items.filter(x => x.done).length}/${P.items.length}</span></div>`
-        + (next >= 0 ? btn('coNext', `Weiter mit Einheit ${next + 1}: ${TM[P.items[next].mode]}`, undefined, 'big go')
-          : `<p class="cosub">${P.placed !== undefined ? `Einstufung fertig: Deine Stufe ist <b>${LV[P.placed]}</b>.` : 'Plan für heute geschafft!'}</p>`) + `</div>`;
+      const html = `<div class="card coach"><div class="cohead"><b>${P.test ? 'Placement' : 'Recommended today'}</b><span>${P.items.filter(x => x.done).length}/${P.items.length}</span></div>`
+        + (next >= 0 ? btn('coNext', `Continue with session ${next + 1}: ${TM[P.items[next].mode]}`, undefined, 'big go')
+          : `<p class="cosub">${P.placed !== undefined ? `Placement done: your level is <b>${LV[P.placed]}</b>.` : 'Today\'s plan done!'}</p>`) + `</div>`;
       box.insertAdjacentHTML('beforeend', html);
     } else if (T.sess && coLearn()) {
       const S = T.sess, card = box.querySelector('.card'); if (!card) return;
       if (CO.tipSeen !== S.date && CO_INTRO[S.mode]) {
-        card.insertAdjacentHTML('afterbegin', `<div class="cotip intro"><b>So gehst du es an</b><p>${CO_INTRO[S.mode]}</p>${btn('coTip', 'Verstanden', undefined, 'cochip on')}</div>`);
+        card.insertAdjacentHTML('afterbegin', `<div class="cotip intro"><b>How to approach it</b><p>${CO_INTRO[S.mode]}</p>${btn('coTip', 'Got it', undefined, 'cochip on')}</div>`);
       } else { const t = coLiveTip(S); if (t) { const f = card.querySelector('.foot, .row2.foot'); (f || card).insertAdjacentHTML(f ? 'beforebegin' : 'beforeend', `<div class="cotip">${t}</div>`); } }
     }
   };
@@ -2036,16 +2036,16 @@ window.DRILLS = (function () {
   // ---------- Lernmodus: Tipps im Spiel gegen den Bot ----------
   function coGameTip(g) {
     const rem = g.p.rem, V = g.visit ? g.visit.darts : [], left = 3 - V.length;
-    if (!g.p.in) return 'Double-In: Ziel auf ein Doppel, das du gut triffst – D20 oder D16. Erst danach zählen die Punkte.';
-    if (rem > 170) return (CO.level || 0) < 2 ? 'Ziel auf die große Single-20. Landen deine Darts oft links, nimm die 19.' : 'Ziel auf T20. Wenn die 20 zugestellt ist oder du links streust, wechsel auf T19.';
+    if (!g.p.in) return 'Double-in: aim at a double you hit well – D20 or D16. Only then do points count.';
+    if (rem > 170) return (CO.level || 0) < 2 ? 'Aim at the big single 20. If your darts often land left, take the 19.' : 'Aim at T20. If the 20 is blocked or you scatter left, switch to T19.';
     const rt = route(rem, left);
-    if (rt) return rt.length === 1 ? `Jetzt das Doppel: ${routeText(rt)}. Ziel auf die Mitte des Doppels.` : `Du kannst checken: ${routeText(rt)}. Triffst du den ersten Dart nicht genau, rechne neu.`;
+    if (rt) return rt.length === 1 ? `Now the double: ${routeText(rt)}. Aim at the middle of the double.` : `You can check out: ${routeText(rt)}. If the first dart misses, recalculate.`;
     if (rem % 2 && left === 1) {
-      const s = rem - 32 >= 1 && rem - 32 <= 20 ? [rem - 32, 'D16'] : rem - 40 >= 1 && rem - 40 <= 20 ? [rem - 40, 'D20'] : [1, (rem - 1) <= 40 ? 'D' + (rem - 1) / 2 : 'einen geraden Rest'];
-      return `Ungerader Rest: Wirf eine S${s[0]}, dann bleibt ${s[1]} für die nächste Aufnahme.`;
+      const s = rem - 32 >= 1 && rem - 32 <= 20 ? [rem - 32, 'D16'] : rem - 40 >= 1 && rem - 40 <= 20 ? [rem - 40, 'D20'] : [1, (rem - 1) <= 40 ? 'D' + (rem - 1) / 2 : 'an even number'];
+      return `Odd number left: throw S${s[0]} to leave ${s[1]} for the next visit.`;
     }
-    if (rem <= 100) return 'Kein Checkout mehr in dieser Aufnahme: stell dir einen geraden Rest wie 32 oder 40 für die nächste Aufnahme.';
-    return 'Punkte machen und einen Rest unter 100 stellen, der mit zwei Darts geht (z. B. 60 oder 80).';
+    if (rem <= 100) return 'No checkout this visit: leave an even number like 32 or 40 for the next visit.';
+    return 'Score and leave a number under 100 that finishes with two darts (e.g. 60 or 80).';
   }
   EXT.after.play = box => {
     if (!coLearn() || !T.game || T.game.phase !== 'play' || T.game.turn !== 'p' || T.game.busy) return;
@@ -2056,13 +2056,13 @@ window.DRILLS = (function () {
   EXT.after.stats = box => {
     if ((T.stab || 'over') !== 'over' || CO.level === null) return;
     const wd = coWeekDone();
-    let h = `<h2 class="sec">Trainingsziele · Stufe ${LV[CO.level]}</h2><div class="card"><div class="bars">`;
-    h += `<div class="br"><span>Woche</span><i><em class="${wd >= CO.weekGoal ? 'g' : 'y'}" style="width:${Math.min(100, wd / CO.weekGoal * 100)}%"></em></i><b>${wd}/${CO.weekGoal}</b><small>Pläne</small></div>`;
+    let h = `<h2 class="sec">Training goals · level ${LV[CO.level]}</h2><div class="card"><div class="bars">`;
+    h += `<div class="br"><span>Week</span><i><em class="${wd >= CO.weekGoal ? 'g' : 'y'}" style="width:${Math.min(100, wd / CO.weekGoal * 100)}%"></em></i><b>${wd}/${CO.weekGoal}</b><small>plans</small></div>`;
     Object.keys(CO_AREAS).forEach(k => {
       const a = coArea(k), r = a.v === null ? 0 : Math.min(100, a.ratio * 100);
-      h += `<div class="br"><span>${a.A.n}</span><i><em class="${r >= 100 ? 'g' : r >= 70 ? 'y' : 'r'}" style="width:${r}%"></em></i><b>${a.v === null ? '–' : f1(a.v) + a.A.u}</b><small>Ziel ${a.goal}${a.A.u}</small></div>`;
+      h += `<div class="br"><span>${a.A.n}</span><i><em class="${r >= 100 ? 'g' : r >= 70 ? 'y' : 'r'}" style="width:${r}%"></em></i><b>${a.v === null ? '–' : f1(a.v) + a.A.u}</b><small>goal ${a.goal}${a.A.u}</small></div>`;
     });
-    box.insertAdjacentHTML('beforeend', h + `</div><div class="boardhint">Ø der letzten 5 Ergebnisse je Bereich. Der schwächste Bereich kommt in deinen Tagesplan.</div></div>`);
+    box.insertAdjacentHTML('beforeend', h + `</div><div class="boardhint">Avg. of the last 5 results per area. Your weakest area goes into your daily plan.</div></div>`);
   };
 
   // ===== 10-training.js =====
@@ -2070,10 +2070,10 @@ window.DRILLS = (function () {
   // ---------- Aufgaben ----------
   function mk(type, n, darts, block) {
     let big, cap;
-    if (type === 'A') { big = String(n); cap = 'Die ' + n + ' treffen – egal welcher Ring'; }
-    else if (type === 'B') { big = 'Bull'; cap = 'Bull treffen (25 oder 50)'; }
+    if (type === 'A') { big = String(n); cap = 'Hit the ' + n + ' – any ring'; }
+    else if (type === 'B') { big = 'Bull'; cap = 'Hit the bull (25 or 50)'; }
     else if (n === 25) { big = type === 'D' ? 'Bull' : '25'; cap = type === 'D' ? 'Bullseye (50)' : 'Single Bull (25)'; }
-    else { big = (type === 'S' ? '' : type) + n; cap = { S: 'Single', D: 'Doppel', T: 'Triple' }[type] + ' ' + n; }
+    else { big = (type === 'S' ? '' : type) + n; cap = { S: 'Single', D: 'Double', T: 'Triple' }[type] + ' ' + n; }
     return { type, n, darts, big, cap, block };
   }
   function checkoutPool(L) {
@@ -2103,12 +2103,12 @@ window.DRILLS = (function () {
   }
   function describe(mode, L, c) {
     if (DR[mode]) return DR[mode].describe(L, c, T.set);
-    if (mode === 'single') return `${c} Aufgaben · Single-Felder ${L >= 3 ? '1–20 + Bull' : '1–20'} · ${[4, 3, 2, 2, 1][L]} Darts pro Feld`;
-    if (mode === 'double') return `${c} Aufgaben · ${['D20, D16, D10, D8', 'Top-Doppel (D20, D16, D18, D12, D10, D8, D4)', 'alle Doppel', 'alle Doppel + Bull', 'alle Doppel + Bull'][L]} · ${[6, 5, 4, 3, 2][L]} Darts pro Feld`;
-    if (mode === 'triple') return `${c} Aufgaben · ${['T20, T19', 'T20–T17', 'T20–T15', 'alle Triple', 'alle Triple'][L]} · ${[9, 6, 5, 4, 3][L]} Darts pro Feld`;
-    if (mode === 'checkout') { const r = [[2, 40], [2, 60], [41, 100], [61, 130], [100, 170]][L]; return `${c} Checkouts von ${r[0]} bis ${r[1]} · ${[9, 9, 6, 6, 3][L]} Darts pro Checkout · Weg wird ${L < 3 ? 'angezeigt' : 'nur auf Wunsch angezeigt'}`; }
-    if (mode === 'score') return `${c} Aufnahmen à 3 Darts auf ${L < 2 ? 'das 20er-Segment' : 'die T20'} · Ziel pro Aufnahme: ${SCORE_GOAL[L]} Punkte`;
-    if (mode === 'hit') return `Kompletter Trainingsplan, ${c} Aufgaben in Blöcken: ` + HIT[L].map(([t, d]) => `${BLOCKNAME[t]} (${d} Darts)`).join(' → ');
+    if (mode === 'single') return `${c} tasks · single fields ${L >= 3 ? '1–20 + bull' : '1–20'} · ${[4, 3, 2, 2, 1][L]} darts per field`;
+    if (mode === 'double') return `${c} tasks · ${['D20, D16, D10, D8', 'top doubles (D20, D16, D18, D12, D10, D8, D4)', 'all doubles', 'all doubles + bull', 'all doubles + bull'][L]} · ${[6, 5, 4, 3, 2][L]} darts per field`;
+    if (mode === 'triple') return `${c} tasks · ${['T20, T19', 'T20–T17', 'T20–T15', 'all trebles', 'all trebles'][L]} · ${[9, 6, 5, 4, 3][L]} darts per field`;
+    if (mode === 'checkout') { const r = [[2, 40], [2, 60], [41, 100], [61, 130], [100, 170]][L]; return `${c} checkouts from ${r[0]} to ${r[1]} · ${[9, 9, 6, 6, 3][L]} darts per checkout · route ${L < 3 ? 'shown' : 'shown on request only'}`; }
+    if (mode === 'score') return `${c} visits of 3 darts at ${L < 2 ? 'the 20 segment' : 'the T20'} · goal per visit: ${SCORE_GOAL[L]} points`;
+    if (mode === 'hit') return `Full training plan, ${c} tasks in blocks: ` + HIT[L].map(([t, d]) => `${BLOCKNAME[t]} (${d} Darts)`).join(' → ');
     return '';
   }
 
@@ -2163,7 +2163,7 @@ window.DRILLS = (function () {
     else { if (!S.log.length) { T.sess = null; return; } entry = Object.assign({ date: S.date, mode: S.mode, level: S.level, planned: S.tasks.length }, taskStats(S)); }
     entry.sid = sidOf(entry);
     const r = Object.assign({}, entry); delete r.date; delete r.mode; delete r.level; delete r.sid;
-    TS.put({ id: entry.sid, v: STATS_V, kind: 'training', mode: S.mode, level: S.level, players: [{ name: 'Du', me: true }],
+    TS.put({ id: entry.sid, v: STATS_V, kind: 'training', mode: S.mode, level: S.level, players: [{ name: 'You', me: true }],
       cfg: { perDart: !!S.perDart }, tasks: S.tasks ? S.tasks.map(t => ({ type: t.type, n: t.n, darts: t.darts })) : undefined,
       log: S.log, visits: S.visits, startedAt: S.date, endedAt: nowIso(), result: r }, S.tl || []);
     T.hist.push(entry); T.summary = entry; T.sess = null; T.filter = entry.mode;
@@ -2298,13 +2298,13 @@ window.DRILLS = (function () {
     });
     const tot = e.P && e.B ? [e.P, e.B] : null;
     return [{ id: sidOf(e), v: STATS_V, kind: 'game', mode: 'x01bot', level: e.level,
-      players: [{ name: 'Du', me: true }, { name: 'Bot ' + (BOT[e.level] ? BOT[e.level].n : ''), bot: e.level }],
+      players: [{ name: 'You', me: true }, { name: 'Bot ' + (BOT[e.level] ? BOT[e.level].n : ''), bot: e.level }],
       cfg: { start: e.start, din: !!e.din, out: 'double' }, startedAt: e.date, endedAt: null,
       result: { winner: e.won ? 0 : 1, legs: [e.lp, e.lb] }, totals: tot, legacy: true }, list];
   }
   function legacyTraining(e) {
     const r = Object.assign({}, e); delete r.date; delete r.mode; delete r.level;
-    return [{ id: sidOf(e), v: STATS_V, kind: 'training', mode: e.mode, level: e.level, players: [{ name: 'Du', me: true }],
+    return [{ id: sidOf(e), v: STATS_V, kind: 'training', mode: e.mode, level: e.level, players: [{ name: 'You', me: true }],
       cfg: {}, startedAt: e.date, endedAt: null, result: r, legacy: true }, []];
   }
   function x01Session(e, list) {
@@ -2376,7 +2376,7 @@ window.DRILLS = (function () {
     const g = T.game, P = g.p, V = g.visit;
     const score = bust ? 0 : V.start - P.rem;
     g.vis.p.push({ leg: g.legNo, score, n: V.darts.length, bust, co: checked ? V.start : 0 });
-    g.last.p = visitText(V.darts) + (bust ? ' → Überworfen' : (g.din && !P.in) ? ' → nicht drin' : ' = ' + score) + (checked ? ' ✓' : '');
+    g.last.p = visitText(V.darts) + (bust ? ' → bust' : (g.din && !P.in) ? ' → not in' : ' = ' + score) + (checked ? ' ✓' : '');
     g.lastVisit = V.darts; g.visit = null;
     callVisit('p', score, bust, checked);
     if (!checked) endPlayerTurn();
@@ -2395,10 +2395,10 @@ window.DRILLS = (function () {
       if (T.game !== g || g.botPending !== r) return;
       const d = r.darts[i];
       g.bLast.push({ x: d.x, y: d.y });
-      let txt = d.l === 'Miss' ? 'Daneben (0)' : (d.m === 1 && d.n < 25 ? 'S' + d.n : d.l) + ' = ' + d.v;
-      if (!g.bShowIn) { if (d.m === 2) g.bShowIn = true; else txt += ' · nicht drin'; }
+      let txt = d.l === 'Miss' ? 'Miss (0)' : (d.m === 1 && d.n < 25 ? 'S' + d.n : d.l) + ' = ' + d.v;
+      if (!g.bShowIn) { if (d.m === 2) g.bShowIn = true; else txt += ' · not in'; }
       if (g.bShowIn && !(r.bust && i === r.darts.length - 1)) g.bShowRem -= (g.bShowIn ? d.v : 0);
-      if (r.bust && i === r.darts.length - 1) txt += ' → Überworfen!';
+      if (r.bust && i === r.darts.length - 1) txt += ' → bust!';
       if (r.checked && i === r.darts.length - 1) { g.bShowRem = 0; txt += ' → Checkout! ✓'; }
       g.botPop = { i: i + 1, txt };
       render(); animateBot(g, r, i + 1);
@@ -2416,7 +2416,7 @@ window.DRILLS = (function () {
       (g.tl = g.tl || []).push(mkThrow({ who: 1, leg: g.legNo, visit: vn, dart: i + 1, n: d.n, m: d.m, pts: d.v, x: d.x, y: d.y, rem: d.rb, dbl: d.att ? 1 : null, flag }));
     });
     g.vis.b.push({ leg: g.legNo, score: scored, n: r.darts.length, bust: !!r.bust, co: r.checked ? g.b.rem : 0 });
-    g.last.b = visitText(r.darts) + (r.bust ? ' → Überworfen' : (g.din && !r.isIn) ? ' → nicht drin' : ' = ' + scored) + (r.checked ? ' ✓' : '');
+    g.last.b = visitText(r.darts) + (r.bust ? ' → bust' : (g.din && !r.isIn) ? ' → not in' : ' = ' + scored) + (r.checked ? ' ✓' : '');
     g.bLast = r.darts.map(d => ({ x: d.x, y: d.y }));
     g.b.rem = r.rem; g.b.in = r.isIn; g.busy = false; g.botPending = null; g.botPop = null;
     T.zoom = null;
@@ -2433,7 +2433,7 @@ window.DRILLS = (function () {
       g.phase = 'over';
       const P = pstats(g, 'p'), B = pstats(g, 'b'), sid = 'g_' + g.date, list = g.tl || [];
       TS.put({ id: sid, v: STATS_V, kind: 'game', mode: 'x01bot', level: g.bot,
-        players: [{ name: 'Du', me: true }, { name: 'Bot ' + BOT[g.bot].n, bot: g.bot }],
+        players: [{ name: 'You', me: true }, { name: 'Bot ' + BOT[g.bot].n, bot: g.bot }],
         cfg: { start: g.start, din: g.din, out: 'double', legsTo: g.legsTo, setsTo: g.setsTo }, startedAt: g.date, endedAt: nowIso(),
         result: { winner: w === 'p' ? 0 : 1, legs: [g.legTot.p, g.legTot.b], sets: [g.sets.p, g.sets.b] }, totals: totalsFrom(list, 2) }, list);
       T.hist.push({ sid, date: g.date, mode: 'game', level: g.bot, won: w === 'p', lp: g.legTot.p, lb: g.legTot.b, sp: g.sets.p, sb: g.sets.b, setsTo: g.setsTo, avg: P.avg, botAvg: B.avg,
@@ -2507,8 +2507,8 @@ window.DRILLS = (function () {
   // „Daneben“-Ring rund um die Scheibe: Tipp dort = Fehlwurf (0). Tipp außerhalb = Zoom schließen, nichts eintragen.
   const MISS_R = 240;
   const MISS_RING = `<circle r="${MISS_R}" fill="#16161b" stroke="#3f3f46" stroke-width="1.5" stroke-dasharray="6 5"/>` +
-    `<text y="${-(MISS_R - 26)}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">DANEBEN</text>` +
-    `<text y="${MISS_R - 14}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">DANEBEN</text>`;
+    `<text y="${-(MISS_R - 26)}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">MISS</text>` +
+    `<text y="${MISS_R - 14}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">MISS</text>`;
   // Gezoomt: ganz dezent die Feldnamen in jedem Feld, damit man nicht daneben tippt
   const ZOOM_LABELS = (function () {
     let s = '<g class="zl" fill="#fff" fill-opacity=".38" font-size="4.2" font-weight="700" text-anchor="middle" dominant-baseline="central">';
@@ -2517,7 +2517,7 @@ window.DRILLS = (function () {
         const [x, y] = pt(r, i * 18); s += `<text x="${x}" y="${y}">${t}</text>`;
       });
     });
-    return s + '<text x="0" y="-11">25</text><text x="0" y="0">BULL</text><text x="0" y="203" font-size="5">DANEBEN</text></g>';
+    return s + '<text x="0" y="-11">25</text><text x="0" y="0">BULL</text><text x="0" y="203" font-size="5">MISS</text></g>';
   })();
   // Nur zoomen, wenn der Tipp mehrdeutig ist: Triple/Doppel/Bull oder nah an einer Ring- bzw. Feldgrenze
   const RINGS = [6.35, 15.9, 99, 107, 162, 170];
@@ -2614,7 +2614,7 @@ window.DRILLS = (function () {
       case 'submit': {
         const val = T.input === '' ? NaN : +T.input;
         if (S && S.mode === 'score') {
-          if (isNaN(val) || val > 180 || IMPOSSIBLE.includes(val)) { S.msg = 'Ungültige Punktzahl'; }
+          if (isNaN(val) || val > 180 || IMPOSSIBLE.includes(val)) { S.msg = 'Invalid score'; }
           else { S.msg = ''; S.visits.push(val); T.input = ''; if (S.visits.length >= S.n) finish(); }
         }
         break;
@@ -2691,33 +2691,33 @@ window.DRILLS = (function () {
     return h;
   }
   window.legsSetsHTML = legsSetsHTML;
-  const fmtFormat = (sets, legs) => sets > 1 ? `First to ${sets} sets (${legs} leg${legs > 1 ? 's' : ''} each)` : `First to ${legs} leg${legs > 1 ? 's' : ''}`;
+  const fmtFormat = (sets, legs) => sets > 1 ? `First to ${sets} sets · ${legs} leg${legs > 1 ? 's' : ''} per set` : `First to ${legs} leg${legs > 1 ? 's' : ''}`;
   window.fmtFormat = fmtFormat;
   function viewSetup() {
     const s = T.set;
     if (T.route === 'play') {
       s.mode = 'game';
-      let h = phead('Spielen', 'Gegen den Bot oder mit mehreren Spielern') + `<div class="seg oppseg">${btn('nav', 'Gegen Bot', 'play', '', true)}${window.X01 ? btn('nav', 'Mehrspieler', 'x01') : ''}</div><div class="card">`;
-      h += `<div class="setlabel">Punkte</div><div class="seg">${btn('start', '301', 301, '', s.start === 301)}${btn('start', '501', 501, '', s.start === 501)}</div>`;
-      h += `<div class="setlabel">Einwurf</div><div class="seg">${btn('din', 'Single-In', 0, '', !s.din)}${btn('din', 'Double-In', 1, '', s.din)}</div>`;
-      h += `<div class="setlabel">Bot-Stärke</div><div class="lvl">`;
+      let h = phead('Play', 'Against the bot or with several players') + `<div class="seg oppseg">${btn('nav', 'vs Bot', 'play', '', true)}${window.X01 ? btn('nav', 'Multiplayer', 'x01') : ''}</div><div class="card">`;
+      h += `<div class="setlabel">Points</div><div class="seg">${btn('start', '301', 301, '', s.start === 301)}${btn('start', '501', 501, '', s.start === 501)}</div>`;
+      h += `<div class="setlabel">Check-in</div><div class="seg">${btn('din', 'Single-In', 0, '', !s.din)}${btn('din', 'Double-In', 1, '', s.din)}</div>`;
+      h += `<div class="setlabel">Bot strength</div><div class="lvl">`;
       BOT.forEach((b, i) => { h += btn('bot', `<b>${i + 1}</b><small>${b.n}</small><small>Ø ~${b.a}</small>`, i, '', s.bot === i); });
       h += `</div>` + legsSetsHTML(s, 'legs', 'legsCustom', 'sets', 'legs');
       h += voiceToggle();
-      h += `<div class="desc">${s.start} · ${s.din ? 'Double-In' : 'Single-In'} · Double-Out · gegen Bot „${BOT[s.bot].n}“ (Ø ~${BOT[s.bot].a}) · ${fmtFormat(s.sets || 1, s.legs)}. Du trägst jeden Pfeil einzeln ein – per Tippen auf die Scheibe oder über Single/Double/Triple + Zahl. Nach deinen 3 Pfeilen wirft der Bot.</div>`;
-      return h + `<button class="big go" data-a="go">Spiel starten</button></div>` + extLinks(EXT.playLinks, 'Weitere Spielmodi');
+      h += `<div class="desc">${s.start} · ${s.din ? 'Double-In' : 'Single-In'} · Double-Out · vs bot "${BOT[s.bot].n}" (avg ~${BOT[s.bot].a}) · ${fmtFormat(s.sets || 1, s.legs)}. Enter every dart by tapping the board or with Single/Double/Treble + number. After your 3 darts the bot throws.</div>`;
+      return h + `<button class="big go" data-a="go">Start game</button></div>` + extLinks(EXT.playLinks, 'More game modes');
     }
     if (s.mode === 'game') s.mode = 'hit';
-    let h = phead('Training', 'Wähle, was du heute üben willst') + `<div class="card"><div class="setlabel">Was willst du trainieren?</div><div class="tgrid">`;
+    let h = phead('Training', 'Choose what you want to practise today') + `<div class="card"><div class="setlabel">What do you want to train?</div><div class="tgrid">`;
     Object.entries(TM).forEach(([k, v]) => { if (k !== 'game' && !DR[k]) h += btn('mode', v, k, '', s.mode === k); });
-    h += `</div><div class="setlabel">Trainingsspiele</div><div class="tgrid dgrid">`;
+    h += `</div><div class="setlabel">Training games</div><div class="tgrid dgrid">`;
     Object.keys(DR).forEach(k => { h += btn('mode', DR[k].name, k, '', s.mode === k); });
-    h += `</div><div class="setlabel">Schwierigkeit</div><div class="lvl">`;
+    h += `</div><div class="setlabel">Difficulty</div><div class="lvl">`;
     LV.forEach((l, i) => { h += btn('level', `<b>${i + 1}</b><small>${l}</small>`, i, '', s.level === i); });
-    h += `</div>` + (DR[s.mode] ? DR[s.mode].opts(s, ctx) : `<div class="setlabel">${s.mode === 'score' ? 'Aufnahmen' : 'Aufgaben'}</div><div class="seg">${[10, 20, 30].map(n => btn('tasks', n, n, '', s.tasks === n)).join('')}</div>`);
-    if (PERDART_MODES.includes(s.mode)) h += `<div class="setlabel">Eingabe</div><div class="seg">${btn('perDart', 'Schnell', 0, '', !s.perDart)}${btn('perDart', 'Jeder Pfeil', 1, '', !!s.perDart)}</div>`;
+    h += `</div>` + (DR[s.mode] ? DR[s.mode].opts(s, ctx) : `<div class="setlabel">${s.mode === 'score' ? 'Visits' : 'Tasks'}</div><div class="seg">${[10, 20, 30].map(n => btn('tasks', n, n, '', s.tasks === n)).join('')}</div>`);
+    if (PERDART_MODES.includes(s.mode)) h += `<div class="setlabel">Input</div><div class="seg">${btn('perDart', 'Quick', 0, '', !s.perDart)}${btn('perDart', 'Every dart', 1, '', !!s.perDart)}</div>`;
     h += `<div class="desc">${describe(s.mode, s.level, s.tasks)}</div>`;
-    return h + `<button class="big go" data-a="go">Training starten</button></div>` + extLinks(EXT.trainLinks, 'Weitere Trainings');
+    return h + `<button class="big go" data-a="go">Start training</button></div>` + extLinks(EXT.trainLinks, 'More trainings');
   }
 
   // ---------- Auswertung über alle Spiele ----------
@@ -2754,29 +2754,29 @@ window.DRILLS = (function () {
 
   function viewHome() {
     const L = lifetime(games()), trains = T.hist.filter(e => e.mode !== 'game').length;
-    let h = `<div class="topbar"><h1>${LOGO}Darts</h1><div class="tb">${EXT.music ? `<button data-a="nav" data-v="music" aria-label="Musik"><svg class="i" viewBox="0 0 24 24">${EXT.music.icon.replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg></button>` : ''}<button data-a="homeData" aria-label="Einstellungen und Daten"><svg class="i" viewBox="0 0 24 24">${HICON.data.replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg></button></div></div>`;
+    let h = `<div class="topbar"><h1>${LOGO}Darts</h1><div class="tb">${EXT.music ? `<button data-a="nav" data-v="music" aria-label="Music"><svg class="i" viewBox="0 0 24 24">${EXT.music.icon.replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg></button>` : ''}<button data-a="homeData" aria-label="Settings and data"><svg class="i" viewBox="0 0 24 24">${HICON.data.replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg></button></div></div>`;
     const cat = (a, v, icon, t) => `<button data-a="${a}" data-v="${v}"><span class="ci"><svg class="i" viewBox="0 0 24 24">${icon.replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg></span>${t}</button>`;
-    h += `<div class="cats">${cat('nav', 'play', HICON.play, 'Spielen')}${cat('nav', 'train', HICON.train, 'Training')}${window.X01 ? cat('nav', 'x01', HICON.x01, 'Mehrspieler') : ''}${cat('nav', 'counter', HICON.counter, 'Zähler')}${cat('nav', 'stats', HICON.stats, 'Statistik')}${EXT.music ? cat('nav', 'music', EXT.music.icon, 'Musik') : ''}${cat('homeData', '', HICON.data, 'Daten')}</div>`;
+    h += `<div class="cats">${cat('nav', 'play', HICON.play, 'Play')}${cat('nav', 'train', HICON.train, 'Training')}${window.X01 ? cat('nav', 'x01', HICON.x01, 'Multiplayer') : ''}${cat('nav', 'counter', HICON.counter, 'Counter')}${cat('nav', 'stats', HICON.stats, 'Stats')}${EXT.music ? cat('nav', 'music', EXT.music.icon, 'Music') : ''}${cat('homeData', '', HICON.data, 'Data')}</div>`;
     h += `<div class="statstrip">
       <div><b>${L.n ? f1(L.avg) : '–'}</b><small>Average</small></div>
-      <div><b>${L.n}</b><small>Spiele</small></div>
-      <div><b>${L.n ? Math.round(L.wins / L.n * 100) + ' %' : '–'}</b><small>Siege</small></div>
+      <div><b>${L.n}</b><small>Games</small></div>
+      <div><b>${L.n ? Math.round(L.wins / L.n * 100) + ' %' : '–'}</b><small>Wins</small></div>
       <div><b>${trains}</b><small>Trainings</small></div></div>`;
-    if (T.game && T.game.phase !== 'over') h += `<button class="resume" data-a="nav" data-v="play"><span>Laufendes Spiel fortsetzen</span><b>${T.game.p.rem} : ${T.game.b.rem} ›</b></button>`;
-    if (T.sess) h += `<button class="resume" data-a="nav" data-v="train"><span>Laufendes Training fortsetzen</span><b>${TM[T.sess.mode]} ›</b></button>`;
-    const QS = [['501', '501 gegen Bot', 'Stufe Mittel'], ['301di', '301 Double-In', 'gegen Bot'], ['double', 'Doppel', 'Training'], ['checkout', 'Checkouts', 'Training'],
-                ['atc', 'Around the Clock', '1 bis Bull'], ['bob', "Bob's 27", 'Doppel-Spiel'], ['lad', 'Checkout-Leiter', 'ab 41'], ['score', 'Punkte', 'T20 Scoring'], ['hit', 'Trainingsplan', 'Alles treffen']]
+    if (T.game && T.game.phase !== 'over') h += `<button class="resume" data-a="nav" data-v="play"><span>Resume current game</span><b>${T.game.p.rem} : ${T.game.b.rem} ›</b></button>`;
+    if (T.sess) h += `<button class="resume" data-a="nav" data-v="train"><span>Resume current training</span><b>${TM[T.sess.mode]} ›</b></button>`;
+    const QS = [['501', '501 vs Bot', 'Level Medium'], ['301di', '301 Double-In', 'vs Bot'], ['double', 'Doubles', 'Training'], ['checkout', 'Checkouts', 'Training'],
+                ['atc', 'Around the Clock', '1 to bull'], ['bob', "Bob's 27", 'Doubles game'], ['lad', 'Checkout Ladder', 'from 41'], ['score', 'Scoring', 'T20 scoring'], ['hit', 'Training plan', 'Hit everything']]
       .filter(q => q[0] === '501' || q[0] === '301di' || TM[q[0]]);
-    h += `<h2 class="sec">Schnellstart</h2><div class="carousel">` + QS.map(([k, t, sub]) => `<button class="ccard" data-a="qs" data-v="${k}"><span class="thumb">${thumb(k)}<b>${t}</b></span><small>${sub}</small></button>`).join('') + `</div>`;
+    h += `<h2 class="sec">Quick start</h2><div class="carousel">` + QS.map(([k, t, sub]) => `<button class="ccard" data-a="qs" data-v="${k}"><span class="thumb">${thumb(k)}<b>${t}</b></span><small>${sub}</small></button>`).join('') + `</div>`;
     const last = T.hist.slice(-5).reverse();
     if (last.length) {
-      h += `<h2 class="sec">Zuletzt</h2><div class="rows">`;
+      h += `<h2 class="sec">Recent</h2><div class="rows">`;
       last.forEach(e => {
-        const m = metric(e), d = new Date(e.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
-        h += `<button class="rowi" data-a="nav" data-v="stats"><span class="th">${thumb(e.mode)}</span><span><b>${TM[e.mode] || e.mode}</b><small>${d} · ${m.det || 'Stufe ' + (e.level + 1)}</small></span><span class="res ${e.mode === 'game' ? (e.won ? 'gw' : 'gl') : ''}">${m.main}</span></button>`;
+        const m = metric(e), d = new Date(e.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
+        h += `<button class="rowi" data-a="nav" data-v="stats"><span class="th">${thumb(e.mode)}</span><span><b>${TM[e.mode] || e.mode}</b><small>${d} · ${m.det || 'Level ' + (e.level + 1)}</small></span><span class="res ${e.mode === 'game' ? (e.won ? 'gw' : 'gl') : ''}">${m.main}</span></button>`;
       });
       h += `</div>`;
-    } else h += `<h2 class="sec">Zuletzt</h2><div class="card empty">Noch nichts gespielt. Starte oben ein Spiel oder Training.</div>`;
+    } else h += `<h2 class="sec">Recent</h2><div class="card empty">Nothing played yet. Start a game or training above.</div>`;
     return h;
   }
 
@@ -2787,8 +2787,8 @@ window.DRILLS = (function () {
   // ---------- Stats-Seite ----------
   function viewStatsPage() {
     const tab = T.stab || 'over';
-    let h = phead('Meine Stats', 'Alles aus deinen Spielen und Trainings');
-    h += `<div class="segtabs">${btn('stab', 'Übersicht', 'over', '', tab === 'over')}${btn('stab', 'Trefferquote', 'acc', '', tab === 'acc')}${btn('stab', 'Verlauf', 'hist', '', tab === 'hist')}${btn('stab', 'Mehrspieler', 'multi', '', tab === 'multi')}${btn('stab', 'Daten', 'data', '', tab === 'data')}</div>`;
+    let h = phead('My stats', 'Everything from your games and trainings');
+    h += `<div class="segtabs">${btn('stab', 'Overview', 'over', '', tab === 'over')}${btn('stab', 'Accuracy', 'acc', '', tab === 'acc')}${btn('stab', 'History', 'hist', '', tab === 'hist')}${btn('stab', 'Multiplayer', 'multi', '', tab === 'multi')}${btn('stab', 'Data', 'data', '', tab === 'data')}</div>`;
     if (tab === 'over') return h + viewOverview();
     if (tab === 'acc') return h + viewAccuracy();
     if (tab === 'data') return h + viewData();
@@ -2799,18 +2799,18 @@ window.DRILLS = (function () {
   function viewOverview() {
     const G = games(), L = lifetime(G), F = lifetime(G.slice(-5));
     let h = '';
-    if (!G.length) h += `<div class="card empty">Noch keine Spiele. Spiel ein Spiel gegen den Bot – dann siehst du hier deinen Average.</div>`;
+    if (!G.length) h += `<div class="card empty">No games yet. Play a game against the bot – then you will see your average here.</div>`;
     else {
       const diff = F.avg - L.avg;
-      h += `<div class="card bigavg"><small>Dein Average · aus ${G.length} Spiel${G.length > 1 ? 'en' : ''}</small><div class="avgnum">${f1(L.avg)}</div>
-        <div class="form">Form (letzte ${Math.min(5, G.length)}): <b>${f1(F.avg)}</b> <span class="${diff >= 0 ? 'up' : 'down'}">${diff >= 0 ? '▲' : '▼'} ${f1(Math.abs(diff))}</span></div></div>`;
+      h += `<div class="card bigavg"><small>Your average · from ${G.length} game${G.length > 1 ? 's' : ''}</small><div class="avgnum">${f1(L.avg)}</div>
+        <div class="form">Form (last ${Math.min(5, G.length)}): <b>${f1(F.avg)}</b> <span class="${diff >= 0 ? 'up' : 'down'}">${diff >= 0 ? '▲' : '▼'} ${f1(Math.abs(diff))}</span></div></div>`;
       h += `<div class="sumgrid">
-        <div><b>${f1(L.f9)}</b><small>Ø erste 9</small></div><div><b>${f1(L.coPct)} %</b><small>Checkout (${L.coHits}/${L.coAtt})</small></div><div><b>${L.wins}/${L.n}</b><small>Siege</small></div>
-        <div><b>${L.hiCO || '–'}</b><small>Höchstes Finish</small></div><div><b>${L.bestLeg || '–'}</b><small>Bestes Leg (Darts)</small></div><div><b>${L.best}</b><small>Höchste Aufnahme</small></div>
-        <div><b>${L.s100}</b><small>100+</small></div><div><b>${L.s140}</b><small>140+</small></div><div><b>${L.s180}</b><small>180er</small></div></div>`;
+        <div><b>${f1(L.f9)}</b><small>First 9 avg</small></div><div><b>${f1(L.coPct)} %</b><small>Checkout (${L.coHits}/${L.coAtt})</small></div><div><b>${L.wins}/${L.n}</b><small>Wins</small></div>
+        <div><b>${L.hiCO || '–'}</b><small>Highest finish</small></div><div><b>${L.bestLeg || '–'}</b><small>Best leg (darts)</small></div><div><b>${L.best}</b><small>Highest visit</small></div>
+        <div><b>${L.s100}</b><small>100+</small></div><div><b>${L.s140}</b><small>140+</small></div><div><b>${L.s180}</b><small>180s</small></div></div>`;
       let run = 0, rd = 0;
       const list = G.map(e => { if (e.P) { run += e.P.pts; rd += e.P.darts; } return Object.assign({}, e, { run: rd ? run / rd * 3 : e.avg }); });
-      h += `<h2 class="sec">Entwicklung</h2>` + chart(list, [{ n: 'Ø pro Spiel', c: '#ec4899', k: 'avg' }, { n: 'Gesamt-Average', c: '#a1a1aa', k: 'run' }], null, 'Spiel Nr.');
+      h += `<h2 class="sec">Progress</h2>` + chart(list, [{ n: 'Avg per game', c: '#ec4899', k: 'avg' }, { n: 'Overall average', c: '#a1a1aa', k: 'run' }], null, 'game no.');
     }
     // Trainings
     const modes = Object.keys(TM).filter(k => k !== 'game' && T.hist.some(e => e.mode === k));
@@ -2824,7 +2824,7 @@ window.DRILLS = (function () {
         const avg = last5.reduce((a, e) => a + val(e), 0) / last5.length, best = (O && O.low ? Math.min : Math.max)(...l.map(val));
         const u = O ? O.unit : k === 'score' ? '' : ' %';
         const w = O ? O.bar(avg) : k === 'score' ? avg / 1.2 : avg;
-        h += `<div class="trc"><small>${TM[k]}</small><b>${f1(avg)}${u}</b><span>Ø letzte ${last5.length} · Best ${f1(best)}${u} · ${l.length}×${trainTrend(l, val)}</span>${levelHint(k, l)}<i style="width:${Math.max(0, Math.min(100, w))}%"></i></div>`;
+        h += `<div class="trc"><small>${TM[k]}</small><b>${f1(avg)}${u}</b><span>avg last ${last5.length} · best ${f1(best)}${u} · ${l.length}×${trainTrend(l, val)}</span>${levelHint(k, l)}<i style="width:${Math.max(0, Math.min(100, w))}%"></i></div>`;
       });
       h += `</div>`;
     }
@@ -2864,33 +2864,33 @@ window.DRILLS = (function () {
     const rms = Math.sqrt(ds.reduce((a, d) => a + (d.x - mx) ** 2 + (d.y - my) ** 2, 0) / N);
     let txt = [];
     if (n === 25) {
-      if (Math.abs(mx) > 2) txt.push(`${f1(Math.abs(mx))} mm zu weit ${mx < 0 ? 'links' : 'rechts'}`);
-      if (Math.abs(my) > 2) txt.push(`${f1(Math.abs(my))} mm zu ${my < 0 ? 'tief' : 'hoch'}`);
+      if (Math.abs(mx) > 2) txt.push(`${f1(Math.abs(mx))} mm too far ${mx < 0 ? 'left' : 'right'}`);
+      if (Math.abs(my) > 2) txt.push(`${f1(Math.abs(my))} mm too ${my < 0 ? 'low' : 'high'}`);
     } else {
       const i = ORDER.indexOf(n), rt = m === 3 ? 103 : m === 2 ? 166 : 134;
       const rm = Math.hypot(mx, my), cwm = Math.atan2(mx, my) * 180 / Math.PI;
       let da = ((cwm - i * 18 + 540) % 360) - 180; const tang = rm * da * Math.PI / 180;
-      if (m !== 1 && Math.abs(rm - rt) > 2) txt.push(`${f1(Math.abs(rm - rt))} mm zu weit ${rm > rt ? 'außen' : 'innen'}`);
-      if (Math.abs(tang) > 2) txt.push(`${f1(Math.abs(tang))} mm Richtung ${ORDER[(i + (tang > 0 ? 1 : 19)) % 20]}`);
+      if (m !== 1 && Math.abs(rm - rt) > 2) txt.push(`${f1(Math.abs(rm - rt))} mm too far ${rm > rt ? 'out' : 'in'}`);
+      if (Math.abs(tang) > 2) txt.push(`${f1(Math.abs(tang))} mm towards ${ORDER[(i + (tang > 0 ? 1 : 19)) % 20]}`);
     }
-    return { mean: { x: mx.toFixed(1), y: my.toFixed(1), r: Math.max(4, rms).toFixed(1) }, rms, txt: txt.length ? txt.join(', ') : 'sehr zentral – kaum Abweichung' };
+    return { mean: { x: mx.toFixed(1), y: my.toFixed(1), r: Math.max(4, rms).toFixed(1) }, rms, txt: txt.length ? txt.join(', ') : 'very central – hardly any deviation' };
   }
 
   function viewAccuracy() {
     const D = allDots().filter(d => d.aim);
-    if (!D.length) return `<div class="card empty">Noch keine Pfeil-Daten. Spiel ein Spiel gegen den Bot und tipp deine Treffer auf der Scheibe an – dann siehst du hier, wo du hinwirfst.</div>`;
+    if (!D.length) return `<div class="card empty">No dart data yet. Play a game against the bot and tap your hits on the board – then you will see where your darts land.</div>`;
     const cnt = {}; D.forEach(d => { cnt[d.aim] = (cnt[d.aim] || 0) + 1; });
     const targets = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
     const sel = T.tgt === '__all' ? '__all' : (T.tgt && cnt[T.tgt] ? T.tgt : targets[0]);
     const rate = t => D.filter(d => d.aim === t && d.l === t).length / cnt[t] * 100;
-    let h = `<div class="card"><div class="setlabel">Ziel wählen</div><div class="tchips">${btn('tgt', 'Alle Pfeile', '__all', 'all', sel === '__all')}`;
+    let h = `<div class="card"><div class="setlabel">Choose target</div><div class="tchips">${btn('tgt', 'All darts', '__all', 'all', sel === '__all')}`;
     targets.slice(0, 16).forEach(t => { const r = rate(t); h += btn('tgt', `${disp(t)}<small class="${r >= 40 ? 'gw' : r >= 20 ? 'mid' : 'gl'}">${Math.round(r)} %</small>`, t, '', sel === t); });
     h += `</div>`;
     if (sel === '__all') {
       const dots = D.map(d => ({ x: d.x, y: d.y, c: '#facc15', o: .55, r: 3.5, s: '#000', sw: .4 }));
-      h += `<div class="boardwrap">${boardSVG({ dots })}</div><div class="live">${D.length} Pfeile – jeder Punkt ist ein Wurf, den du eingetragen hast.</div>`;
+      h += `<div class="boardwrap">${boardSVG({ dots })}</div><div class="live">${D.length} darts – each dot is a throw you entered.</div>`;
       const lc = {}; D.forEach(d => { lc[d.l] = (lc[d.l] || 0) + 1; });
-      h += fieldTable(lc, D.length, 'Wo du am meisten hintriffst') + `</div>`;
+      h += fieldTable(lc, D.length, 'Where you hit most') + `</div>`;
       return h + targetList(targets, cnt, rate);
     }
     const ds = D.filter(d => d.aim === sel), N = ds.length, { n } = parseLab(sel);
@@ -2899,15 +2899,15 @@ window.DRILLS = (function () {
     const tdc = tendency(ds, sel);
     const dots = ds.map(d => ({ x: d.x, y: d.y, c: d.l === sel ? '#22c55e' : (d.l !== 'Miss' && parseLab(d.l).n === n) ? '#facc15' : '#ef4444', o: .85, r: 4, s: '#000', sw: .5 }));
     h += `<div class="boardwrap">${boardSVG({ dots, mean: tdc.mean, extra: targetShape(sel) })}</div>`;
-    h += `<div class="legend2"><span style="--c:#22c55e">${disp(sel)} getroffen</span><span style="--c:#facc15">richtige Zahl</span><span style="--c:#ef4444">daneben</span></div>`;
-    h += `<div class="sumgrid"><div><b>${N}</b><small>Würfe auf ${disp(sel)}</small></div><div><b class="${hits / N >= .4 ? 'gw' : hits / N >= .2 ? '' : 'gl'}">${f1(hits / N * 100)} %</b><small>Trefferquote</small></div><div><b>${f1(num / N * 100)} %</b><small>richtige Zahl</small></div></div>`;
+    h += `<div class="legend2"><span style="--c:#22c55e">${disp(sel)} hit</span><span style="--c:#facc15">right number</span><span style="--c:#ef4444">miss</span></div>`;
+    h += `<div class="sumgrid"><div><b>${N}</b><small>darts at ${disp(sel)}</small></div><div><b class="${hits / N >= .4 ? 'gw' : hits / N >= .2 ? '' : 'gl'}">${f1(hits / N * 100)} %</b><small>hit rate</small></div><div><b>${f1(num / N * 100)} %</b><small>right number</small></div></div>`;
     const miss = {}; ds.filter(d => d.l !== sel).forEach(d => { miss[d.l] = (miss[d.l] || 0) + 1; });
     const topMiss = Object.entries(miss).sort((a, b) => b[1] - a[1])[0];
-    let tip = `<b>Tendenz:</b> ${tdc.txt}. Streuung ${f1(tdc.rms)} mm.`;
-    if (topMiss) tip += `<br><b>Häufigster Fehlwurf:</b> ${disp(topMiss[0])} (${f1(topMiss[1] / N * 100)} %).`;
-    if (sel[0] === 'D' && hits / N < .25 && N >= 5) tip += `<br>👉 Auf ${disp(sel)} liegst du unter 25 %. Übe ihn gezielt im Doppel-Training.`;
+    let tip = `<b>Tendency:</b> ${tdc.txt}. Spread ${f1(tdc.rms)} mm.`;
+    if (topMiss) tip += `<br><b>Most common miss:</b> ${disp(topMiss[0])} (${f1(topMiss[1] / N * 100)} %).`;
+    if (sel[0] === 'D' && hits / N < .25 && N >= 5) tip += `<br>👉 You are under 25 % on ${disp(sel)}. Practise it in doubles training.`;
     h += `<div class="hint">${tip}</div>`;
-    h += fieldTable(miss, N, 'Wohin deine Fehlwürfe gehen') + `</div>`;
+    h += fieldTable(miss, N, 'Where your misses go') + `</div>`;
     return h + targetList(targets, cnt, rate);
   }
   function fieldTable(c, N, title) {
@@ -2916,23 +2916,23 @@ window.DRILLS = (function () {
     return `<div class="setlabel">${title}</div><div class="bars">${top.map(([l, k]) => `<div class="br"><span>${disp(l)}</span><i><em style="width:${k / N * 100}%"></em></i><b>${f1(k / N * 100)} %</b></div>`).join('')}</div>`;
   }
   function targetList(targets, cnt, rate) {
-    let h = `<h2 class="sec">Alle Ziele</h2><div class="card"><div class="bars">`;
+    let h = `<h2 class="sec">All targets</h2><div class="card"><div class="bars">`;
     targets.forEach(t => { const r = rate(t); h += `<div class="br clk" data-a="tgt" data-v="${t}"><span>${disp(t)}</span><i><em class="${r >= 40 ? 'g' : r >= 20 ? 'y' : 'r'}" style="width:${r}%"></em></i><b>${Math.round(r)} %</b><small>${cnt[t]}×</small></div>`; });
-    return h + `</div><div class="boardhint">Ziel = dein Checkout-Weg, sonst T20. Treffer = genau dieses Feld.</div></div>`;
+    return h + `</div><div class="boardhint">Target = your checkout route, otherwise T20. Hit = exactly this field.</div></div>`;
   }
 
   function viewHistory() {
-    let h = `<div class="chipsel">${btn('filter', 'Alle', 'all', '', T.filter === 'all')}`;
+    let h = `<div class="chipsel">${btn('filter', 'All', 'all', '', T.filter === 'all')}`;
     Object.entries(TM).forEach(([k, v]) => { h += btn('filter', v, k, '', T.filter === k); });
     h += `</div>`;
     const list = T.hist.map((e, i) => Object.assign({ i }, e)).filter(e => T.filter === 'all' || e.mode === T.filter);
-    if (!list.length) return h + `<div class="card empty">Noch keine Einträge${T.filter !== 'all' ? ' für ' + TM[T.filter] : ''}.</div>`;
+    if (!list.length) return h + `<div class="card empty">No entries yet${T.filter !== 'all' ? ' for ' + TM[T.filter] : ''}.</div>`;
     if (T.filter !== 'all') { const cl = DR[T.filter] && DR[T.filter].list ? DR[T.filter].list(list) : list; if (cl.length) h += chart(cl); }
-    if (T.filter === 'game') h += `<div class="boardhint">Tippe auf ein Spiel für die komplette Statistik</div>`;
-    h += `<div class="card tablecard"><table><tr><th>Datum</th><th>Modus</th><th>Stufe</th><th>Ergebnis</th><th></th></tr>`;
+    if (T.filter === 'game') h += `<div class="boardhint">Tap a game for the full stats</div>`;
+    h += `<div class="card tablecard"><table><tr><th>Date</th><th>Mode</th><th>Level</th><th>Result</th><th></th></tr>`;
     list.slice().reverse().forEach(e => {
       const d = new Date(e.date), m = metric(e);
-      const ds = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + '<br><small>' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + '</small>';
+      const ds = d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) + '<br><small>' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + '</small>';
       const ex = e.mode === 'game' && e.P;
       h += `<tr${ex ? ` data-a="exp" data-v="${e.i}" class="clk"` : ''}><td>${ds}</td><td>${TM[e.mode]}${ex ? ' ▾' : ''}</td><td>${e.level + 1}</td><td><b class="${e.mode === 'game' ? (e.won ? 'gw' : 'gl') : 'gw'}">${m.main}</b><br><small>${m.det}</small></td><td>${btn('del', '×', e.i, 'del')}</td></tr>`;
       if (ex && T.exp === e.i) h += `<tr><td colspan="5">${cmpTable(e.P, e.B)}</td></tr>`;
@@ -2949,7 +2949,7 @@ window.DRILLS = (function () {
   // ---------- X01 Mehrspieler ----------
   function viewMulti() {
     const H = x01Hist();
-    if (!H.length) return `<div class="card empty">Noch keine Mehrspieler-Spiele. Starte unter Spielen → X01 Mehrspieler ein Spiel – danach siehst du hier, wer wie wirft.</div>`;
+    if (!H.length) return `<div class="card empty">No multiplayer games yet. Start one under Play → Multiplayer – then you will see how everyone throws.</div>`;
     // Pro Spielername zusammenfassen; Checkout-Quote nur aus Spielen mit Einzelwürfen
     const P = {};
     H.forEach(e => {
@@ -2963,17 +2963,17 @@ window.DRILLS = (function () {
       });
     });
     const rows = Object.values(P).sort((a, b) => b.wins - a.wins || b.pts / (b.darts || 1) - a.pts / (a.darts || 1));
-    let h = `<div class="card tablecard"><div class="setlabel">Spieler · ${H.length} Spiel${H.length > 1 ? 'e' : ''}</div><table class="multi"><tr><th>Spieler</th><th>Siege</th><th>Ø</th><th>Checkout</th><th>180er</th><th>Finish</th></tr>`;
+    let h = `<div class="card tablecard"><div class="setlabel">Players · ${H.length} game${H.length > 1 ? 's' : ''}</div><table class="multi"><tr><th>Player</th><th>Wins</th><th>Avg</th><th>Checkout</th><th>180s</th><th>Finish</th></tr>`;
     rows.forEach(a => {
-      h += `<tr><td><b>${escH(a.name)}</b><br><small>${a.games} Spiel${a.games > 1 ? 'e' : ''}</small></td><td>${a.wins}</td><td><b>${f1(a.darts ? a.pts / a.darts * 3 : 0)}</b></td>`
+      h += `<tr><td><b>${escH(a.name)}</b><br><small>${a.games} game${a.games > 1 ? 's' : ''}</small></td><td>${a.wins}</td><td><b>${f1(a.darts ? a.pts / a.darts * 3 : 0)}</b></td>`
         + `<td>${a.coAtt ? f1(a.coHits / a.coAtt * 100) + ' %<br><small>' + a.coHits + '/' + a.coAtt + '</small>' : '–'}</td><td>${a.s180}</td><td>${a.hiCO || '–'}</td></tr>`;
     });
-    h += `</table><div class="boardhint">Checkout-Quote = Checkouts / Pfeile mit Checkout-Chance. Zählt ab dieser Version (ältere Spiele haben keine Einzelwürfe).</div></div>`;
-    h += `<h2 class="sec">Spiele</h2><div class="card tablecard"><table><tr><th>Datum</th><th>Spiel</th><th>Ergebnis</th></tr>`;
+    h += `</table><div class="boardhint">Checkout rate = checkouts / darts at a checkout. Counted from this version on (older games have no single darts).</div></div>`;
+    h += `<h2 class="sec">Games</h2><div class="card tablecard"><table><tr><th>Date</th><th>Game</th><th>Result</th></tr>`;
     H.slice().reverse().forEach(e => {
       const d = new Date(e.date);
-      const ds = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + '<br><small>' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + '</small>';
-      const ps = e.players.map(p => `${p.name === e.winner ? '<b class="gw">' + escH(p.name) + ' ' + p.legs + '</b>' : escH(p.name) + ' ' + p.legs} <small>Ø ${f1(p.avg)}</small>`).join('<br>');
+      const ds = d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) + '<br><small>' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + '</small>';
+      const ps = e.players.map(p => `${p.name === e.winner ? '<b class="gw">' + escH(p.name) + ' ' + p.legs + '</b>' : escH(p.name) + ' ' + p.legs} <small>avg ${f1(p.avg)}</small>`).join('<br>');
       h += `<tr><td>${ds}</td><td>${e.start}<br><small>${e.out === 'double' ? 'Double-Out' : 'Single-Out'}</small></td><td>${ps}</td></tr>`;
     });
     return h + `</table></div>`;
@@ -3001,9 +3001,9 @@ window.DRILLS = (function () {
     const F = doubleRates(), keys = Object.keys(F).sort((a, b) => (F[b].g[1] + F[b].t[1]) - (F[a].g[1] + F[a].t[1])).slice(0, 10);
     if (!keys.length) return '';
     const pc = a => a[1] ? `${f1(a[0] / a[1] * 100)} %<br><small>${a[0]}/${a[1]}</small>` : '–';
-    let h = `<h2 class="sec">Doppel: Spiel und Training</h2><div class="card tablecard"><table class="multi"><tr><th>Feld</th><th>Im Spiel</th><th>Im Training</th></tr>`;
+    let h = `<h2 class="sec">Doubles: game and training</h2><div class="card tablecard"><table class="multi"><tr><th>Field</th><th>In games</th><th>In training</th></tr>`;
     keys.forEach(k => { h += `<tr><td><b>${k}</b></td><td>${pc(F[k].g)}</td><td>${pc(F[k].t)}</td></tr>`; });
-    return h + `</table><div class="boardhint">Treffer / Pfeile auf dieses Doppel. Im Spiel zählen Pfeile, deren Checkout-Weg auf das Doppel ging.</div></div>`;
+    return h + `</table><div class="boardhint">Hits / darts at this double. In games, darts count whose checkout route went to this double.</div></div>`;
   }
 
   // ---------- Trainingsfortschritt: Trend und Stufen-Empfehlung ----------
@@ -3017,8 +3017,8 @@ window.DRILLS = (function () {
     if (DR[k] || k === 'score' || l.length < 3) return '';
     const last = l.slice(-3), L = last[0].level;
     if (!last.every(e => e.level === L)) return '';
-    if (L < 4 && last.every(e => e.rate >= LEVEL_UP)) return `<em class="lvhint">Bereit für Stufe ${LV[L + 1]}</em>`;
-    if (L > 0 && last.every(e => e.rate <= LEVEL_DOWN)) return `<em class="lvhint">Tipp: Stufe ${LV[L - 1]} probieren</em>`;
+    if (L < 4 && last.every(e => e.rate >= LEVEL_UP)) return `<em class="lvhint">Ready for level ${LV[L + 1]}</em>`;
+    if (L > 0 && last.every(e => e.rate <= LEVEL_DOWN)) return `<em class="lvhint">Tip: try level ${LV[L - 1]}</em>`;
     return '';
   }
 
@@ -3027,40 +3027,40 @@ window.DRILLS = (function () {
   function viewTask() {
     const S = T.sess, task = S.tasks[S.idx], st = taskStats(S);
     let h = `<div class="card">`;
-    h += `<div class="tophead"><span>${TM[S.mode]} · ${LV[S.level]}</span><span>Aufgabe ${S.idx + 1} / ${S.tasks.length}</span></div>`;
+    h += `<div class="tophead"><span>${TM[S.mode]} · ${LV[S.level]}</span><span>Task ${S.idx + 1} / ${S.tasks.length}</span></div>`;
     h += `<div class="bar"><i style="width:${S.idx / S.tasks.length * 100}%"></i></div>`;
     if (task.block) h += `<div class="block">Block ${task.block.i}/${task.block.of} · ${task.block.name}</div>`;
     h += `<div class="target">${task.big}</div><div class="tcap">${task.cap}</div>`;
     h += `<div class="tdarts">${task.darts} Dart${task.darts > 1 ? 's' : ''}</div>`;
     if (task.type === 'C') {
       const showR = S.level < 3 || T.showRoute;
-      h += showR ? `<div class="route">Weg: ${task.route}</div>` : `<button class="link" data-a="route">Weg anzeigen</button>`;
+      h += showR ? `<div class="route">Route: ${task.route}</div>` : `<button class="link" data-a="route">Show route</button>`;
     }
     if (S.perDart && (S.phase === 'task' || S.phase === 'more')) {
       const k = S.cur || 0;
-      h += `<div class="setlabel c">Pfeil ${k + 1}${S.phase === 'task' ? ' von ' + task.darts : ' (Zusatz)'}</div>`;
-      h += `<div class="row2 pdrow">${btn('pdHit', '✓ Treffer', undefined, 'mid pdhit')}${btn('pdMiss', '✕ Daneben', undefined, 'mid pdmiss')}</div>`;
-      if (S.phase === 'more') h += `<button class="link" data-a="skip">Aufgeben → nächste Aufgabe</button>`;
+      h += `<div class="setlabel c">Dart ${k + 1}${S.phase === 'task' ? ' of ' + task.darts : ' (extra)'}</div>`;
+      h += `<div class="row2 pdrow">${btn('pdHit', '✓ Hit', undefined, 'mid pdhit')}${btn('pdMiss', '✕ Miss', undefined, 'mid pdmiss')}</div>`;
+      if (S.phase === 'more') h += `<button class="link" data-a="skip">Give up → next task</button>`;
     } else if (S.phase === 'task') {
-      h += `<div class="setlabel c">Geschafft mit …</div><div class="okgrid">`;
+      h += `<div class="setlabel c">Done with …</div><div class="okgrid">`;
       for (let i = 1; i <= task.darts; i++) h += btn('ok', `✓ ${i}`, i, 'okb');
-      h += `</div><button class="big bad" data-a="fail">✕ Nicht in ${task.darts} Darts geschafft</button>`;
+      h += `</div><button class="big bad" data-a="fail">✕ Not done in ${task.darts} darts</button>`;
     } else if (S.phase === 'fail') {
-      h += `<div class="setlabel c">Nicht in ${task.darts} Darts geschafft – wie weiter?</div>`;
-      h += `<div class="row2">${btn('cont', '🎯 Weiterwerfen', undefined, 'mid')}${btn('skip', 'Weiter →', undefined, 'mid')}</div>`;
+      h += `<div class="setlabel c">Not done in ${task.darts} darts – what next?</div>`;
+      h += `<div class="row2">${btn('cont', '🎯 Keep throwing', undefined, 'mid')}${btn('skip', 'Next →', undefined, 'mid')}</div>`;
     } else if (S.phase === 'more') {
-      h += `<div class="setlabel c">Wirf weiter, bis du triffst. Wie viele Darts insgesamt?</div>`;
+      h += `<div class="setlabel c">Keep throwing until you hit. How many darts in total?</div>`;
       h += `<div class="stepper">${btn('moreM', '−')}<span>${S.more}</span>${btn('moreP', '+')}</div>`;
-      h += `<button class="big go" data-a="moreOk">✓ Geschafft mit ${S.more} Darts</button>`;
-      h += `<button class="link" data-a="skip">Doch aufgeben → nächste Aufgabe</button>`;
+      h += `<button class="big go" data-a="moreOk">✓ Done with ${S.more} darts</button>`;
+      h += `<button class="link" data-a="skip">Give up after all → next task</button>`;
     }
-    h += `<div class="live">Erfolg <b>${st.ok}/${st.n}</b> · Trefferquote <b>${f1(st.hitPct)} %</b></div>`;
+    h += `<div class="live">Success <b>${st.ok}/${st.n}</b> · Hit rate <b>${f1(st.hitPct)} %</b></div>`;
     h += footer();
     return h + `</div>`;
   }
 
   function keypad(quick) {
-    let h = `<div class="disp">${T.input === '' ? '<span class="ph">Punkte eingeben</span>' : T.input}</div>`;
+    let h = `<div class="disp">${T.input === '' ? '<span class="ph">Enter score</span>' : T.input}</div>`;
     if (quick) h += `<div class="quick">${quick.map(q => btn('quick', q, q)).join('')}</div>`;
     h += `<div class="pad">`;
     [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(k => { h += btn('key', k, k); });
@@ -3071,10 +3071,10 @@ window.DRILLS = (function () {
   function viewScore() {
     const S = T.sess, st = scoreStats(S);
     let h = `<div class="card">`;
-    h += `<div class="tophead"><span>Punkte · ${LV[S.level]}</span><span>Aufnahme ${S.visits.length + 1} / ${S.n}</span></div>`;
+    h += `<div class="tophead"><span>Scoring · ${LV[S.level]}</span><span>Visit ${S.visits.length + 1} / ${S.n}</span></div>`;
     h += `<div class="bar"><i style="width:${S.visits.length / S.n * 100}%"></i></div>`;
-    h += `<div class="target sm">${S.level < 2 ? '20er' : 'T20'}</div><div class="tcap">3 Darts · Ziel: ${S.goal}+ Punkte</div>`;
-    h += `<div class="live">Ø <b>${f1(st.avg)}</b> · Ziel erreicht <b>${f1(st.goalPct)} %</b> · Best <b>${st.best}</b></div>`;
+    h += `<div class="target sm">${S.level < 2 ? '20s' : 'T20'}</div><div class="tcap">3 darts · goal: ${S.goal}+ points</div>`;
+    h += `<div class="live">Avg <b>${f1(st.avg)}</b> · goal reached <b>${f1(st.goalPct)} %</b> · Best <b>${st.best}</b></div>`;
     if (S.visits.length) h += `<div class="chips">${S.visits.slice(-12).map(v => `<span class="${v >= S.goal ? 'g' : ''}">${v}</span>`).join('')}</div>`;
     if (S.msg) h += `<div class="msg">${S.msg}</div>`;
     h += keypad([26, 41, 45, 60, 81, 85, 100, 140]);
@@ -3083,19 +3083,19 @@ window.DRILLS = (function () {
   }
 
   function footer() {
-    if (T.confirm === 'end') return `<div class="confirmbox"><p>Training beenden?</p><div class="row2">${btn('no', 'Weiter trainieren', undefined, 'mid')}${btn('endSave', 'Beenden & speichern', undefined, 'mid')}</div>${btn('endDrop', 'Verwerfen (nicht speichern)', undefined, 'link red')}</div>`;
-    return `<div class="row2 foot">${btn('undoTask', '↶ Rückgängig', undefined, 'mid')}${btn('end', 'Training beenden', undefined, 'mid')}</div>`;
+    if (T.confirm === 'end') return `<div class="confirmbox"><p>End training?</p><div class="row2">${btn('no', 'Keep training', undefined, 'mid')}${btn('endSave', 'End & save', undefined, 'mid')}</div>${btn('endDrop', 'Discard (do not save)', undefined, 'link red')}</div>`;
+    return `<div class="row2 foot">${btn('undoTask', '↶ Undo', undefined, 'mid')}${btn('end', 'End training', undefined, 'mid')}</div>`;
   }
 
   function cmpTable(P, B) {
     const rows = [
-      ['Average', f1(P.avg), f1(B.avg)], ['Ø erste 9', f1(P.f9), f1(B.f9)], ['Ø erste 6', f1(P.f6), f1(B.f6)],
+      ['Average', f1(P.avg), f1(B.avg)], ['First 9 avg', f1(P.f9), f1(B.f9)], ['First 6 avg', f1(P.f6), f1(B.f6)],
       ['Checkout %', `${f1(P.coPct)} % <small>(${P.coHits}/${P.coAtt})</small>`, `${f1(B.coPct)} % <small>(${B.coHits}/${B.coAtt})</small>`],
-      ['Höchstes Finish', P.hiCO || '–', B.hiCO || '–'], ['Bestes Leg', P.bestLeg ? P.bestLeg + ' Darts' : '–', B.bestLeg ? B.bestLeg + ' Darts' : '–'],
-      ['Höchste Aufnahme', P.best, B.best], ['40+', P.s40, B.s40], ['100+', P.s100, B.s100], ['120+', P.s120, B.s120],
-      ['140+', P.s140, B.s140], ['180', P.s180, B.s180], ['Darts geworfen', P.darts, B.darts], ['Punkte gesamt', P.pts, B.pts]
+      ['Highest finish', P.hiCO || '–', B.hiCO || '–'], ['Best leg', P.bestLeg ? P.bestLeg + ' darts' : '–', B.bestLeg ? B.bestLeg + ' darts' : '–'],
+      ['Highest visit', P.best, B.best], ['40+', P.s40, B.s40], ['100+', P.s100, B.s100], ['120+', P.s120, B.s120],
+      ['140+', P.s140, B.s140], ['180', P.s180, B.s180], ['Darts thrown', P.darts, B.darts], ['Total points', P.pts, B.pts]
     ];
-    return `<table class="cmp"><tr><th></th><th>Du</th><th>Bot</th></tr>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>`;
+    return `<table class="cmp"><tr><th></th><th>You</th><th>Bot</th></tr>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>`;
   }
 
   function viewGame() {
@@ -3104,9 +3104,9 @@ window.DRILLS = (function () {
     h += `<div class="tophead"><span>${voiceBtn()}${g.start} · ${g.din ? 'Double-In' : 'Single-In'}</span><span>${(g.setsTo || 1) > 1 ? `Set ${g.setNo || 1} · ` : ''}Leg ${g.legNo} · ${fmtFormat(g.setsTo || 1, g.legsTo)}</span></div>`;
     const panel = (who, name, PL, avg, last, legs) => `<div class="gp ${g.turn === who && g.phase === 'play' ? 'act' : ''}">
         <div class="gn">${name}</div><div class="grem">${PL.rem}</div>
-        <div class="gs">Ø ${f1(avg)} · ${(g.setsTo || 1) > 1 ? `Sets ${g.sets[who]} · ` : ''}Legs ${legs}${!PL.in ? ' · <span class="warn">nicht drin</span>' : ''}</div>
+        <div class="gs">avg ${f1(avg)} · ${(g.setsTo || 1) > 1 ? `Sets ${g.sets[who]} · ` : ''}Legs ${legs}${!PL.in ? ' · <span class="warn">not in</span>' : ''}</div>
         <div class="glast">${last || '&nbsp;'}</div></div>`;
-    h += `<div class="gboard">${panel('p', 'Du', g.p, P.avg, g.last.p, g.legs.p)}${panel('b', 'Bot · ' + BOT[g.bot].n, g.botPending ? { rem: g.bShowRem, in: g.bShowIn } : g.b, B.avg, g.botPending ? (g.botPop ? 'Pfeil ' + g.botPop.i + ': ' + g.botPop.txt : 'wirft …') : g.last.b, g.legs.b)}</div>`;
+    h += `<div class="gboard">${panel('p', 'You', g.p, P.avg, g.last.p, g.legs.p)}${panel('b', 'Bot · ' + BOT[g.bot].n, g.botPending ? { rem: g.bShowRem, in: g.bShowIn } : g.b, B.avg, g.botPending ? (g.botPop ? 'Dart ' + g.botPop.i + ': ' + g.botPop.txt : 'throwing …') : g.last.b, g.legs.b)}</div>`;
 
     if (g.phase === 'play') {
       const V = g.visit ? g.visit.darts : [];
@@ -3118,63 +3118,63 @@ window.DRILLS = (function () {
       else if (!V.length) g.bLast.forEach((d, i) => dots.push({ x: d.x, y: d.y, c: '#3b82f6', o: .5, r: 5, s: '#fff', sw: .8 }));
       V.forEach((d, i) => { if (d.x !== null && d.x !== undefined) dots.push({ x: d.x, y: d.y, c: '#facc15', r: 7, t: i + 1 }); });
       h += `<div class="gsplit"><div class="gleft">`;
-      if (g.busy) h += `<div class="botpop ${g.botPop ? 'on' : ''}">${g.botPop ? `<small>Bot · Pfeil ${g.botPop.i}</small>${g.botPop.txt}` : '<small>Bot</small>wirft …'}</div>`;
+      if (g.busy) h += `<div class="botpop ${g.botPop ? 'on' : ''}">${g.botPop ? `<small>Bot · dart ${g.botPop.i}</small>${g.botPop.txt}` : '<small>Bot</small>throwing …'}</div>`;
       h += `<div class="boardwrap">${boardSVG({ click: myTurn, zoom: T.zoom, dots })}</div>`;
-      if (T.zoom) h += `<div class="zoombar"><span>Genau tippen, wo der Pfeil steckt · außerhalb des grauen Rings tippen = zurück</span>${btn('zoomOff', 'Abbrechen', undefined, 'zb')}</div>`;
-      else if (myTurn) h += `<div class="boardhint">Auf die Scheibe tippen${T.set.zoom !== false ? ' (bei Triple, Doppel und Grenzen wird gezoomt)' : ''} oder unten das Feld wählen · grauer Ring = Daneben</div>`;
+      if (T.zoom) h += `<div class="zoombar"><span>Tap exactly where the dart landed · tap outside the grey ring = back</span>${btn('zoomOff', 'Cancel', undefined, 'zb')}</div>`;
+      else if (myTurn) h += `<div class="boardhint">Tap the board${T.set.zoom !== false ? ' (zooms in on trebles, doubles and borders)' : ''} or pick the field below · grey ring = miss</div>`;
       h += `</div><div class="gright">`;
 
-      if (g.busy) h += `<div class="wait">Du bist gleich wieder dran …</div>`;
+      if (g.busy) h += `<div class="wait">You are up next …</div>`;
       else {
-        h += `<div class="seg inpseg">${btn('inp', 'Scheibe', 'board', '', inp === 'board')}${btn('inp', 'Tastatur', 'keys', '', inp === 'keys')}</div>`;
-        h += `<div class="slots">${[0, 1, 2].map(i => `<div class="${V[i] ? 'f' : ''}">${V[i] ? V[i].l : 'Pfeil ' + (i + 1)}</div>`).join('')}<div class="sum">${V.reduce((a, d) => a + d.v, 0)}</div></div>`;
-        if (!g.p.in) h += `<div class="hint">Double-In: Erst ein Doppel bringt dich rein. Pfeile davor zählen 0.</div>`;
+        h += `<div class="seg inpseg">${btn('inp', 'Board', 'board', '', inp === 'board')}${btn('inp', 'Keypad', 'keys', '', inp === 'keys')}</div>`;
+        h += `<div class="slots">${[0, 1, 2].map(i => `<div class="${V[i] ? 'f' : ''}">${V[i] ? V[i].l : 'Dart ' + (i + 1)}</div>`).join('')}<div class="sum">${V.reduce((a, d) => a + d.v, 0)}</div></div>`;
+        if (!g.p.in) h += `<div class="hint">Double-in: only a double gets you in. Darts before that score 0.</div>`;
         else { const rt = route(g.p.rem, 3 - V.length); if (rt) h += `<div class="route">Checkout: ${routeText(rt)}</div>`; }
         if (g.msg) h += `<div class="msg">${g.msg}</div>`;
         const m = T.mult || 1;
-        h += `<div class="mult">${btn('mult', 'Single', 1, 'm1', m === 1)}${btn('mult', 'Double', 2, 'm2', m === 2)}${btn('mult', 'Triple', 3, 'm3', m === 3)}</div>`;
+        h += `<div class="mult">${btn('mult', 'Single', 1, 'm1', m === 1)}${btn('mult', 'Double', 2, 'm2', m === 2)}${btn('mult', 'Treble', 3, 'm3', m === 3)}</div>`;
         h += `<div class="numgrid">${R20.map(n => btn('dart', (m === 3 ? 'T' : m === 2 ? 'D' : '') + n, n, 'nb m' + m)).join('')}</div>`;
         h += `<div class="numrow">${btn('s25', '25', undefined, 'nb')}${btn('bull', 'Bull', undefined, 'nb bullb')}${btn('miss', 'Miss / 0', undefined, 'nb missb')}</div>`;
-        h += `<button class="link zoomlink" data-a="zoomSet" data-v="${T.set.zoom === false ? 1 : 0}">🔍 Zoom beim Tippen auf die Scheibe: ${T.set.zoom === false ? 'aus' : 'an'}</button>`;
+        h += `<button class="link zoomlink" data-a="zoomSet" data-v="${T.set.zoom === false ? 1 : 0}">🔍 Zoom when tapping the board: ${T.set.zoom === false ? 'off' : 'on'}</button>`;
       }
       h += `</div></div>`;
     } else if (g.phase === 'legover') {
-      h += `<div class="celebrate"><div class="result ${g.legWinner === 'p' ? 'win' : 'lose'}">${g.legWinner === 'p' ? 'Leg gewonnen!' : 'Leg an den Bot'}</div>`;
-      if (g.setWon) h += `<div class="result ${g.legWinner === 'p' ? 'win' : 'lose'}">${g.legWinner === 'p' ? 'Set gewonnen!' : 'Set an den Bot'}</div>`;
-      h += `<div class="live">${(g.setsTo || 1) > 1 ? `Sets ${g.sets.p} : ${g.sets.b} · ` : ''}Legs ${g.legs.p} : ${g.legs.b}</div><button class="big go" data-a="nextLeg">${g.setWon ? 'Nächstes Set' : 'Nächstes Leg'}</button>`;
-      h += `<div class="setlabel">Statistik bisher</div>${cmpTable(P, B)}</div>`;
+      h += `<div class="celebrate"><div class="result ${g.legWinner === 'p' ? 'win' : 'lose'}">${g.legWinner === 'p' ? 'Leg won!' : 'Leg to the bot'}</div>`;
+      if (g.setWon) h += `<div class="result ${g.legWinner === 'p' ? 'win' : 'lose'}">${g.legWinner === 'p' ? 'Set won!' : 'Set to the bot'}</div>`;
+      h += `<div class="live">${(g.setsTo || 1) > 1 ? `Sets ${g.sets.p} : ${g.sets.b} · ` : ''}Legs ${g.legs.p} : ${g.legs.b}</div><button class="big go" data-a="nextLeg">${g.setWon ? 'Next set' : 'Next leg'}</button>`;
+      h += `<div class="setlabel">Stats so far</div>${cmpTable(P, B)}</div>`;
     } else if (g.phase === 'over') {
       const won = g.legWinner === 'p';
-      h += `<div class="celebrate"><div class="result ${won ? 'win' : 'lose'}">${won ? 'Spiel gewonnen!' : 'Spiel verloren'}</div>`;
+      h += `<div class="celebrate"><div class="result ${won ? 'win' : 'lose'}">${won ? 'Game won!' : 'Game lost'}</div>`;
       h += `<div class="live">${(g.setsTo || 1) > 1 ? `Sets ${g.sets.p} : ${g.sets.b} · ` : ''}Legs ${(g.legTot || g.legs).p} : ${(g.legTot || g.legs).b}</div>${cmpTable(P, B)}`;
-      h += `<div class="row2">${btn('again', 'Revanche', undefined, 'mid')}${btn('close', 'Zu den Einstellungen', undefined, 'mid')}</div></div>`;
+      h += `<div class="row2">${btn('again', 'Rematch', undefined, 'mid')}${btn('close', 'Back to settings', undefined, 'mid')}</div></div>`;
       return h + `</div>`;
     }
-    if (T.confirm === 'quit') h += `<div class="confirmbox"><p>Spiel abbrechen? Es wird nicht gespeichert.</p><div class="row2">${btn('no', 'Weiterspielen', undefined, 'mid')}${btn('quitYes', 'Abbrechen', undefined, 'mid redb')}</div></div>`;
-    else h += `<div class="row2 foot">${btn('gUndo', '↶ Letzten Pfeil zurück', undefined, 'mid')}${btn('quit', 'Spiel beenden', undefined, 'mid')}</div>`;
+    if (T.confirm === 'quit') h += `<div class="confirmbox"><p>Quit the game? It will not be saved.</p><div class="row2">${btn('no', 'Keep playing', undefined, 'mid')}${btn('quitYes', 'Quit', undefined, 'mid redb')}</div></div>`;
+    else h += `<div class="row2 foot">${btn('gUndo', '↶ Undo last dart', undefined, 'mid')}${btn('quit', 'End game', undefined, 'mid')}</div>`;
     return h + `</div>`;
   }
 
   function viewSummary() {
     const e = T.summary;
-    let h = `<div class="card"><div class="result win">Training abgeschlossen ✓</div><div class="tcap">${TM[e.mode]} · ${LV[e.level]}</div>`;
+    let h = `<div class="card"><div class="result win">Training complete ✓</div><div class="tcap">${TM[e.mode]} · ${LV[e.level]}</div>`;
     if (DR[e.mode]) h += DR[e.mode].summary(e, ctx);
     else if (e.mode === 'score') {
-      h += `<div class="sumgrid"><div><b>${f1(e.avg)}</b><small>Ø pro Aufnahme</small></div><div><b>${f1(e.goalPct)} %</b><small>Ziel ${e.goal}+ erreicht</small></div><div><b>${e.best}</b><small>Beste Aufnahme</small></div><div><b>${e.c100}</b><small>100+</small></div><div><b>${e.c140}</b><small>140+</small></div><div><b>${e.c180}</b><small>180er</small></div></div>`;
+      h += `<div class="sumgrid"><div><b>${f1(e.avg)}</b><small>avg per visit</small></div><div><b>${f1(e.goalPct)} %</b><small>goal ${e.goal}+ reached</small></div><div><b>${e.best}</b><small>best visit</small></div><div><b>${e.c100}</b><small>100+</small></div><div><b>${e.c140}</b><small>140+</small></div><div><b>${e.c180}</b><small>180s</small></div></div>`;
     } else {
-      h += `<div class="sumgrid"><div><b>${e.ok}/${e.n}</b><small>in der Vorgabe</small></div><div><b>${f1(e.rate)} %</b><small>Erfolgsquote</small></div><div><b>${f1(e.hitPct)} %</b><small>Trefferquote</small></div><div><b>${e.hits}</b><small>getroffen gesamt</small></div><div><b>${e.darts}</b><small>Darts geworfen</small></div><div><b>${e.hits ? f1(e.darts / e.hits) : '–'}</b><small>Darts pro Treffer</small></div></div>`;
+      h += `<div class="sumgrid"><div><b>${e.ok}/${e.n}</b><small>within target</small></div><div><b>${f1(e.rate)} %</b><small>success rate</small></div><div><b>${f1(e.hitPct)} %</b><small>hit rate</small></div><div><b>${e.hits}</b><small>total hits</small></div><div><b>${e.darts}</b><small>darts thrown</small></div><div><b>${e.hits ? f1(e.darts / e.hits) : '–'}</b><small>darts per hit</small></div></div>`;
     }
     const tip = nextTip(e);
     if (tip) h += `<div class="hint">${tip}</div>`;
-    h += `<div class="row2">${btn('again', 'Nochmal', undefined, 'mid')}${btn('close', 'Zu den Einstellungen', undefined, 'mid')}</div></div>`;
+    h += `<div class="row2">${btn('again', 'Again', undefined, 'mid')}${btn('close', 'Back to settings', undefined, 'mid')}</div></div>`;
     return h;
   }
   function nextTip(e) {
     if (DR[e.mode]) return DR[e.mode].tip(e);
     const val = e.mode === 'score' ? e.goalPct : e.rate;
-    if (val >= 70 && e.level < 4) return `Stark! Ab 70 % lohnt sich die nächste Stufe: <b>${LV[e.level + 1]}</b>.`;
-    if (val < 30 && e.level > 0) return `Unter 30 % – auf Stufe <b>${LV[e.level - 1]}</b> baust du die Sicherheit schneller auf.`;
-    return 'Bleib auf dieser Stufe, bis du regelmäßig über 70 % kommst.';
+    if (val >= 70 && e.level < 4) return `Strong! From 70 % the next level is worth it: <b>${LV[e.level + 1]}</b>.`;
+    if (val < 30 && e.level > 0) return `Under 30 % – at level <b>${LV[e.level - 1]}</b> you build confidence faster.`;
+    return 'Stay at this level until you regularly get over 70 %.';
   }
 
 
@@ -3183,18 +3183,18 @@ window.DRILLS = (function () {
   // ---------- Statistik ----------
   function metric(e) {
     if (DR[e.mode]) return DR[e.mode].metric(e, ctx);
-    if (e.mode === 'game') return { main: (e.won ? 'Sieg ' : 'Niederl. ') + e.lp + ':' + e.lb, det: `${e.start} ${e.din ? 'DI' : 'SI'} · Bot ${BOT[e.level].n} · Ø ${f1(e.avg)} / ${f1(e.botAvg)}` };
+    if (e.mode === 'game') return { main: (e.won ? 'Won ' : 'Lost ') + ((e.setsTo || 1) > 1 ? e.sp + ':' + e.sb + ' sets' : e.lp + ':' + e.lb), det: `${e.start} ${e.din ? 'DI' : 'SI'} · Bot ${BOT[e.level].n} · Ø ${f1(e.avg)} / ${f1(e.botAvg)}` };
     if (e.mode === 'score') return { main: 'Ø ' + f1(e.avg), det: `${f1(e.goalPct)} % ≥ ${e.goal} · Best ${e.best}` };
-    return { main: f1(e.rate) + ' %', det: `${e.ok}/${e.n} · ${f1(e.hitPct)} % Treffer` };
+    return { main: f1(e.rate) + ' %', det: `${e.ok}/${e.n} · ${f1(e.hitPct)} % hits` };
   }
   function niceMax(v) { if (v <= 0) return 10; const p = Math.pow(10, Math.floor(Math.log10(v))); for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p; return 10 * p; }
   function chart(list, ser, mx, xl) {
     let series = ser, max = mx;
     if (series) {}
     else if (DR[list[0].mode]) { series = DR[list[0].mode].series; max = DR[list[0].mode].max; }
-    else if (list[0].mode === 'game') series = [{ n: 'Dein Ø', c: '#ec4899', k: 'avg' }, { n: 'Bot Ø', c: '#71717a', k: 'botAvg' }];
-    else if (list[0].mode === 'score') series = [{ n: 'Ø pro Aufnahme', c: '#ec4899', k: 'avg' }, { n: '% Ziel erreicht', c: '#a1a1aa', k: 'goalPct' }];
-    else { series = [{ n: 'Erfolgsquote %', c: '#ec4899', k: 'rate' }, { n: 'Trefferquote %', c: '#a1a1aa', k: 'hitPct' }]; max = 100; }
+    else if (list[0].mode === 'game') series = [{ n: 'Your avg', c: '#ec4899', k: 'avg' }, { n: 'Bot avg', c: '#71717a', k: 'botAvg' }];
+    else if (list[0].mode === 'score') series = [{ n: 'Avg per visit', c: '#ec4899', k: 'avg' }, { n: '% goal reached', c: '#a1a1aa', k: 'goalPct' }];
+    else { series = [{ n: 'Success rate %', c: '#ec4899', k: 'rate' }, { n: 'Hit rate %', c: '#a1a1aa', k: 'hitPct' }]; max = 100; }
     max = max || niceMax(Math.max(...list.flatMap(e => series.map(s => e[s.k] || 0))));
     const W = 400, H = 220, L = 34, R = 12, Tp = 12, B = 24, pw = W - L - R, ph = H - Tp - B, n = list.length;
     const x = i => L + (n === 1 ? pw / 2 : i * pw / (n - 1)), y = v => Tp + ph - (v / max) * ph;
@@ -3206,7 +3206,7 @@ window.DRILLS = (function () {
       if (n > 1) s += `<polyline points="${list.map((e, i) => x(i).toFixed(1) + ',' + y(e[se.k] || 0).toFixed(1)).join(' ')}" fill="none" stroke="${se.c}" stroke-width="2" stroke-linejoin="round"/>`;
       list.forEach((e, i) => { s += `<circle cx="${x(i)}" cy="${y(e[se.k] || 0)}" r="4" fill="${se.c}" stroke="#fff" stroke-width="2"><title>${se.n}: ${f1(e[se.k] || 0)}</title></circle>`; });
     });
-    return s + `</svg><div class="chartnote">${DR[list[0].mode] && DR[list[0].mode].ov.low && !ser ? 'Darts: weniger ist besser' : 'Je höher, desto besser'} · x-Achse = ${xl || 'Training Nr.'}</div></div>`;
+    return s + `</svg><div class="chartnote">${DR[list[0].mode] && DR[list[0].mode].ov.low && !ser ? 'Darts: fewer is better' : 'Higher is better'} · x-axis = ${xl || 'training no.'}</div></div>`;
   }
 
 
@@ -3233,16 +3233,16 @@ window.DRILLS = (function () {
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
       document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     }
-    T.dataMsg = { ok: true, t: 'Sicherung erstellt: ' + name };
+    T.dataMsg = { ok: true, t: 'Backup created: ' + name };
   }
 
   function importData(text) {
     let d;
     try { d = JSON.parse(text); } catch (e) { d = null; }
     if (!d || d.app !== 'darts-scorer' || typeof d.dartsTrainer !== 'string') {
-      T.dataMsg = { ok: false, t: 'Das ist keine gültige Darts-Scorer-Sicherung.' }; render(); return;
+      T.dataMsg = { ok: false, t: 'This is not a valid Darts Scorer backup.' }; render(); return;
     }
-    try { JSON.parse(d.dartsTrainer); } catch (e) { T.dataMsg = { ok: false, t: 'Sicherung ist beschädigt.' }; render(); return; }
+    try { JSON.parse(d.dartsTrainer); } catch (e) { T.dataMsg = { ok: false, t: 'Backup is damaged.' }; render(); return; }
     dataKeys().forEach(k => { if (typeof d[k] === 'string') localStorage.setItem(k, d[k]); else localStorage.removeItem(k); });
     // Alte Sicherung ohne Wurf-Datenbank: Sessions werden nach dem Neuladen aus den Einträgen neu angelegt
     TS.restore(d.statsDb && Array.isArray(d.statsDb.sessions) ? d.statsDb : null).then(() => location.reload());
@@ -3256,15 +3256,15 @@ window.DRILLS = (function () {
   function viewData() {
     const G = games().length, Tr = T.hist.length - G, xn = x01Hist().length;
     const wn = TS.sessions().reduce((a, s) => a + TS.throws(s.id).length, 0);
-    let h = `<div class="card datacard"><div class="setlabel">Sicherung</div>
-      <p>Deine Daten liegen nur auf diesem Gerät (im Browser). Sichere sie ab und zu – vor allem, bevor du den Browser-Verlauf löschst oder das Handy wechselst.<br>Aktuell gespeichert: <b>${G}</b> Spiel${G === 1 ? '' : 'e'} und <b>${Tr}</b> Training${Tr === 1 ? '' : 's'}${xn ? `, <b>${xn}</b> Mehrspieler-Spiel${xn === 1 ? '' : 'e'}` : ''} · <b>${wn.toLocaleString('de-DE')}</b> einzelne Würfe.</p>
-      ${btn('export', '⤓ Sicherung exportieren', undefined, 'big go')}
-      ${btn('importPick', '⤒ Sicherung importieren', undefined, 'big ghost')}
+    let h = `<div class="card datacard"><div class="setlabel">Backup</div>
+      <p>Your data is stored only on this device (in the browser). Back it up now and then – especially before clearing your browser history or switching phones.<br>Currently saved: <b>${G}</b> game${G === 1 ? '' : 's'} and <b>${Tr}</b> training${Tr === 1 ? '' : 's'}${xn ? `, <b>${xn}</b> multiplayer game${xn === 1 ? '' : 's'}` : ''} · <b>${wn.toLocaleString('en-GB')}</b> single darts.</p>
+      ${btn('export', '⤓ Export backup', undefined, 'big go')}
+      ${btn('importPick', '⤒ Import backup', undefined, 'big ghost')}
       <div class="datamsg${T.dataMsg && !T.dataMsg.ok ? ' err' : ''}">${T.dataMsg ? T.dataMsg.t : ''}</div></div>`;
-    h += `<div class="card datacard"><div class="setlabel">Zurücksetzen</div><p>Löscht alle Spiele, Trainings, Einstellungen und den Zähler auf diesem Gerät.</p>`;
+    h += `<div class="card datacard"><div class="setlabel">Reset</div><p>Deletes all games, trainings, settings and the counter on this device.</p>`;
     h += T.confirm === 'wipe'
-      ? `<div class="confirmbox"><p>Wirklich alles löschen? Das lässt sich nicht rückgängig machen.</p><div class="row2">${btn('no', 'Abbrechen', undefined, 'mid')}${btn('wipeYes', 'Alles löschen', undefined, 'mid redb')}</div></div>`
-      : btn('wipe', 'Alle Daten löschen', undefined, 'big danger');
+      ? `<div class="confirmbox"><p>Really delete everything? This cannot be undone.</p><div class="row2">${btn('no', 'Cancel', undefined, 'mid')}${btn('wipeYes', 'Delete everything', undefined, 'mid redb')}</div></div>`
+      : btn('wipe', 'Delete all data', undefined, 'big danger');
     h += `</div><div class="appver">Darts-Scorer · Version ${window.APP_VERSION || 'dev'}</div>`;
     return h;
   }
@@ -3298,22 +3298,22 @@ window.DRILLS = (function () {
   const MU_ICON = '<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
 
   EXT.views.music = () => {
-    let h = phead('Musik', 'Deine Playlists fürs Darts – Musik läuft in deiner Musik-App weiter');
+    let h = phead('Music', 'Your darts playlists – music keeps playing in your music app');
     if (MU.lists.length) {
       h += `<div class="rows">` + MU.lists.map((l, i) => `<div class="rowi murow">
         <a class="th muth" href="${esc(l.url)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24">${MU_ICON.replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg></a>
-        <a class="mulink" href="${esc(l.url)}" target="_blank" rel="noopener"><b>${esc(l.name)}</b><small>${muService(l.url)} · antippen zum Öffnen</small></a>
+        <a class="mulink" href="${esc(l.url)}" target="_blank" rel="noopener"><b>${esc(l.name)}</b><small>${muService(l.url)} · tap to open</small></a>
         <span class="muact">${i > 0 ? btn('muUp', '↑', i, 'mubtn') : ''}${btn('muDel', '✕', i, 'mubtn')}</span></div>`).join('') + `</div>`;
-    } else h += `<div class="card empty">Noch keine Playlist. Füge unten deine erste hinzu.</div>`;
+    } else h += `<div class="card empty">No playlist yet. Add your first one below.</div>`;
     if (MU.adding) {
-      h += `<div class="card mucard"><div class="setlabel">Neue Playlist</div>
-        <input id="muName" class="muin" placeholder="Name, z.B. Walk-on Hymnen" maxlength="60">
-        <input id="muUrl" class="muin" placeholder="Link, z.B. https://open.spotify.com/playlist/…" inputmode="url" autocomplete="off">
+      h += `<div class="card mucard"><div class="setlabel">New playlist</div>
+        <input id="muName" class="muin" placeholder="Name, e.g. Walk-on anthems" maxlength="60">
+        <input id="muUrl" class="muin" placeholder="Link, e.g. https://open.spotify.com/playlist/…" inputmode="url" autocomplete="off">
         <div class="mumsg">${esc(MU.msg)}</div>
-        <div class="row2">${btn('muCancel', 'Abbrechen', undefined, 'mid')}${btn('muSaveNew', 'Speichern', undefined, 'mid mugo')}</div></div>`;
-    } else h += btn('muAdd', '+ Playlist hinzufügen', undefined, 'big go');
-    h += `<div class="card muhelp"><div class="setlabel">So kommst du an den Link</div>
-      <p><b>Spotify:</b> Playlist öffnen → ··· → Teilen → <i>Link kopieren</i>.<br><b>Apple Music:</b> Playlist → ··· → Teilen → <i>Link kopieren</i>.<br>Dann hier einfügen. Beim Antippen öffnet sich die Playlist in deiner App, du startest sie und kommst über den App-Wechsler zurück zum Spiel – die Musik läuft weiter.</p></div>`;
+        <div class="row2">${btn('muCancel', 'Cancel', undefined, 'mid')}${btn('muSaveNew', 'Save', undefined, 'mid mugo')}</div></div>`;
+    } else h += btn('muAdd', '+ Add playlist', undefined, 'big go');
+    h += `<div class="card muhelp"><div class="setlabel">How to get the link</div>
+      <p><b>Spotify:</b> open playlist → ··· → Share → <i>Copy link</i>.<br><b>Apple Music:</b> playlist → ··· → Share → <i>Copy link</i>.<br>Then paste it here. Tapping it opens the playlist in your app; start it and switch back to the game – the music keeps playing.</p></div>`;
     return h;
   };
   EXT.actions.muAdd = () => { MU.adding = true; MU.msg = ''; setTimeout(() => { const i = document.getElementById('muName'); if (i) i.focus(); }, 0); };
@@ -3321,7 +3321,7 @@ window.DRILLS = (function () {
   EXT.actions.muSaveNew = () => {
     const name = (document.getElementById('muName') || {}).value || '', raw = (document.getElementById('muUrl') || {}).value || '';
     const url = muNormalize(raw);
-    if (!/^https:\/\/[^\s]+\.[^\s]+/.test(url)) { MU.msg = 'Bitte einen gültigen Link einfügen.'; render(); restore(name, raw); return; }
+    if (!/^https:\/\/[^\s]+\.[^\s]+/.test(url)) { MU.msg = 'Please paste a valid link.'; render(); restore(name, raw); return; }
     MU.lists.push({ name: name.trim() || muService(url) + ' Playlist', url }); MU.adding = false; MU.msg = ''; muSave();
   };
   function restore(name, raw) { setTimeout(() => { const a = document.getElementById('muName'), b = document.getElementById('muUrl'); if (a) a.value = name; if (b) b.value = raw; }, 0); }
@@ -3335,11 +3335,11 @@ window.DRILLS = (function () {
 // Nutzt die Sprachausgabe des Geräts (Web Speech API), kein Internet nötig. Ein/Aus: T.set.voice.
   if (T.set.voice === undefined) T.set.voice = true;
   const VOICE_OK = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance === 'function';
-  let deVoice = null;
+  let enVoice = null;
   function pickVoice() {
     if (!VOICE_OK) return;
     const vs = speechSynthesis.getVoices();
-    deVoice = vs.find(v => /^de(-|_)DE/i.test(v.lang) && /Anna|Helena|Markus|Google/i.test(v.name)) || vs.find(v => /^de/i.test(v.lang)) || null;
+    enVoice = vs.find(v => /^en(-|_)GB/i.test(v.lang) && /Daniel|Arthur|Google UK English Male|Serena|Kate/i.test(v.name)) || vs.find(v => /^en(-|_)GB/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null;
   }
   if (VOICE_OK) { pickVoice(); speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', pickVoice); }
 
@@ -3348,7 +3348,7 @@ window.DRILLS = (function () {
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'de-DE'; if (deVoice) u.voice = deVoice;
+      u.lang = 'en-GB'; if (enVoice) u.voice = enVoice;
       u.rate = 1.05; u.pitch = 1; u.volume = 1;
       speechSynthesis.speak(u);
     } catch (e) {}
@@ -3358,16 +3358,16 @@ window.DRILLS = (function () {
 
   // Wird aus 20-game.js nach jeder Aufnahme aufgerufen
   function callVisit(who, score, bust, checked) {
-    if (bust) return say('Überworfen');
-    if (checked) return say(score + ', Game Shot!');
+    if (bust) return say('Bust');
+    if (checked) return say('Game shot! ' + score);
     if (score === 0) return say('No Score');
-    say(score === 180 ? 'Hundertachtzig!' : String(score));
+    say(score === 180 ? 'One hundred and eighty!' : String(score));
   }
 
-  EXT.actions.voice = v => { T.set.voice = v === '1'; if (T.set.voice) say('Ansage an'); else if (VOICE_OK) speechSynthesis.cancel(); };
-  const voiceToggle = () => VOICE_OK ? `<div class="setlabel">Ansage der Punktzahl</div><div class="seg">${btn('voice', 'An', 1, '', T.set.voice)}${btn('voice', 'Aus', 0, '', !T.set.voice)}</div>` : '';
+  EXT.actions.voice = v => { T.set.voice = v === '1'; if (T.set.voice) say('Caller on'); else if (VOICE_OK) speechSynthesis.cancel(); };
+  const voiceToggle = () => VOICE_OK ? `<div class="setlabel">Score caller</div><div class="seg">${btn('voice', 'On', 1, '', T.set.voice)}${btn('voice', 'Off', 0, '', !T.set.voice)}</div>` : '';
   const SPK = '<svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/></svg>';
-  const voiceBtn = () => VOICE_OK ? `<button class="vbtn${T.set.voice ? ' on' : ''}" data-a="voice" data-v="${T.set.voice ? 0 : 1}" aria-label="Ansage ${T.set.voice ? 'aus' : 'an'}schalten">${T.set.voice ? SPK.replace('</svg>', '<path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>') : SPK.replace('</svg>', '<path d="m16 9 5 6m0-6-5 6"/></svg>')}${T.set.voice ? 'Ansage an' : 'Ansage aus'}</button>` : '';
+  const voiceBtn = () => VOICE_OK ? `<button class="vbtn${T.set.voice ? ' on' : ''}" data-a="voice" data-v="${T.set.voice ? 0 : 1}" aria-label="Turn caller ${T.set.voice ? 'off' : 'on'}">${T.set.voice ? SPK.replace('</svg>', '<path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>') : SPK.replace('</svg>', '<path d="m16 9 5 6m0-6-5 6"/></svg>')}${T.set.voice ? 'Caller on' : 'Caller off'}</button>` : '';
   // Schnittstelle für eigenständige Module (z.B. X01 Mehrspieler)
   window.dartsCall = (score, bust, checked) => callVisit('x', score, bust, checked);
 
@@ -3398,7 +3398,7 @@ window.DRILLS = (function () {
     save();
   }
   document.getElementById('nav').addEventListener('click', e => { const b = e.target.closest('[data-route]'); if (b) act('nav', b.dataset.route); });
-  const NAV = [['home', 'Home', ICON.home], ['play', 'Spielen', ICON.play], ['train', 'Training', ICON.train], ['counter', 'Zähler', ICON.counter], ['stats', 'Stats', ICON.stats]];
+  const NAV = [['home', 'Home', ICON.home], ['play', 'Play', ICON.play], ['train', 'Training', ICON.train], ['counter', 'Counter', ICON.counter], ['stats', 'Stats', ICON.stats]];
   EXT.nav.forEach(x => NAV.splice(NAV.length - 1, 0, [x.route, x.label, x.icon || ICON.play]));
   document.getElementById('nav').innerHTML = NAV.map(([r, l, i]) => `<button data-route="${r}">${i}<span>${l}</span></button>`).join('');
   window.renderTrainer = render;
@@ -3414,7 +3414,7 @@ window.DRILLS = (function () {
 </script>
 <script>
 // ===== PWA: Service Worker + Update-Prüfung (nur über http/https, nicht bei file://) =====
-window.APP_VERSION = 'b8c0601248';
+window.APP_VERSION = '92c9e639e2';
 (function () {
   if (!/^https?:$/.test(location.protocol)) return;
   let shown = false;
@@ -3422,7 +3422,7 @@ window.APP_VERSION = 'b8c0601248';
     if (shown) return; shown = true;
     const b = document.createElement('button');
     b.id = 'updbar'; b.type = 'button';
-    b.innerHTML = '<b>Neue Version verfügbar</b><span>Tippen zum Aktualisieren</span>';
+    b.innerHTML = '<b>New version available</b><span>Tap to update</span>';
     b.onclick = () => { b.disabled = true; reloadFresh(); };
     document.body.appendChild(b);
   }

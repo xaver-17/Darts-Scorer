@@ -1631,11 +1631,11 @@ window.DRILLS = (function () {
       case 'filter': T.filter = v; break;
       case 'del': T.hist.splice(n, 1); break;
       case 'drOrder': s.drOrder = v; break;
-      default: if (EXT.actions[a]) EXT.actions[a](v, n); else console.warn('Unbekannte Aktion:', a);
       case 'export': exportData(); break;
       case 'importPick': document.getElementById('importFile').click(); break;
       case 'wipe': T.confirm = 'wipe'; break;
       case 'wipeYes': wipeData(); return;
+      default: if (EXT.actions[a]) EXT.actions[a](v, n); else console.warn('Unbekannte Aktion:', a); break;
     }
     render();
   }
@@ -2166,7 +2166,7 @@ window.DRILLS = (function () {
 </script>
 <script>
 // ===== PWA: Service Worker anmelden (nur über http/https, nicht bei file://) =====
-window.APP_VERSION = '5b2eb872f5';
+window.APP_VERSION = 'a3632ed6e9';
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
   window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service Worker nicht registriert:', e)); });
 }

@@ -1274,7 +1274,7 @@ window.DRILLS = (function () {
       case 'xAdd': if (s.players.length < MAXP) s.players.push('Player ' + (s.players.length + 1)); break;
       case 'xDel': if (s.players.length > 1) s.players.splice(n, 1); break;
       case 'xUp': if (n > 0) s.players.splice(n - 1, 0, s.players.splice(n, 1)[0]); break;
-      case 'xGo': newGame(); break;
+      case 'xGo': if (window.dartsVoice) window.dartsVoice.unlock(); newGame(); break;
       case 'xMult': X.mult = X.mult === n ? 1 : n; break;
       case 'xDart': dart(n, X.mult || 1); X.mult = 1; break;
       case 'x25': dart(25, 1); break;
@@ -1288,7 +1288,7 @@ window.DRILLS = (function () {
       case 'xAgain': { const g = G(); s.players = g.players.map(p => p.name); s.players.push(s.players.shift()); newGame(); break; }
       case 'xClose': X.game = null; break;
       case 'xBack': if (opts.onBack) opts.onBack(); return;
-      default: return;
+      default: if (window.dartsVoice && window.dartsVoice.act(a, v)) break; return;
     }
     render();
   }
@@ -1309,6 +1309,7 @@ window.DRILLS = (function () {
     h += `</div>`;
     if (s.players.length < MAXP) h += btn('xAdd', '+ Add player', undefined, 'link');
     h += `<div class="desc">${s.start} · ${s.out === 'double' ? 'Double-Out' : 'Single-Out'} · ${s.players.length} players · ${window.fmtFormat ? window.fmtFormat(s.sets || 1, s.legs) : 'First to ' + s.legs + ' Legs'}. Darts are entered one by one.</div>`;
+    if (window.dartsVoice) h += window.dartsVoice.html();
     h += `<button class="big go" data-a="xGo">Start game</button>`;
     return h + `</div>`;
   }
@@ -1371,7 +1372,7 @@ window.DRILLS = (function () {
     el = container; opts = o || {};
     el.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && !b.disabled) act(b.dataset.a, b.dataset.v); });
     el.addEventListener('input', e => { const i = e.target.closest('input[data-p]'); if (i) { X.set.players[+i.dataset.p] = i.value; save(); } });
-    el.addEventListener('change', e => { const i = e.target.closest('input[data-set="xlegs"]'); if (i) { X.set.legs = Math.max(1, Math.min(99, Math.round(+i.value) || 1)); render(); } });
+    el.addEventListener('change', e => { const sv = e.target.closest('select[data-voice]'); if (sv && window.dartsVoice) { window.dartsVoice.select(sv.value); return; } const i = e.target.closest('input[data-set="xlegs"]'); if (i) { X.set.legs = Math.max(1, Math.min(99, Math.round(+i.value) || 1)); render(); } });
   }
 
   // Zum Testen und für Stats: reine Logik zugänglich machen
@@ -3260,7 +3261,8 @@ window.DRILLS = (function () {
   function viewData() {
     const G = games().length, Tr = T.hist.length - G, xn = x01Hist().length;
     const wn = TS.sessions().reduce((a, s) => a + TS.throws(s.id).length, 0);
-    let h = `<div class="card datacard"><div class="setlabel">Backup</div>
+    let h = VOICE_OK ? `<div class="card datacard">${voiceToggle()}</div>` : '';
+    h += `<div class="card datacard"><div class="setlabel">Backup</div>
       <p>Your data is stored only on this device (in the browser). Back it up now and then – especially before clearing your browser history or switching phones.<br>Currently saved: <b>${G}</b> game${G === 1 ? '' : 's'} and <b>${Tr}</b> training${Tr === 1 ? '' : 's'}${xn ? `, <b>${xn}</b> multiplayer game${xn === 1 ? '' : 's'}` : ''} · <b>${wn.toLocaleString('en-GB')}</b> single darts.</p>
       ${btn('export', '⤓ Export backup', undefined, 'big go')}
       ${btn('importPick', '⤒ Import backup', undefined, 'big ghost')}
@@ -3359,7 +3361,10 @@ window.DRILLS = (function () {
     voiceList = speechSynthesis.getVoices().filter(v => voiceScore(v) > -50).sort((a, b) => voiceScore(b) - voiceScore(a));
     enVoice = (T.set.voiceName && voiceList.find(v => v.name === T.set.voiceName)) || voiceList[0] || null;
   }
-  if (VOICE_OK) { pickVoice(); speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', () => { pickVoice(); if (T.route === 'play' && !T.game) render(); }); }
+  if (VOICE_OK) { pickVoice(); speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', voicesReady);
+    // Safari (auch als Web-App im Dock) meldet die Stimmen manchmal erst spät und ohne Ereignis: ein paar Mal nachfragen
+    let tries = 0; const poll = setInterval(() => { if (voiceList.length || ++tries > 20) { clearInterval(poll); if (voiceList.length) voicesReady(); return; } pickVoice(); }, 500); }
+  function voicesReady() { const had = voiceList.length; pickVoice(); if (!had && voiceList.length && typeof render === 'function' && ['play', 'x01', 'stats'].includes(T.route) && !T.game) render(); }
 
   function say(text) {
     if (!VOICE_OK || !T.set.voice || !text) return;
@@ -3385,7 +3390,8 @@ window.DRILLS = (function () {
   EXT.actions.voice = v => { T.set.voice = v === '1'; if (T.set.voice) say('Caller on'); else if (VOICE_OK) speechSynthesis.cancel(); };
   // Stimme wählen (beste natürliche Stimme ist vorausgewählt) und anhören
   EXT.actions.voiceTest = () => { const was = T.set.voice; T.set.voice = true; say('One hundred and eighty!'); T.set.voice = was; };
-  el.addEventListener('change', e => { const sel = e.target.closest('select[data-voice]'); if (!sel) return; T.set.voiceName = sel.value || null; pickVoice(); save(); say('Game shot, and the leg!'); });
+  function voiceSelect(name) { T.set.voiceName = name || null; pickVoice(); save(); say('Game shot, and the leg!'); }
+  el.addEventListener('change', e => { const sel = e.target.closest('select[data-voice]'); if (sel) voiceSelect(sel.value); });
   const voiceToggle = () => {
     if (!VOICE_OK) return '';
     let h = `<div class="setlabel">Score caller</div><div class="seg">${btn('voice', 'On', 1, '', T.set.voice)}${btn('voice', 'Off', 0, '', !T.set.voice)}</div>`;
@@ -3400,6 +3406,8 @@ window.DRILLS = (function () {
   const voiceBtn = () => VOICE_OK ? `<button class="vbtn${T.set.voice ? ' on' : ''}" data-a="voice" data-v="${T.set.voice ? 0 : 1}" aria-label="Turn caller ${T.set.voice ? 'off' : 'on'}">${T.set.voice ? SPK.replace('</svg>', '<path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>') : SPK.replace('</svg>', '<path d="m16 9 5 6m0-6-5 6"/></svg>')}${T.set.voice ? 'Caller on' : 'Caller off'}</button>` : '';
   // Schnittstelle für eigenständige Module (z.B. X01 Mehrspieler)
   window.dartsCall = (score, bust, checked) => callVisit('x', score, bust, checked);
+  // Für das Mehrspieler-Modul: gleiche Ansage-Einstellungen und Stimme
+  window.dartsVoice = { html: () => voiceToggle(), act: (a, v) => { if (a !== 'voice' && a !== 'voiceTest') return false; EXT.actions[a](v); save(); return true; }, select: voiceSelect, unlock: () => unlockVoice() };
 
   // ===== 90-main.js =====
 // Rendern, Navigation, Start
@@ -3444,7 +3452,7 @@ window.DRILLS = (function () {
 </script>
 <script>
 // ===== PWA: Service Worker + Update-Prüfung (nur über http/https, nicht bei file://) =====
-window.APP_VERSION = 'ccbc613888';
+window.APP_VERSION = '7848af9be8';
 (function () {
   if (!/^https?:$/.test(location.protocol)) return;
   let shown = false;

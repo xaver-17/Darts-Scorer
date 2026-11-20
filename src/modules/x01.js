@@ -124,7 +124,7 @@
       case 'xAdd': if (s.players.length < MAXP) s.players.push('Player ' + (s.players.length + 1)); break;
       case 'xDel': if (s.players.length > 1) s.players.splice(n, 1); break;
       case 'xUp': if (n > 0) s.players.splice(n - 1, 0, s.players.splice(n, 1)[0]); break;
-      case 'xGo': newGame(); break;
+      case 'xGo': if (window.dartsVoice) window.dartsVoice.unlock(); newGame(); break;
       case 'xMult': X.mult = X.mult === n ? 1 : n; break;
       case 'xDart': dart(n, X.mult || 1); X.mult = 1; break;
       case 'x25': dart(25, 1); break;
@@ -138,7 +138,7 @@
       case 'xAgain': { const g = G(); s.players = g.players.map(p => p.name); s.players.push(s.players.shift()); newGame(); break; }
       case 'xClose': X.game = null; break;
       case 'xBack': if (opts.onBack) opts.onBack(); return;
-      default: return;
+      default: if (window.dartsVoice && window.dartsVoice.act(a, v)) break; return;
     }
     render();
   }
@@ -159,6 +159,7 @@
     h += `</div>`;
     if (s.players.length < MAXP) h += btn('xAdd', '+ Add player', undefined, 'link');
     h += `<div class="desc">${s.start} · ${s.out === 'double' ? 'Double-Out' : 'Single-Out'} · ${s.players.length} players · ${window.fmtFormat ? window.fmtFormat(s.sets || 1, s.legs) : 'First to ' + s.legs + ' Legs'}. Darts are entered one by one.</div>`;
+    if (window.dartsVoice) h += window.dartsVoice.html();
     h += `<button class="big go" data-a="xGo">Start game</button>`;
     return h + `</div>`;
   }
@@ -221,7 +222,7 @@
     el = container; opts = o || {};
     el.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && !b.disabled) act(b.dataset.a, b.dataset.v); });
     el.addEventListener('input', e => { const i = e.target.closest('input[data-p]'); if (i) { X.set.players[+i.dataset.p] = i.value; save(); } });
-    el.addEventListener('change', e => { const i = e.target.closest('input[data-set="xlegs"]'); if (i) { X.set.legs = Math.max(1, Math.min(99, Math.round(+i.value) || 1)); render(); } });
+    el.addEventListener('change', e => { const sv = e.target.closest('select[data-voice]'); if (sv && window.dartsVoice) { window.dartsVoice.select(sv.value); return; } const i = e.target.closest('input[data-set="xlegs"]'); if (i) { X.set.legs = Math.max(1, Math.min(99, Math.round(+i.value) || 1)); render(); } });
   }
 
   // Zum Testen und für Stats: reine Logik zugänglich machen

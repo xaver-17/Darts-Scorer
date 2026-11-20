@@ -18,11 +18,17 @@
     s += `<circle r="15.9" fill="#22d3ee" stroke="#3a3a3e" stroke-width=".5"/><circle r="6.35" fill="#ff5a1f" stroke="#3a3a3e" stroke-width=".5"/>`;
     BOARD_BASE = s;
   })();
+  // „Daneben“-Ring rund um die Scheibe: Tipp dort = Fehlwurf (0). Tipp außerhalb = Zoom schließen, nichts eintragen.
+  const MISS_R = 240;
+  const MISS_RING = `<circle r="${MISS_R}" fill="#f4f4f5" stroke="#a1a1aa" stroke-width="1.5" stroke-dasharray="6 5"/>` +
+    `<text y="${-(MISS_R - 26)}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">DANEBEN</text>` +
+    `<text y="${MISS_R - 14}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">DANEBEN</text>`;
   // dots: [{x,y,c,r,o,t}] in mm (y nach oben)
   function boardSVG(o) {
-    const vb = o.zoom ? `${(o.zoom.x - 50).toFixed(1)} ${(o.zoom.y - 50).toFixed(1)} 100 100` : '-200 -200 400 400';
+    const R = o.click ? MISS_R + 6 : 200;   // Eingabe-Scheiben zeigen außen den „Daneben“-Ring
+    const vb = o.zoom ? `${(o.zoom.x - 50).toFixed(1)} ${(o.zoom.y - 50).toFixed(1)} 100 100` : `${-R} ${-R} ${2 * R} ${2 * R}`;
     const k = o.zoom ? 0.3 : 1;
-    let s = `<svg ${o.click ? 'data-board="1"' : ''} viewBox="${vb}" width="100%" style="display:block;touch-action:manipulation">${BOARD_BASE}${o.extra || ''}`;
+    let s = `<svg ${o.click ? 'data-board="1"' : ''} viewBox="${vb}" width="100%" style="display:block;touch-action:manipulation">${o.click ? MISS_RING : ''}${BOARD_BASE}${o.extra || ''}`;
     (o.dots || []).forEach(d => {
       s += `<circle cx="${d.x}" cy="${-d.y}" r="${(d.r || 4) * k}" fill="${d.c}" fill-opacity="${d.o || 1}" stroke="${d.s || '#000'}" stroke-width="${(d.sw || 1) * k}"/>`;
       if (d.t) s += `<text x="${d.x}" y="${(-d.y + 3.5 * k).toFixed(2)}" font-size="${10 * k}" font-weight="800" text-anchor="middle" fill="${d.tc || '#000'}">${d.t}</text>`;
@@ -37,7 +43,9 @@
   function boardTap(e, svg) {
     const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
     const q = p.matrixTransform(svg.getScreenCTM().inverse());
-    if (T.set.zoom !== false && !T.zoom) { T.zoom = { x: q.x, y: q.y }; render(); return; }
+    const r = Math.hypot(q.x, q.y);
+    if (r > MISS_R) { if (T.zoom) { T.zoom = null; render(); } return; }   // außerhalb: nur Zoom schließen
+    if (r <= 170 && T.set.zoom !== false && !T.zoom) { T.zoom = { x: q.x, y: q.y }; render(); return; }
     T.zoom = null;
     const x = Math.round(q.x * 10) / 10, y = Math.round(-q.y * 10) / 10;
     playerDart(Object.assign(scoreAt(x, y), { x, y }));

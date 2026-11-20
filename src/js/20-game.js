@@ -41,6 +41,7 @@
     g.vis.p.push({ leg: g.legNo, score, n: V.darts.length, bust, co: checked ? V.start : 0 });
     g.last.p = visitText(V.darts) + (bust ? ' → Überworfen' : (g.din && !P.in) ? ' → nicht drin' : ' = ' + score) + (checked ? ' ✓' : '');
     g.lastVisit = V.darts; g.visit = null;
+    callVisit('p', score, bust, checked);
     if (!checked) endPlayerTurn();
   }
   function endPlayerTurn() { const g = T.game; T.zoom = null; g.turn = 'b'; g.busy = true; setTimeout(botMove, 900); }
@@ -75,6 +76,7 @@
     g.bLast = r.darts.map(d => ({ x: d.x, y: d.y }));
     g.b.rem = r.rem; g.b.in = r.isIn; g.busy = false; g.botPending = null; g.botPop = null;
     T.zoom = null;
+    callVisit('b', scored, !!r.bust, !!r.checked);
     if (r.checked) legWon('b'); else g.turn = 'p';
   }
   function legWon(w) {

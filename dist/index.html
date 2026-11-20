@@ -394,6 +394,9 @@
   .row2 .mid.mugo { background: var(--ink); color: #fff; border-color: var(--ink); }
   .muhelp { margin-top: 14px; } .muhelp p { font-size: 14px; color: var(--ink2); line-height: 1.5; }
   #viewTrainer .rows + .big, #viewTrainer .empty + .big { margin-top: 16px; }
+  .vbtn { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--mute); font: inherit; font-size: 13px; cursor: pointer; }
+  .vbtn.on { color: var(--ink); }
+  .vbtn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   /* ---- PWA: Platz für Notch / Statusleiste, wenn die App vom Home-Bildschirm startet ---- */
   body { padding-top: env(safe-area-inset-top); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
   html, body { overscroll-behavior-y: none; }
@@ -920,13 +923,14 @@ window.DRILLS = (function () {
       p.darts += g.visit.length; p.legDarts += g.visit.length;
       p.last = 'Überworfen (' + g.visit.map(x => x.l).join(' ') + ')';
       g.msg = p.name + ': überworfen, bleibt auf ' + p.rem;
+      if (window.dartsCall) window.dartsCall(0, true, false);
       nextPlayer(); return;
     }
     if (after === 0) {
       const sc = visitSum();
       p.darts += g.visit.length; p.legDarts += g.visit.length; p.pts += sc; p.rem = 0;
       p.best = Math.max(p.best, sc); p.hiCO = Math.max(p.hiCO, sc); p.last = 'Checkout ' + sc;
-      g.visit = []; legWon(); return;
+      g.visit = []; if (window.dartsCall) window.dartsCall(sc, false, true); legWon(); return;
     }
     if (g.visit.length === 3) closeVisit();
   }
@@ -935,6 +939,7 @@ window.DRILLS = (function () {
     p.rem -= sc; p.pts += sc; p.darts += g.visit.length; p.legDarts += g.visit.length;
     p.best = Math.max(p.best, sc); if (sc === 180) p.s180++;
     p.last = sc + ' (' + g.visit.map(x => x.l).join(' ') + ')';
+    if (window.dartsCall) window.dartsCall(sc, false, false);
     nextPlayer();
   }
   function nextPlayer() { const g = G(); g.visit = []; g.cur = (g.cur + 1) % g.players.length; X.mult = 1; }
@@ -1494,6 +1499,7 @@ window.DRILLS = (function () {
     g.vis.p.push({ leg: g.legNo, score, n: V.darts.length, bust, co: checked ? V.start : 0 });
     g.last.p = visitText(V.darts) + (bust ? ' → Überworfen' : (g.din && !P.in) ? ' → nicht drin' : ' = ' + score) + (checked ? ' ✓' : '');
     g.lastVisit = V.darts; g.visit = null;
+    callVisit('p', score, bust, checked);
     if (!checked) endPlayerTurn();
   }
   function endPlayerTurn() { const g = T.game; T.zoom = null; g.turn = 'b'; g.busy = true; setTimeout(botMove, 900); }
@@ -1528,6 +1534,7 @@ window.DRILLS = (function () {
     g.bLast = r.darts.map(d => ({ x: d.x, y: d.y }));
     g.b.rem = r.rem; g.b.in = r.isIn; g.busy = false; g.botPending = null; g.botPop = null;
     T.zoom = null;
+    callVisit('b', scored, !!r.bust, !!r.checked);
     if (r.checked) legWon('b'); else g.turn = 'p';
   }
   function legWon(w) {
@@ -1602,11 +1609,17 @@ window.DRILLS = (function () {
     s += `<circle r="15.9" fill="#22d3ee" stroke="#3a3a3e" stroke-width=".5"/><circle r="6.35" fill="#ff5a1f" stroke="#3a3a3e" stroke-width=".5"/>`;
     BOARD_BASE = s;
   })();
+  // „Daneben“-Ring rund um die Scheibe: Tipp dort = Fehlwurf (0). Tipp außerhalb = Zoom schließen, nichts eintragen.
+  const MISS_R = 240;
+  const MISS_RING = `<circle r="${MISS_R}" fill="#f4f4f5" stroke="#a1a1aa" stroke-width="1.5" stroke-dasharray="6 5"/>` +
+    `<text y="${-(MISS_R - 26)}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">DANEBEN</text>` +
+    `<text y="${MISS_R - 14}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">DANEBEN</text>`;
   // dots: [{x,y,c,r,o,t}] in mm (y nach oben)
   function boardSVG(o) {
-    const vb = o.zoom ? `${(o.zoom.x - 50).toFixed(1)} ${(o.zoom.y - 50).toFixed(1)} 100 100` : '-200 -200 400 400';
+    const R = o.click ? MISS_R + 6 : 200;   // Eingabe-Scheiben zeigen außen den „Daneben“-Ring
+    const vb = o.zoom ? `${(o.zoom.x - 50).toFixed(1)} ${(o.zoom.y - 50).toFixed(1)} 100 100` : `${-R} ${-R} ${2 * R} ${2 * R}`;
     const k = o.zoom ? 0.3 : 1;
-    let s = `<svg ${o.click ? 'data-board="1"' : ''} viewBox="${vb}" width="100%" style="display:block;touch-action:manipulation">${BOARD_BASE}${o.extra || ''}`;
+    let s = `<svg ${o.click ? 'data-board="1"' : ''} viewBox="${vb}" width="100%" style="display:block;touch-action:manipulation">${o.click ? MISS_RING : ''}${BOARD_BASE}${o.extra || ''}`;
     (o.dots || []).forEach(d => {
       s += `<circle cx="${d.x}" cy="${-d.y}" r="${(d.r || 4) * k}" fill="${d.c}" fill-opacity="${d.o || 1}" stroke="${d.s || '#000'}" stroke-width="${(d.sw || 1) * k}"/>`;
       if (d.t) s += `<text x="${d.x}" y="${(-d.y + 3.5 * k).toFixed(2)}" font-size="${10 * k}" font-weight="800" text-anchor="middle" fill="${d.tc || '#000'}">${d.t}</text>`;
@@ -1621,7 +1634,9 @@ window.DRILLS = (function () {
   function boardTap(e, svg) {
     const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
     const q = p.matrixTransform(svg.getScreenCTM().inverse());
-    if (T.set.zoom !== false && !T.zoom) { T.zoom = { x: q.x, y: q.y }; render(); return; }
+    const r = Math.hypot(q.x, q.y);
+    if (r > MISS_R) { if (T.zoom) { T.zoom = null; render(); } return; }   // außerhalb: nur Zoom schließen
+    if (r <= 170 && T.set.zoom !== false && !T.zoom) { T.zoom = { x: q.x, y: q.y }; render(); return; }
     T.zoom = null;
     const x = Math.round(q.x * 10) / 10, y = Math.round(-q.y * 10) / 10;
     playerDart(Object.assign(scoreAt(x, y), { x, y }));
@@ -1650,7 +1665,7 @@ window.DRILLS = (function () {
       case 'start': s.start = n; break;
       case 'din': s.din = v === '1'; break;
       case 'legs': s.legs = n; break;
-      case 'go': start(); break;
+      case 'go': unlockVoice(); start(); break;
       case 'ok': record({ ok: true, done: true, darts: n }); break;
       case 'fail': S.phase = 'fail'; break;
       case 'cont': S.phase = 'more'; S.more = S.tasks[S.idx].darts + 1; break;
@@ -1695,6 +1710,7 @@ window.DRILLS = (function () {
       case 'stab': T.stab = v; T.dataMsg = null; T.confirm = null; break;
       case 'tgt': T.tgt = v; break;
       case 'qs':
+        unlockVoice();
         if (v === '501' || v === '301di') {
           T.route = 'play';
           if (!T.game) { Object.assign(s, { mode: 'game', start: v === '501' ? 501 : 301, din: v === '301di', bot: 2, legs: 1 }); start(); }
@@ -1705,7 +1721,7 @@ window.DRILLS = (function () {
         window.scrollTo(0, 0); break;
       case 'nextLeg': nextLeg(); break;
       case 'gUndo': gameUndo(); break;
-      case 'again': start(); break;
+      case 'again': unlockVoice(); start(); break;
       case 'close': T.game = null; T.summary = null; break;
       case 'filter': T.filter = v; break;
       case 'del': T.hist.splice(n, 1); break;
@@ -1721,7 +1737,8 @@ window.DRILLS = (function () {
   }
   el.addEventListener('click', e => {
     const svg = e.target.closest('svg[data-board]'); if (svg) { boardTap(e, svg); return; }
-    const b = e.target.closest('[data-a]'); if (b && !b.disabled) act(b.dataset.a, b.dataset.v);
+    const b = e.target.closest('[data-a]'); if (b && !b.disabled) { act(b.dataset.a, b.dataset.v); return; }
+    if (T.zoom) { T.zoom = null; render(); }   // Tipp neben die vergrößerte Scheibe: Zoom schließen
   });
 
 
@@ -1747,6 +1764,7 @@ window.DRILLS = (function () {
       h += `<div class="setlabel">Bot-Stärke</div><div class="lvl">`;
       BOT.forEach((b, i) => { h += btn('bot', `<b>${i + 1}</b><small>${b.n}</small><small>Ø ~${b.a}</small>`, i, '', s.bot === i); });
       h += `</div><div class="setlabel">Legs (First to)</div><div class="seg">${[1, 2, 3, 5].map(n => btn('legs', n, n, '', s.legs === n)).join('')}</div>`;
+      h += voiceToggle();
       h += `<div class="desc">${s.start} · ${s.din ? 'Double-In' : 'Single-In'} · Double-Out · gegen Bot „${BOT[s.bot].n}“ (Ø ~${BOT[s.bot].a}) · First to ${s.legs} Leg${s.legs > 1 ? 's' : ''}. Du trägst jeden Pfeil einzeln ein – per Tippen auf die Scheibe oder über Single/Double/Triple + Zahl. Nach deinen 3 Pfeilen wirft der Bot.</div>`;
       return h + `<button class="big go" data-a="go">Spiel starten</button></div>` + extLinks(EXT.playLinks, 'Weitere Spielmodi');
     }
@@ -2055,7 +2073,7 @@ window.DRILLS = (function () {
   function viewGame() {
     const g = T.game, P = pstats(g, 'p'), B = pstats(g, 'b');
     let h = `<div class="card">`;
-    h += `<div class="tophead"><span>${g.start} · ${g.din ? 'Double-In' : 'Single-In'} · Double-Out</span><span>Leg ${g.legNo} · First to ${g.legsTo}</span></div>`;
+    h += `<div class="tophead"><span>${g.start} · ${g.din ? 'Double-In' : 'Single-In'} · Double-Out</span><span>Leg ${g.legNo} · First to ${g.legsTo}</span></div>` + voiceBtn();
     const panel = (who, name, PL, avg, last, legs) => `<div class="gp ${g.turn === who && g.phase === 'play' ? 'act' : ''}">
         <div class="gn">${name}</div><div class="grem">${PL.rem}</div>
         <div class="gs">Ø ${f1(avg)} · Legs ${legs}${!PL.in ? ' · <span class="warn">nicht drin</span>' : ''}</div>
@@ -2073,8 +2091,8 @@ window.DRILLS = (function () {
       V.forEach((d, i) => { if (d.x !== null && d.x !== undefined) dots.push({ x: d.x, y: d.y, c: '#facc15', r: 7, t: i + 1 }); });
       if (g.busy) h += `<div class="botpop ${g.botPop ? 'on' : ''}">${g.botPop ? `<small>Bot · Pfeil ${g.botPop.i}</small>${g.botPop.txt}` : '<small>Bot</small>wirft …'}</div>`;
       h += `<div class="boardwrap">${boardSVG({ click: myTurn, zoom: T.zoom, dots })}</div>`;
-      if (T.zoom) h += `<div class="zoombar"><span>🔍 Jetzt genau tippen, wo der Pfeil steckt</span>${btn('zoomOff', 'Abbrechen', undefined, 'zb')}</div>`;
-      else if (myTurn) h += `<div class="boardhint">Auf die Scheibe tippen${T.set.zoom !== false ? ' (zoomt zum genauen Setzen)' : ''} oder unten das Feld wählen</div>`;
+      if (T.zoom) h += `<div class="zoombar"><span>Genau tippen, wo der Pfeil steckt · außerhalb des grauen Rings tippen = zurück</span>${btn('zoomOff', 'Abbrechen', undefined, 'zb')}</div>`;
+      else if (myTurn) h += `<div class="boardhint">Auf die Scheibe tippen${T.set.zoom !== false ? ' (zoomt zum genauen Setzen)' : ''} oder unten das Feld wählen · grauer Ring = Daneben</div>`;
 
       if (g.busy) h += `<div class="wait">Du bist gleich wieder dran …</div>`;
       else {
@@ -2275,6 +2293,47 @@ window.DRILLS = (function () {
   EXT.dataKeys.push(MUSIC_KEY);
   EXT.music = { icon: MU_ICON, first: () => MU.lists[0] || null };
 
+  // ===== 88-voice.js =====
+// Ansage („Caller“): liest nach jeder Aufnahme im Spiel gegen den Bot kurz die Punktzahl vor.
+// Nutzt die Sprachausgabe des Geräts (Web Speech API), kein Internet nötig. Ein/Aus: T.set.voice.
+  if (T.set.voice === undefined) T.set.voice = true;
+  const VOICE_OK = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance === 'function';
+  let deVoice = null;
+  function pickVoice() {
+    if (!VOICE_OK) return;
+    const vs = speechSynthesis.getVoices();
+    deVoice = vs.find(v => /^de(-|_)DE/i.test(v.lang) && /Anna|Helena|Markus|Google/i.test(v.name)) || vs.find(v => /^de/i.test(v.lang)) || null;
+  }
+  if (VOICE_OK) { pickVoice(); speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', pickVoice); }
+
+  function say(text) {
+    if (!VOICE_OK || !T.set.voice || !text) return;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'de-DE'; if (deVoice) u.voice = deVoice;
+      u.rate = 1.05; u.pitch = 1; u.volume = 1;
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  // iOS spricht erst, nachdem einmal innerhalb eines Tipps gesprochen wurde: beim Spielstart „freischalten“
+  function unlockVoice() { if (VOICE_OK && T.set.voice) { try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {} } }
+
+  // Wird aus 20-game.js nach jeder Aufnahme aufgerufen
+  function callVisit(who, score, bust, checked) {
+    if (bust) return say('Überworfen');
+    if (checked) return say(score + ', Game Shot!');
+    if (score === 0) return say('No Score');
+    say(score === 180 ? 'Hundertachtzig!' : String(score));
+  }
+
+  EXT.actions.voice = v => { T.set.voice = v === '1'; if (T.set.voice) say('Ansage an'); else if (VOICE_OK) speechSynthesis.cancel(); };
+  const voiceToggle = () => VOICE_OK ? `<div class="setlabel">Ansage der Punktzahl</div><div class="seg">${btn('voice', 'An', 1, '', T.set.voice)}${btn('voice', 'Aus', 0, '', !T.set.voice)}</div>` : '';
+  const SPK = '<svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/></svg>';
+  const voiceBtn = () => VOICE_OK ? `<button class="vbtn${T.set.voice ? ' on' : ''}" data-a="voice" data-v="${T.set.voice ? 0 : 1}" aria-label="Ansage ${T.set.voice ? 'aus' : 'an'}schalten">${T.set.voice ? SPK.replace('</svg>', '<path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>') : SPK.replace('</svg>', '<path d="m16 9 5 6m0-6-5 6"/></svg>')}${T.set.voice ? 'Ansage an' : 'Ansage aus'}</button>` : '';
+  // Schnittstelle für eigenständige Module (z.B. X01 Mehrspieler)
+  window.dartsCall = (score, bust, checked) => callVisit('x', score, bust, checked);
+
   // ===== 90-main.js =====
 // Rendern, Navigation, Start
   function render() {
@@ -2314,7 +2373,7 @@ window.DRILLS = (function () {
 </script>
 <script>
 // ===== PWA: Service Worker anmelden (nur über http/https, nicht bei file://) =====
-window.APP_VERSION = '64967c8433';
+window.APP_VERSION = '6941992797';
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
   window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service Worker nicht registriert:', e)); });
 }

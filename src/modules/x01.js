@@ -55,13 +55,14 @@
       p.darts += g.visit.length; p.legDarts += g.visit.length;
       p.last = 'Überworfen (' + g.visit.map(x => x.l).join(' ') + ')';
       g.msg = p.name + ': überworfen, bleibt auf ' + p.rem;
+      if (window.dartsCall) window.dartsCall(0, true, false);
       nextPlayer(); return;
     }
     if (after === 0) {
       const sc = visitSum();
       p.darts += g.visit.length; p.legDarts += g.visit.length; p.pts += sc; p.rem = 0;
       p.best = Math.max(p.best, sc); p.hiCO = Math.max(p.hiCO, sc); p.last = 'Checkout ' + sc;
-      g.visit = []; legWon(); return;
+      g.visit = []; if (window.dartsCall) window.dartsCall(sc, false, true); legWon(); return;
     }
     if (g.visit.length === 3) closeVisit();
   }
@@ -70,6 +71,7 @@
     p.rem -= sc; p.pts += sc; p.darts += g.visit.length; p.legDarts += g.visit.length;
     p.best = Math.max(p.best, sc); if (sc === 180) p.s180++;
     p.last = sc + ' (' + g.visit.map(x => x.l).join(' ') + ')';
+    if (window.dartsCall) window.dartsCall(sc, false, false);
     nextPlayer();
   }
   function nextPlayer() { const g = G(); g.visit = []; g.cur = (g.cur + 1) % g.players.length; X.mult = 1; }

@@ -11,7 +11,7 @@
       case 'start': s.start = n; break;
       case 'din': s.din = v === '1'; break;
       case 'legs': s.legs = n; break;
-      case 'go': start(); break;
+      case 'go': unlockVoice(); start(); break;
       case 'ok': record({ ok: true, done: true, darts: n }); break;
       case 'fail': S.phase = 'fail'; break;
       case 'cont': S.phase = 'more'; S.more = S.tasks[S.idx].darts + 1; break;
@@ -56,6 +56,7 @@
       case 'stab': T.stab = v; T.dataMsg = null; T.confirm = null; break;
       case 'tgt': T.tgt = v; break;
       case 'qs':
+        unlockVoice();
         if (v === '501' || v === '301di') {
           T.route = 'play';
           if (!T.game) { Object.assign(s, { mode: 'game', start: v === '501' ? 501 : 301, din: v === '301di', bot: 2, legs: 1 }); start(); }
@@ -66,7 +67,7 @@
         window.scrollTo(0, 0); break;
       case 'nextLeg': nextLeg(); break;
       case 'gUndo': gameUndo(); break;
-      case 'again': start(); break;
+      case 'again': unlockVoice(); start(); break;
       case 'close': T.game = null; T.summary = null; break;
       case 'filter': T.filter = v; break;
       case 'del': T.hist.splice(n, 1); break;
@@ -82,6 +83,7 @@
   }
   el.addEventListener('click', e => {
     const svg = e.target.closest('svg[data-board]'); if (svg) { boardTap(e, svg); return; }
-    const b = e.target.closest('[data-a]'); if (b && !b.disabled) act(b.dataset.a, b.dataset.v);
+    const b = e.target.closest('[data-a]'); if (b && !b.disabled) { act(b.dataset.a, b.dataset.v); return; }
+    if (T.zoom) { T.zoom = null; render(); }   // Tipp neben die vergrößerte Scheibe: Zoom schließen
   });
 

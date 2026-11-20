@@ -71,7 +71,7 @@
   function viewGame() {
     const g = T.game, P = pstats(g, 'p'), B = pstats(g, 'b');
     let h = `<div class="card">`;
-    h += `<div class="tophead"><span>${g.start} · ${g.din ? 'Double-In' : 'Single-In'} · Double-Out</span><span>Leg ${g.legNo} · First to ${g.legsTo}</span></div>`;
+    h += `<div class="tophead"><span>${g.start} · ${g.din ? 'Double-In' : 'Single-In'} · Double-Out</span><span>Leg ${g.legNo} · First to ${g.legsTo}</span></div>` + voiceBtn();
     const panel = (who, name, PL, avg, last, legs) => `<div class="gp ${g.turn === who && g.phase === 'play' ? 'act' : ''}">
         <div class="gn">${name}</div><div class="grem">${PL.rem}</div>
         <div class="gs">Ø ${f1(avg)} · Legs ${legs}${!PL.in ? ' · <span class="warn">nicht drin</span>' : ''}</div>
@@ -89,8 +89,8 @@
       V.forEach((d, i) => { if (d.x !== null && d.x !== undefined) dots.push({ x: d.x, y: d.y, c: '#facc15', r: 7, t: i + 1 }); });
       if (g.busy) h += `<div class="botpop ${g.botPop ? 'on' : ''}">${g.botPop ? `<small>Bot · Pfeil ${g.botPop.i}</small>${g.botPop.txt}` : '<small>Bot</small>wirft …'}</div>`;
       h += `<div class="boardwrap">${boardSVG({ click: myTurn, zoom: T.zoom, dots })}</div>`;
-      if (T.zoom) h += `<div class="zoombar"><span>🔍 Jetzt genau tippen, wo der Pfeil steckt</span>${btn('zoomOff', 'Abbrechen', undefined, 'zb')}</div>`;
-      else if (myTurn) h += `<div class="boardhint">Auf die Scheibe tippen${T.set.zoom !== false ? ' (zoomt zum genauen Setzen)' : ''} oder unten das Feld wählen</div>`;
+      if (T.zoom) h += `<div class="zoombar"><span>Genau tippen, wo der Pfeil steckt · außerhalb des grauen Rings tippen = zurück</span>${btn('zoomOff', 'Abbrechen', undefined, 'zb')}</div>`;
+      else if (myTurn) h += `<div class="boardhint">Auf die Scheibe tippen${T.set.zoom !== false ? ' (zoomt zum genauen Setzen)' : ''} oder unten das Feld wählen · grauer Ring = Daneben</div>`;
 
       if (g.busy) h += `<div class="wait">Du bist gleich wieder dran …</div>`;
       else {

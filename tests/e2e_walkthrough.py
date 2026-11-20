@@ -15,7 +15,7 @@ with sync_playwright() as p:
         if not pg.locator('svg[data-board]').count():
             pg.screenshot(path=os.path.join(OUT,'fail.png'), full_page=True); print('STATE', pg.evaluate("JSON.stringify(JSON.parse(localStorage.getItem('dartsTrainer')).game).slice(0,600)")); raise SystemExit
         box=pg.locator('svg[data-board]').bounding_box()
-        pg.mouse.click(box['x']+(mx+200)/400*box['width'], box['y']+(-my+200)/400*box['height'])
+        pg.mouse.click(box['x']+(mx+246)/492*box['width'], box['y']+(-my+246)/492*box['height'])
     for game in range(2):
         pg.click('#nav [data-route="home"]')
         A('qs','501')
@@ -43,6 +43,7 @@ with sync_playwright() as p:
                 continue
             if rem-20>=2 and rem-20!=1: A('dart',20)
             else: A('dart',1)
+        if not pg.locator('#viewTrainer [data-a="close"]').count(): print('NO CLOSE', step, pg.evaluate("JSON.stringify(JSON.parse(localStorage.getItem('dartsTrainer')).game||null).slice(0,300)"), pg.evaluate('location.href')); pg.screenshot(path=os.path.join(OUT,'noclose.png'), full_page=True)
         print('game', game, g and g['phase'], g and g['p']['rem'], g and g['b']['rem']); A('close')
     pg.click('#nav [data-route="home"]'); pg.screenshot(path=os.path.join(OUT,'h1.png'), full_page=True)
     pg.click('#nav [data-route="stats"]'); pg.screenshot(path=os.path.join(OUT,'st1.png'), full_page=True)

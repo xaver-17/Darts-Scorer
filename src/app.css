@@ -162,3 +162,6 @@
   .row2 .mid.mugo { background: var(--ink); color: #fff; border-color: var(--ink); }
   .muhelp { margin-top: 14px; } .muhelp p { font-size: 14px; color: var(--ink2); line-height: 1.5; }
   #viewTrainer .rows + .big, #viewTrainer .empty + .big { margin-top: 16px; }
+  .vbtn { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--mute); font: inherit; font-size: 13px; cursor: pointer; }
+  .vbtn.on { color: var(--ink); }
+  .vbtn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }

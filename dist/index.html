@@ -1587,19 +1587,19 @@ window.DRILLS = (function () {
   const pt = (r, a) => [(r * Math.sin(a * Math.PI / 180)).toFixed(2), (-r * Math.cos(a * Math.PI / 180)).toFixed(2)];
   function sector(r1, r2, a1, a2, fill) {
     const [x1, y1] = pt(r2, a1), [x2, y2] = pt(r2, a2), [x3, y3] = pt(r1, a2), [x4, y4] = pt(r1, a1);
-    return `<path d="M${x1} ${y1}A${r2} ${r2} 0 0 1 ${x2} ${y2}L${x3} ${y3}A${r1} ${r1} 0 0 0 ${x4} ${y4}Z" fill="${fill}" stroke="#8a8a8a" stroke-width=".4"/>`;
+    return `<path d="M${x1} ${y1}A${r2} ${r2} 0 0 1 ${x2} ${y2}L${x3} ${y3}A${r1} ${r1} 0 0 0 ${x4} ${y4}Z" fill="${fill}" stroke="#3a3a3e" stroke-width=".5"/>`;
   }
   let BOARD_BASE = '';
   (function () {
-    let s = `<circle r="198" fill="#1c1c1e"/><circle r="172" fill="#111"/>`;
+    let s = `<circle r="198" fill="#0a0a0a"/><circle r="172" fill="#151515"/>`;
     ORDER.forEach((n, i) => {
       const a1 = i * 18 - 9, a2 = i * 18 + 9, dark = i % 2 === 0;
-      const sg = dark ? '#1a1a1a' : '#f1e6cf', rg = dark ? '#d0312d' : '#1f8a4c';
+      const sg = dark ? '#151515' : '#2a2a2e', rg = dark ? '#ff5a1f' : '#22d3ee';
       s += sector(15.9, 99, a1, a2, sg) + sector(99, 107, a1, a2, rg) + sector(107, 162, a1, a2, sg) + sector(162, 170, a1, a2, rg);
       const [tx, ty] = pt(185, i * 18);
       s += `<text x="${tx}" y="${(+ty + 6).toFixed(1)}" fill="#f4f4f5" font-size="17" font-weight="700" text-anchor="middle">${n}</text>`;
     });
-    s += `<circle r="15.9" fill="#1f8a4c" stroke="#8a8a8a" stroke-width=".4"/><circle r="6.35" fill="#d0312d" stroke="#8a8a8a" stroke-width=".4"/>`;
+    s += `<circle r="15.9" fill="#22d3ee" stroke="#3a3a3e" stroke-width=".5"/><circle r="6.35" fill="#ff5a1f" stroke="#3a3a3e" stroke-width=".5"/>`;
     BOARD_BASE = s;
   })();
   // dots: [{x,y,c,r,o,t}] in mm (y nach oben)
@@ -1613,8 +1613,8 @@ window.DRILLS = (function () {
     });
     if (o.mean) {
       const m = o.mean;
-      s += `<circle cx="${m.x}" cy="${-m.y}" r="${m.r}" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-dasharray="5 4"/>`;
-      s += `<path d="M${m.x - 8} ${-m.y}h16M${m.x} ${-m.y - 8}v16" stroke="#0ea5e9" stroke-width="3"/>`;
+      s += `<circle cx="${m.x}" cy="${-m.y}" r="${m.r}" fill="none" stroke="#a3e635" stroke-width="2" stroke-dasharray="5 4"/>`;
+      s += `<path d="M${m.x - 8} ${-m.y}h16M${m.x} ${-m.y - 8}v16" stroke="#a3e635" stroke-width="3"/>`;
     }
     return s + `</svg>`;
   }
@@ -2314,7 +2314,7 @@ window.DRILLS = (function () {
 </script>
 <script>
 // ===== PWA: Service Worker anmelden (nur über http/https, nicht bei file://) =====
-window.APP_VERSION = '60532a2e8d';
+window.APP_VERSION = '64967c8433';
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
   window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service Worker nicht registriert:', e)); });
 }

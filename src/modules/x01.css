@@ -1,26 +1,26 @@
   /* ===== X01 mehrere Spieler ===== */
-  #viewX01 .card { background: var(--glass, #1e293b) !important; border: 1px solid var(--line, #e4e4e7); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-radius: 22px; padding: 16px; text-align: left; }
-  #viewX01 .setlabel { font-size: 13px; color: #71717a; margin: 16px 0 8px; }
+  #viewX01 .card { background: var(--glass, #1e293b) !important; border: 1px solid var(--line, var(--line)); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-radius: 22px; padding: 16px; text-align: left; }
+  #viewX01 .setlabel { font-size: 13px; color: var(--mute); margin: 16px 0 8px; }
   #viewX01 .setlabel:first-child { margin-top: 0; }
   #viewX01 .seg button { padding: 11px 0; }
   #viewX01 table { margin-top: 12px; text-align: left; }
-  #viewX01 td small { color: #71717a; font-size: 11px; }
+  #viewX01 td small { color: var(--mute); font-size: 11px; }
   .xplist { display: flex; flex-direction: column; gap: 6px; }
   .xprow { display: flex; align-items: center; gap: 6px; }
-  .xprow .xpn { width: 22px; text-align: center; color: #71717a; font-weight: 700; }
-  .xprow input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line, #e4e4e7); background: #f4f4f5; color: #18181b; font: inherit; font-size: 16px; }
+  .xprow .xpn { width: 22px; text-align: center; color: var(--mute); font-weight: 700; }
+  .xprow input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line, var(--line)); background: var(--soft); color: var(--ink); font: inherit; font-size: 16px; }
   .xprow .xsm { width: 40px; flex: none; padding: 10px 0; }
   .xboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-top: 10px; }
-  .xp { background: #f4f4f5; border: 2px solid transparent; border-radius: 14px; padding: 10px; text-align: center; min-width: 0; }
+  .xp { background: var(--soft); border: 2px solid transparent; border-radius: 14px; padding: 10px; text-align: center; min-width: 0; }
   .xp.act { border-color: #16a34a; }
   .xp.win { border-color: #4ade80; }
-  .xpname { font-size: 13px; color: #71717a; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .xpname { font-size: 13px; color: var(--mute); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .xprem { font-size: 46px; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
   .xp:not(.act) .xprem { opacity: .75; }
-  .xpstat { font-size: 12px; color: #71717a; }
-  .xplast { margin-top: 4px; font-size: 12px; color: #3f3f46; min-height: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .xturn { margin-top: 12px; text-align: center; color: #3f3f46; }
+  .xpstat { font-size: 12px; color: var(--mute); }
+  .xplast { margin-top: 4px; font-size: 12px; color: var(--ink2); min-height: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .xturn { margin-top: 12px; text-align: center; color: var(--ink2); }
   .x01 .mult { grid-template-columns: 1fr 1fr; }
   .x01 table.cmp th, .x01 table.cmp td { text-align: center; } .x01 table.cmp td:first-child { text-align: left; }
-  .xprow button.xsm { background: #f4f4f5; color: #3f3f46; border: 1px solid var(--line, #e4e4e7); border-radius: 10px; font-size: 15px; cursor: pointer; }
+  .xprow button.xsm { background: var(--soft); color: var(--ink2); border: 1px solid var(--line, var(--line)); border-radius: 10px; font-size: 15px; cursor: pointer; }
   #viewX01 .xback { display: inline-block; margin: 0 0 4px; padding: 6px 0; }

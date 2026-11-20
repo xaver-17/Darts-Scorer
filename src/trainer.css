@@ -110,3 +110,10 @@
   @keyframes pop { from { transform: scale(.9); opacity: .4; } to { transform: scale(1); opacity: 1; } }
   .mult .m2.active, .mult .m3.active { background: #111; border-color: #111; }
   .nb.m2, .nb.m3, .nb.bullb { background: #111; }
+
+/* Stats aus der Wurf-Datenbank (65-stats-throws.js) */
+.trc .up { color: var(--ok); font-weight: 600; } .trc .down { color: var(--bad); font-weight: 600; }
+.trc .lvhint { display: block; margin-top: 4px; font-style: normal; font-size: 11px; font-weight: 600; color: var(--ink); }
+table.multi td, table.multi th { text-align: left; }
+.row2.pdrow button.pdhit { background: var(--ok); color: #fff; border-color: var(--ok); }
+.row2.pdrow button.pdmiss { background: #fff; color: var(--bad); border-color: #f3c4c4; }

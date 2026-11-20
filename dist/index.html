@@ -230,6 +230,13 @@
   @keyframes pop { from { transform: scale(.9); opacity: .4; } to { transform: scale(1); opacity: 1; } }
   .mult .m2.active, .mult .m3.active { background: #111; border-color: #111; }
   .nb.m2, .nb.m3, .nb.bullb { background: #111; }
+
+/* Stats aus der Wurf-Datenbank (65-stats-throws.js) */
+.trc .up { color: var(--ok); font-weight: 600; } .trc .down { color: var(--bad); font-weight: 600; }
+.trc .lvhint { display: block; margin-top: 4px; font-style: normal; font-size: 11px; font-weight: 600; color: var(--ink); }
+table.multi td, table.multi th { text-align: left; }
+.row2.pdrow button.pdhit { background: var(--ok); color: #fff; border-color: var(--ok); }
+.row2.pdrow button.pdmiss { background: #fff; color: var(--bad); border-color: #f3c4c4; }
   /* ===== App-Design: neutral, hell, wie eine normale iOS-App ===== */
   :root { --ink: #111; --ink2: #3f3f46; --mute: #71717a; --faint: #a1a1aa; --line: #e7e7ea; --soft: #f4f4f5; --bg: #fff;
           --ok: #16a34a; --bad: #dc2626; --r: 8px; --glass: #fff; }
@@ -894,7 +901,7 @@ window.DRILLS = (function () {
     X.game = {
       start: s.start, out: s.out, legsTo: s.legs, legNo: 1, starter: 0, cur: 0, phase: 'play',
       players: s.players.map(n => ({ name: n.trim() || 'Spieler', rem: s.start, legs: 0, darts: 0, pts: 0, legDarts: 0, best: 0, s180: 0, hiCO: 0, last: '' })),
-      visit: [], undo: [], msg: '', legWinner: null, date: new Date().toISOString()
+      visit: [], undo: [], msg: '', legWinner: null, date: new Date().toISOString(), tl: []
     };
     X.mult = 1; X.confirm = null;
   }
@@ -904,12 +911,13 @@ window.DRILLS = (function () {
   const remNow = () => P().rem - visitSum();
 
   function snapshot() {
-    const g = G(); g.undo.push(JSON.stringify(Object.assign({}, g, { undo: [] })));
+    // tl (alle Würfe) nicht in jeden Schnappschuss kopieren, nur seine Länge merken
+    const g = G(); g.undo.push(JSON.stringify(Object.assign({}, g, { undo: [], tl: undefined, tlLen: (g.tl || []).length })));
     if (g.undo.length > MAXUNDO) g.undo.shift();
   }
   function undo() {
     const g = G(); if (!g || !g.undo.length) return;
-    const u = g.undo, prev = JSON.parse(u.pop()); prev.undo = u; X.game = prev; X.mult = 1;
+    const u = g.undo, prev = JSON.parse(u.pop()); prev.undo = u; prev.tl = (g.tl || []).slice(0, prev.tlLen); delete prev.tlLen; X.game = prev; X.mult = 1;
   }
 
   function isBust(after, d, out) {
@@ -922,9 +930,15 @@ window.DRILLS = (function () {
     const g = G(); if (!g || g.phase !== 'play') return;
     snapshot();
     const p = P(), d = { n, m, v: n * m, l: n === 0 ? 'Miss' : dlabel(n, m) };
-    const after = remNow() - d.v;
+    const rb = remNow(), after = rb - d.v;
     g.visit.push(d); g.msg = '';
+    // Wurf für die Statistik (Felder wie in docs/DATENMODELL.md, leere weggelassen)
+    const w = { who: g.cur, leg: g.legNo, visit: (p.vn || 0) + 1, dart: g.visit.length, n, m: n === 0 ? 0 : m, pts: d.v, rem: rb, t: Date.now() };
+    if (g.out === 'double') { const rt = route(rb, 4 - g.visit.length); w.aim = rt ? dlabel(rt[0].n, rt[0].m) : 'T20'; }
+    if (g.out === 'double' ? !!(ROUTES[rb] && ROUTES[rb][1]) : DARTS.some(x => x.v === rb)) w.dbl = 1;
+    (g.tl = g.tl || []).push(w);
     if (isBust(after, d, g.out)) {
+      w.flag = 'bust';
       p.darts += g.visit.length; p.legDarts += g.visit.length;
       p.last = 'Überworfen (' + g.visit.map(x => x.l).join(' ') + ')';
       g.msg = p.name + ': überworfen, bleibt auf ' + p.rem;
@@ -932,6 +946,7 @@ window.DRILLS = (function () {
       nextPlayer(); return;
     }
     if (after === 0) {
+      w.flag = 'out';
       const sc = visitSum();
       p.darts += g.visit.length; p.legDarts += g.visit.length; p.pts += sc; p.rem = 0;
       p.best = Math.max(p.best, sc); p.hiCO = Math.max(p.hiCO, sc); p.last = 'Checkout ' + sc;
@@ -947,7 +962,7 @@ window.DRILLS = (function () {
     if (window.dartsCall) window.dartsCall(sc, false, false);
     nextPlayer();
   }
-  function nextPlayer() { const g = G(); g.visit = []; g.cur = (g.cur + 1) % g.players.length; X.mult = 1; }
+  function nextPlayer() { const g = G(); P().vn = (P().vn || 0) + 1; g.visit = []; g.cur = (g.cur + 1) % g.players.length; X.mult = 1; }
 
   function legWon() {
     const g = G(), w = P(); w.legs++; g.legWinner = g.cur;
@@ -957,17 +972,22 @@ window.DRILLS = (function () {
   function nextLeg() {
     const g = G(); if (g.phase !== 'legover') return;
     g.legNo++; g.starter = (g.starter + 1) % g.players.length; g.cur = g.starter;
-    g.players.forEach(p => { p.rem = g.start; p.legDarts = 0; p.last = ''; });
+    g.players.forEach(p => { p.rem = g.start; p.legDarts = 0; p.last = ''; p.vn = 0; });
     g.visit = []; g.undo = []; g.msg = ''; g.phase = 'play'; g.legWinner = null;
   }
   function recordGame() {
     const g = G();
-    X.hist.push({ type: 'x01', date: g.date, end: new Date().toISOString(), start: g.start, out: g.out, legsTo: g.legsTo,
+    const e = { type: 'x01', sid: 'x_' + g.date, date: g.date, end: new Date().toISOString(), start: g.start, out: g.out, legsTo: g.legsTo,
       winner: g.players[g.legWinner].name,
-      players: g.players.map(p => ({ name: p.name, legs: p.legs, darts: p.darts, pts: p.pts, avg: p.darts ? p.pts / p.darts * 3 : 0, best: p.best, s180: p.s180, hiCO: p.hiCO })) });
+      players: g.players.map(p => ({ name: p.name, legs: p.legs, darts: p.darts, pts: p.pts, avg: p.darts ? p.pts / p.darts * 3 : 0, best: p.best, s180: p.s180, hiCO: p.hiCO })) };
+    X.hist.push(e);
+    if (window.DartsStats) DartsStats.x01Done(e, g.tl || []);   // Würfe in die Statistik-Datenbank
   }
   // Nach Rückgängig aus "over" das gespeicherte Ergebnis wieder entfernen
-  function undoFromOver() { if (X.hist.length && X.hist[X.hist.length - 1].date === G().date) X.hist.pop(); undo(); }
+  function undoFromOver() {
+    if (X.hist.length && X.hist[X.hist.length - 1].date === G().date) { const e = X.hist.pop(); if (window.DartsStats) DartsStats.x01Undo(e); }
+    undo();
+  }
 
   // ---------- Aktionen ----------
   function act(a, v) {
@@ -1513,13 +1533,39 @@ window.DRILLS = (function () {
     return '';
   }
 
+  // Modi, in denen jeder Pfeil einzeln als Treffer/Daneben eingetragen werden kann (Einstellung T.set.perDart)
+  const PERDART_MODES = ['hit', 'single', 'double', 'triple'];
+  // Ziel einer Aufgabe in der Schreibweise der Würfe (T20, D16, 20, Bull; Typ A = Zahl in jedem Ring)
+  const taskAim = t => t.type === 'B' ? 'Bull' : t.type === 'A' ? String(t.n) : dlabel(t.n, t.type === 'T' ? 3 : t.type === 'D' ? 2 : 1);
+  function taskDart(hit) {
+    const S = T.sess, task = S.tasks[S.idx], fixed = task.type === 'S' || task.type === 'D' || task.type === 'T';
+    const m = task.type === 'T' ? 3 : task.type === 'D' ? 2 : 1;
+    S.tl.push(mkThrow({ task: S.idx, dart: (S.cur || 0) + 1, aim: taskAim(task), hit: hit ? 1 : 0,
+      n: hit ? task.n : null, m: hit && fixed ? (task.n === 25 && task.type === 'S' ? 1 : m) : null, pts: hit && fixed ? task.n * m : null }));
+    if (hit) { record({ ok: S.phase === 'task', done: true, darts: (S.cur || 0) + 1 }); return; }
+    S.cur = (S.cur || 0) + 1;
+    if (S.phase === 'task' && S.cur >= task.darts) S.phase = 'fail';
+    if (S.cur >= 99) record({ ok: false, done: false, darts: S.cur });
+  }
+  function taskDartUndo() {
+    const S = T.sess, task = S.tasks[S.idx];
+    if (S.cur > 0) {
+      S.tl.pop(); S.cur--;
+      if (S.cur < task.darts) S.phase = 'task'; else if (S.cur === task.darts && S.phase === 'more') S.phase = 'fail';
+    } else if (S.log.length) {
+      S.log.pop(); S.idx--; S.phase = 'task';
+      S.tl = S.tl.filter(w => w.task !== S.idx);
+    }
+  }
+
   // ---------- Sitzung ----------
   function start() {
     const s = T.set; T.summary = null; T.input = ''; T.showRoute = false;
     if (s.mode === 'game') { newGame(); return; }
     if (DR[s.mode]) { T.sess = DR[s.mode].start(s); return; }
     if (s.mode === 'score') { T.sess = { mode: 'score', level: s.level, n: s.tasks, goal: SCORE_GOAL[s.level], visits: [], date: new Date().toISOString() }; return; }
-    T.sess = { mode: s.mode, level: s.level, tasks: genTasks(s.mode, s.level, s.tasks), idx: 0, log: [], phase: 'task', more: 0, date: new Date().toISOString() };
+    T.sess = { mode: s.mode, level: s.level, tasks: genTasks(s.mode, s.level, s.tasks), idx: 0, log: [], phase: 'task', more: 0, date: new Date().toISOString(),
+               perDart: !!s.perDart && PERDART_MODES.includes(s.mode), cur: 0, tl: [] };
   }
   function taskStats(S) {
     const ok = S.log.filter(l => l.ok).length, hits = S.log.filter(l => l.done).length, darts = S.log.reduce((a, l) => a + l.darts, 0);
@@ -1536,15 +1582,174 @@ window.DRILLS = (function () {
     if (DR[S.mode]) { entry = DR[S.mode].entry(S); if (!entry) { T.sess = null; return; } }
     else if (S.mode === 'score') { if (!S.visits.length) { T.sess = null; return; } entry = Object.assign({ date: S.date, mode: 'score', level: S.level, goal: S.goal }, scoreStats(S)); }
     else { if (!S.log.length) { T.sess = null; return; } entry = Object.assign({ date: S.date, mode: S.mode, level: S.level, planned: S.tasks.length }, taskStats(S)); }
+    entry.sid = sidOf(entry);
+    const r = Object.assign({}, entry); delete r.date; delete r.mode; delete r.level; delete r.sid;
+    TS.put({ id: entry.sid, v: STATS_V, kind: 'training', mode: S.mode, level: S.level, players: [{ name: 'Du', me: true }],
+      cfg: { perDart: !!S.perDart }, tasks: S.tasks ? S.tasks.map(t => ({ type: t.type, n: t.n, darts: t.darts })) : undefined,
+      log: S.log, visits: S.visits, startedAt: S.date, endedAt: nowIso(), result: r }, S.tl || []);
     T.hist.push(entry); T.summary = entry; T.sess = null; T.filter = entry.mode;
   }
   function record(r) {
     const S = T.sess, task = S.tasks[S.idx];
     S.log.push(Object.assign({ allowed: task.darts }, r));
-    S.idx++; S.phase = 'task'; T.showRoute = false;
+    S.idx++; S.phase = 'task'; S.cur = 0; T.showRoute = false;
     if (S.idx >= S.tasks.length) finish();
   }
 
+
+  // ===== 15-throws.js =====
+// Wurf-Datenbank: jede Session (Spiel oder Training) mit allen einzelnen Pfeilen.
+// Gespeichert in IndexedDB 'darts-scorer' (Tabellen 'sessions' und 'throws'), ohne IndexedDB im localStorage 'dartsStatsDb'.
+// Aufbau der Datensätze: docs/DATENMODELL.md. T.hist und 'dartsX01' bleiben unverändert erhalten.
+  const TS = (function () {
+    const DBN = 'darts-scorer', FB = 'dartsStatsDb';
+    const S = new Map(), W = new Map();      // S: id -> Session, W: id -> Liste der Würfe
+    let db = null, kind = 'mem', loaded = false;
+    const req = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    function openDb() {
+      return new Promise(res => {
+        let rq; try { if (!window.indexedDB) return res(null); rq = indexedDB.open(DBN, 1); } catch (e) { return res(null); }
+        rq.onupgradeneeded = () => {
+          const d = rq.result;
+          if (!d.objectStoreNames.contains('sessions')) d.createObjectStore('sessions', { keyPath: 'id' }).createIndex('startedAt', 'startedAt');
+          if (!d.objectStoreNames.contains('throws')) d.createObjectStore('throws', { keyPath: 'sid' });
+        };
+        rq.onsuccess = () => res(rq.result); rq.onerror = () => res(null); rq.onblocked = () => res(null);
+      });
+    }
+    function saveFallback() { try { localStorage.setItem(FB, JSON.stringify(dump())); } catch (e) {} }
+    function tx(stores, fn) {
+      if (!db) { saveFallback(); return Promise.resolve(); }
+      return new Promise(res => {
+        let t; try { t = db.transaction(stores, 'readwrite'); } catch (e) { return res(); }
+        fn(t); t.oncomplete = () => res(); t.onerror = t.onabort = () => res();
+      });
+    }
+    const ready = (async () => {
+      db = await openDb();
+      if (db) {
+        try {
+          const t = db.transaction(['sessions', 'throws']);
+          const [ss, ws] = await Promise.all([req(t.objectStore('sessions').getAll()), req(t.objectStore('throws').getAll())]);
+          ss.forEach(s => S.set(s.id, s)); ws.forEach(w => W.set(w.sid, w.list));
+          kind = 'idb';
+        } catch (e) { db = null; }
+      }
+      if (!db) {
+        kind = 'ls';
+        try { const d = JSON.parse(localStorage.getItem(FB) || 'null'); if (d) load(d); } catch (e) {}
+      }
+      loaded = true;
+    })();
+    function load(d) {
+      (d.sessions || []).forEach(s => S.set(s.id, s));
+      (d.throws || []).forEach(w => W.set(w.sid, w.list));
+    }
+    function dump() { return { sessions: [...S.values()], throws: [...W.entries()].map(([sid, list]) => ({ sid, list })) }; }
+    function put(s, list) {
+      S.set(s.id, s); if (list) W.set(s.id, list);
+      return ready.then(() => tx(['sessions', 'throws'], t => { t.objectStore('sessions').put(s); if (list) t.objectStore('throws').put({ sid: s.id, list }); }));
+    }
+    function remove(id) {
+      S.delete(id); W.delete(id);
+      return ready.then(() => tx(['sessions', 'throws'], t => { t.objectStore('sessions').delete(id); t.objectStore('throws').delete(id); }));
+    }
+    async function clear() {
+      await ready; S.clear(); W.clear(); try { localStorage.removeItem(FB); } catch (e) {}
+      return db ? tx(['sessions', 'throws'], t => { t.objectStore('sessions').clear(); t.objectStore('throws').clear(); }) : Promise.resolve();
+    }
+    async function restore(d) {
+      await clear(); load(d || {});
+      if (!db) { saveFallback(); return; }
+      await tx(['sessions', 'throws'], t => {
+        S.forEach(s => t.objectStore('sessions').put(s));
+        W.forEach((list, sid) => t.objectStore('throws').put({ sid, list }));
+      });
+    }
+    return {
+      ready, put, remove, clear, restore, dump,
+      get loaded() { return loaded; }, get kind() { return kind; },
+      session: id => S.get(id), throws: id => W.get(id) || [], has: id => S.has(id),
+      sessions: () => [...S.values()].sort((a, b) => (a.startedAt < b.startedAt ? -1 : 1))
+    };
+  })();
+
+  // ---------- Hilfen für Sessions und Würfe ----------
+  const STATS_V = 1;
+  const nowIso = () => new Date().toISOString();
+  const sidOf = e => e.sid || (e.mode === 'game' ? 'g_' : 't_' + e.mode + '_') + e.date;
+  // Ein Wurf-Datensatz; Felder mit null/undefined werden weggelassen, damit die Datenbank klein bleibt
+  function mkThrow(o) {
+    const w = {}; Object.keys(o).forEach(k => { if (o[k] !== null && o[k] !== undefined) w[k] = o[k]; });
+    if (w.t === undefined) w.t = Date.now();
+    return w;
+  }
+  // Doppel-Chance: Rest lässt sich mit einem Pfeil beenden (Double-Out: Doppel/Bull, Single-Out: jedes Feld)
+  const dblChance = (rem, out) => out === 'single' ? DARTS.some(d => d.v === rem) : !!(ROUTES[rem] && ROUTES[rem][1]);
+
+  // Kennzahlen je Spieler aus den Würfen (siehe docs/DATENMODELL.md, Statistik-Definitionen)
+  function totalsFrom(list, nPlayers) {
+    const out = [];
+    for (let who = 0; who < nPlayers; who++) {
+      const ds = list.filter(w => (w.who || 0) === who && w.leg !== undefined);
+      const vis = new Map();
+      ds.forEach(w => { const k = w.leg + '/' + w.visit; if (!vis.has(k)) vis.set(k, []); vis.get(k).push(w); });
+      let pts = 0, best = 0, hiCO = 0, s100 = 0, s140 = 0, s180 = 0;
+      vis.forEach(v => {
+        const bust = v.some(w => w.flag === 'bust');
+        const sc = bust ? 0 : v.reduce((a, w) => a + (w.flag === 'noin' ? 0 : w.pts || 0), 0);
+        pts += sc; best = Math.max(best, sc);
+        if (sc === 180) s180++; else if (sc >= 140) s140++; else if (sc >= 100) s100++;
+        if (v.some(w => w.flag === 'out')) hiCO = Math.max(hiCO, v[0].rem || 0);
+      });
+      const coAtt = ds.filter(w => w.dbl).length, coHits = ds.filter(w => w.flag === 'out').length;
+      out.push({ darts: ds.length, pts, avg: ds.length ? pts / ds.length * 3 : 0, best, hiCO, s100, s140, s180, coAtt, coHits, coPct: coAtt ? coHits / coAtt * 100 : 0 });
+    }
+    return out;
+  }
+
+  // ---------- Übernahme vorhandener Daten (verlustfrei, Originale bleiben stehen) ----------
+  function legacyGame(e) {
+    // Feld aus dem gespeicherten Label (nicht neu aus x/y berechnet, damit nichts vom Original abweicht)
+    const lab = l => l === 'Miss' || !l ? { n: 0, m: 0 } : l === 'Bull' ? { n: 25, m: 2 } : l === '25' ? { n: 25, m: 1 }
+      : l[0] === 'T' ? { n: +l.slice(1), m: 3 } : l[0] === 'D' ? { n: +l.slice(1), m: 2 } : { n: +l, m: 1 };
+    const list = (e.dots || []).map(d => {
+      const h = lab(d[2]);
+      return mkThrow({ who: 0, n: h.n, m: h.m, pts: h.n * h.m, x: d[0], y: d[1], rem: d[3], dbl: d[4] ? 1 : null, aim: d[5], t: 0 });
+    });
+    const tot = e.P && e.B ? [e.P, e.B] : null;
+    return [{ id: sidOf(e), v: STATS_V, kind: 'game', mode: 'x01bot', level: e.level,
+      players: [{ name: 'Du', me: true }, { name: 'Bot ' + (BOT[e.level] ? BOT[e.level].n : ''), bot: e.level }],
+      cfg: { start: e.start, din: !!e.din, out: 'double' }, startedAt: e.date, endedAt: null,
+      result: { winner: e.won ? 0 : 1, legs: [e.lp, e.lb] }, totals: tot, legacy: true }, list];
+  }
+  function legacyTraining(e) {
+    const r = Object.assign({}, e); delete r.date; delete r.mode; delete r.level;
+    return [{ id: sidOf(e), v: STATS_V, kind: 'training', mode: e.mode, level: e.level, players: [{ name: 'Du', me: true }],
+      cfg: {}, startedAt: e.date, endedAt: null, result: r, legacy: true }, []];
+  }
+  function x01Session(e, list) {
+    const names = e.players.map(p => p.name);
+    return { id: e.sid || 'x_' + e.date, v: STATS_V, kind: 'game', mode: 'x01multi', level: null,
+      players: names.map(n => ({ name: n })), cfg: { start: e.start, out: e.out, legsTo: e.legsTo },
+      startedAt: e.date, endedAt: e.end || null,
+      result: { winner: Math.max(0, names.indexOf(e.winner)), legs: e.players.map(p => p.legs) },
+      totals: list && list.length ? totalsFrom(list, names.length) : e.players.map(p => ({ darts: p.darts, pts: p.pts, avg: p.avg, best: p.best, s180: p.s180, hiCO: p.hiCO })),
+      legacy: !(list && list.length) };
+  }
+  // Läuft bei jedem Start: legt für jeden Eintrag ohne Session eine an (auch nach Import einer alten Sicherung)
+  function syncLegacy() {
+    T.hist.forEach(e => { if (!TS.has(sidOf(e))) { const [s, l] = e.mode === 'game' ? legacyGame(e) : legacyTraining(e); TS.put(s, l); } });
+    const X = window.X01 && X01.history ? X01.history() : [];
+    X.forEach(e => { const id = e.sid || 'x_' + e.date; if (!TS.has(id)) TS.put(x01Session(e, null), []); });
+  }
+  TS.ready.then(() => { syncLegacy(); if (T.route === 'stats') render(); });
+
+  // X01-Mehrspieler meldet fertige Spiele mit allen Würfen (siehe src/modules/x01.js)
+  window.DartsStats = {
+    x01Done(e, list) { TS.put(x01Session(e, list), list); },
+    x01Undo(e) { TS.remove(e.sid || 'x_' + e.date); }
+  };
 
   // ===== 20-game.js =====
 // Spiel X01 vs. Bot: Ablauf, Bot-Züge, Leg-/Spielende, Spieler-Stats
@@ -1555,7 +1760,7 @@ window.DRILLS = (function () {
     T.game = { start: s.start, din: s.din, bot: s.bot, legsTo: s.legs, legs: { p: 0, b: 0 }, legNo: 1, starter: 'p', turn: 'p',
                p: { rem: s.start, in: !s.din }, b: { rem: s.start, in: !s.din },
                visit: null, vis: { p: [], b: [] }, att: { p: 0, b: 0 }, pdots: [], bLast: [], legWins: [],
-               last: { p: '', b: '' }, phase: 'play', undo: [], busy: false, msg: '', date: new Date().toISOString() };
+               last: { p: '', b: '' }, phase: 'play', undo: [], busy: false, msg: '', date: new Date().toISOString(), tl: [] };
   }
   function snapshot() { const g = T.game; g.undo.push(JSON.stringify(Object.assign({}, g, { undo: [] }))); if (g.undo.length > 15) g.undo.shift(); }
   const visitText = ds => ds.map(d => d.l).join(' · ');
@@ -1573,15 +1778,19 @@ window.DRILLS = (function () {
     if (P.in) { const rt = P.rem <= 170 ? route(P.rem, 3 - V.darts.length) : null; aim = rt ? dlabel(rt[0].n, rt[0].m) : 'T20'; }
     if (d.att) g.att.p++;
     V.darts.push(d);
+    // Wurf für die Statistik-Datenbank (tl = throw log, wird mit dem Spiel gespeichert)
+    const w = mkThrow({ who: 0, leg: g.legNo, visit: g.vis.p.filter(v => v.leg === g.legNo).length + 1, dart: V.darts.length,
+      n: d.n, m: d.m, pts: d.v, x: d.x, y: d.y, aim, rem: P.rem, dbl: d.att ? 1 : null, flag: P.in ? null : d.m === 2 ? 'in' : 'noin' });
+    (g.tl = g.tl || []).push(w);
     g.pdots.push({ x: d.x, y: d.y, l: d.l, leg: g.legNo, rb: P.rem, att: d.att, din: !P.in, aim });
     if (!P.in) {
       if (d.m === 2) P.in = true;
       else { if (V.darts.length === 3) closeVisit(false, false); return; }
     }
     const nr = P.rem - d.v;
-    if (nr < 0 || nr === 1 || (nr === 0 && d.m !== 2)) { P.rem = V.start; closeVisit(true, false); return; }
+    if (nr < 0 || nr === 1 || (nr === 0 && d.m !== 2)) { w.flag = 'bust'; P.rem = V.start; closeVisit(true, false); return; }
     P.rem = nr;
-    if (nr === 0) { closeVisit(false, true); legWon('p'); return; }
+    if (nr === 0) { w.flag = 'out'; closeVisit(false, true); legWon('p'); return; }
     if (V.darts.length === 3) closeVisit(false, false);
   }
   function closeVisit(bust, checked) {
@@ -1620,6 +1829,13 @@ window.DRILLS = (function () {
     const g = T.game, r = g.botPending; if (!r) return;
     const scored = r.bust ? 0 : g.b.rem - r.rem;
     g.att.b += r.darts.filter(d => d.att).length;
+    let inn = g.b.in || !g.din; const vn = g.vis.b.filter(v => v.leg === g.legNo).length + 1;
+    r.darts.forEach((d, i) => {
+      let flag = null;
+      if (!inn) { if (d.m === 2) { inn = true; flag = 'in'; } else flag = 'noin'; }
+      if (i === r.darts.length - 1) { if (r.bust) flag = 'bust'; else if (r.checked) flag = 'out'; }
+      (g.tl = g.tl || []).push(mkThrow({ who: 1, leg: g.legNo, visit: vn, dart: i + 1, n: d.n, m: d.m, pts: d.v, x: d.x, y: d.y, rem: d.rb, dbl: d.att ? 1 : null, flag }));
+    });
     g.vis.b.push({ leg: g.legNo, score: scored, n: r.darts.length, bust: !!r.bust, co: r.checked ? g.b.rem : 0 });
     g.last.b = visitText(r.darts) + (r.bust ? ' → Überworfen' : (g.din && !r.isIn) ? ' → nicht drin' : ' = ' + scored) + (r.checked ? ' ✓' : '');
     g.bLast = r.darts.map(d => ({ x: d.x, y: d.y }));
@@ -1632,8 +1848,12 @@ window.DRILLS = (function () {
     const g = T.game; g.legs[w]++; g.legWinner = w; g.legWins.push({ leg: g.legNo, w });
     if (g.legs[w] >= g.legsTo) {
       g.phase = 'over';
-      const P = pstats(g, 'p'), B = pstats(g, 'b');
-      T.hist.push({ date: g.date, mode: 'game', level: g.bot, won: w === 'p', lp: g.legs.p, lb: g.legs.b, avg: P.avg, botAvg: B.avg,
+      const P = pstats(g, 'p'), B = pstats(g, 'b'), sid = 'g_' + g.date, list = g.tl || [];
+      TS.put({ id: sid, v: STATS_V, kind: 'game', mode: 'x01bot', level: g.bot,
+        players: [{ name: 'Du', me: true }, { name: 'Bot ' + BOT[g.bot].n, bot: g.bot }],
+        cfg: { start: g.start, din: g.din, out: 'double', legsTo: g.legsTo }, startedAt: g.date, endedAt: nowIso(),
+        result: { winner: w === 'p' ? 0 : 1, legs: [g.legs.p, g.legs.b] }, totals: totalsFrom(list, 2) }, list);
+      T.hist.push({ sid, date: g.date, mode: 'game', level: g.bot, won: w === 'p', lp: g.legs.p, lb: g.legs.b, avg: P.avg, botAvg: B.avg,
                     start: g.start, din: g.din, best: P.best, hiCO: P.hiCO, P, B,
                     dots: g.pdots.filter(d => d.x !== null && d.x !== undefined).map(d => [d.x, d.y, d.l, d.rb, d.att ? 1 : 0, d.aim === undefined ? null : d.aim]) });
       T.filter = 'game';
@@ -1777,6 +1997,9 @@ window.DRILLS = (function () {
       case 'start': s.start = n; break;
       case 'din': s.din = v === '1'; break;
       case 'legs': s.legs = n; break;
+      case 'perDart': s.perDart = v === '1'; break;
+      case 'pdHit': taskDart(true); break;
+      case 'pdMiss': taskDart(false); break;
       case 'go': unlockVoice(); start(); break;
       case 'ok': record({ ok: true, done: true, darts: n }); break;
       case 'fail': S.phase = 'fail'; break;
@@ -1784,11 +2007,12 @@ window.DRILLS = (function () {
       case 'moreM': S.more = Math.max(S.tasks[S.idx].darts + 1, S.more - 1); break;
       case 'moreP': S.more = Math.min(99, S.more + 1); break;
       case 'moreOk': record({ ok: false, done: true, darts: S.more }); break;
-      case 'skip': record({ ok: false, done: false, darts: S.tasks[S.idx].darts }); break;
+      case 'skip': record({ ok: false, done: false, darts: Math.max(S.cur || 0, S.tasks[S.idx].darts) }); break;
       case 'route': T.showRoute = !T.showRoute; break;
       case 'undoTask':
         if (DR[S.mode]) DR[S.mode].act(a, v, S);
         else if (S.mode === 'score') { S.visits.pop(); }
+        else if (S.perDart) taskDartUndo();
         else if (S.phase !== 'task') S.phase = 'task';
         else if (S.log.length) { S.log.pop(); S.idx--; }
         break;
@@ -1836,7 +2060,7 @@ window.DRILLS = (function () {
       case 'again': unlockVoice(); start(); break;
       case 'close': T.game = null; T.summary = null; break;
       case 'filter': T.filter = v; break;
-      case 'del': T.hist.splice(n, 1); break;
+      case 'del': { const e = T.hist.splice(n, 1)[0]; if (e) TS.remove(sidOf(e)); break; }
       case 'drOrder': s.drOrder = v; break;
       case 'homeData': T.route = 'stats'; T.stab = 'data'; window.scrollTo(0, 0); break;
       case 'export': exportData(); break;
@@ -1888,6 +2112,7 @@ window.DRILLS = (function () {
     h += `</div><div class="setlabel">Schwierigkeit</div><div class="lvl">`;
     LV.forEach((l, i) => { h += btn('level', `<b>${i + 1}</b><small>${l}</small>`, i, '', s.level === i); });
     h += `</div>` + (DR[s.mode] ? DR[s.mode].opts(s, ctx) : `<div class="setlabel">${s.mode === 'score' ? 'Aufnahmen' : 'Aufgaben'}</div><div class="seg">${[10, 20, 30].map(n => btn('tasks', n, n, '', s.tasks === n)).join('')}</div>`);
+    if (PERDART_MODES.includes(s.mode)) h += `<div class="setlabel">Eingabe</div><div class="seg">${btn('perDart', 'Schnell', 0, '', !s.perDart)}${btn('perDart', 'Jeder Pfeil', 1, '', !!s.perDart)}</div>`;
     h += `<div class="desc">${describe(s.mode, s.level, s.tasks)}</div>`;
     return h + `<button class="big go" data-a="go">Training starten</button></div>` + extLinks(EXT.trainLinks, 'Weitere Trainings');
   }
@@ -1960,10 +2185,11 @@ window.DRILLS = (function () {
   function viewStatsPage() {
     const tab = T.stab || 'over';
     let h = phead('Meine Stats', 'Alles aus deinen Spielen und Trainings');
-    h += `<div class="segtabs">${btn('stab', 'Übersicht', 'over', '', tab === 'over')}${btn('stab', 'Trefferquote', 'acc', '', tab === 'acc')}${btn('stab', 'Verlauf', 'hist', '', tab === 'hist')}${btn('stab', 'Daten', 'data', '', tab === 'data')}</div>`;
+    h += `<div class="segtabs">${btn('stab', 'Übersicht', 'over', '', tab === 'over')}${btn('stab', 'Trefferquote', 'acc', '', tab === 'acc')}${btn('stab', 'Verlauf', 'hist', '', tab === 'hist')}${btn('stab', 'Mehrspieler', 'multi', '', tab === 'multi')}${btn('stab', 'Daten', 'data', '', tab === 'data')}</div>`;
     if (tab === 'over') return h + viewOverview();
     if (tab === 'acc') return h + viewAccuracy();
     if (tab === 'data') return h + viewData();
+    if (tab === 'multi') return h + viewMulti();
     return h + viewHistory();
   }
 
@@ -1995,10 +2221,11 @@ window.DRILLS = (function () {
         const avg = last5.reduce((a, e) => a + val(e), 0) / last5.length, best = (O && O.low ? Math.min : Math.max)(...l.map(val));
         const u = O ? O.unit : k === 'score' ? '' : ' %';
         const w = O ? O.bar(avg) : k === 'score' ? avg / 1.2 : avg;
-        h += `<div class="trc"><small>${TM[k]}</small><b>${f1(avg)}${u}</b><span>Ø letzte ${last5.length} · Best ${f1(best)}${u} · ${l.length}×</span><i style="width:${Math.max(0, Math.min(100, w))}%"></i></div>`;
+        h += `<div class="trc"><small>${TM[k]}</small><b>${f1(avg)}${u}</b><span>Ø letzte ${last5.length} · Best ${f1(best)}${u} · ${l.length}×${trainTrend(l, val)}</span>${levelHint(k, l)}<i style="width:${Math.max(0, Math.min(100, w))}%"></i></div>`;
       });
       h += `</div>`;
     }
+    h += viewDoubles();
     Object.values(DR).forEach(d => { if (d.extra) h += d.extra(T.hist, ctx); });
     return h;
   }
@@ -2111,6 +2338,87 @@ window.DRILLS = (function () {
   }
 
 
+  // ===== 65-stats-throws.js =====
+// Stats aus der Wurf-Datenbank (15-throws.js): X01-Mehrspieler, Doppelquote je Feld (Spiel + Training), Trainingstrend
+  const x01Hist = () => (window.X01 && X01.history ? X01.history() : []);
+  const escH = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  // ---------- X01 Mehrspieler ----------
+  function viewMulti() {
+    const H = x01Hist();
+    if (!H.length) return `<div class="card empty">Noch keine Mehrspieler-Spiele. Starte unter Spielen → X01 Mehrspieler ein Spiel – danach siehst du hier, wer wie wirft.</div>`;
+    // Pro Spielername zusammenfassen; Checkout-Quote nur aus Spielen mit Einzelwürfen
+    const P = {};
+    H.forEach(e => {
+      const s = TS.session(e.sid || 'x_' + e.date), tot = s && s.totals;
+      e.players.forEach((p, i) => {
+        const a = P[p.name] = P[p.name] || { name: p.name, games: 0, wins: 0, darts: 0, pts: 0, s180: 0, hiCO: 0, best: 0, coAtt: 0, coHits: 0, legs: 0 };
+        a.games++; if (e.winner === p.name) a.wins++;
+        a.darts += p.darts; a.pts += p.pts; a.s180 += p.s180 || 0; a.legs += p.legs || 0;
+        a.hiCO = Math.max(a.hiCO, p.hiCO || 0); a.best = Math.max(a.best, p.best || 0);
+        if (tot && tot[i] && tot[i].coAtt !== undefined) { a.coAtt += tot[i].coAtt; a.coHits += tot[i].coHits; }
+      });
+    });
+    const rows = Object.values(P).sort((a, b) => b.wins - a.wins || b.pts / (b.darts || 1) - a.pts / (a.darts || 1));
+    let h = `<div class="card tablecard"><div class="setlabel">Spieler · ${H.length} Spiel${H.length > 1 ? 'e' : ''}</div><table class="multi"><tr><th>Spieler</th><th>Siege</th><th>Ø</th><th>Checkout</th><th>180er</th><th>Finish</th></tr>`;
+    rows.forEach(a => {
+      h += `<tr><td><b>${escH(a.name)}</b><br><small>${a.games} Spiel${a.games > 1 ? 'e' : ''}</small></td><td>${a.wins}</td><td><b>${f1(a.darts ? a.pts / a.darts * 3 : 0)}</b></td>`
+        + `<td>${a.coAtt ? f1(a.coHits / a.coAtt * 100) + ' %<br><small>' + a.coHits + '/' + a.coAtt + '</small>' : '–'}</td><td>${a.s180}</td><td>${a.hiCO || '–'}</td></tr>`;
+    });
+    h += `</table><div class="boardhint">Checkout-Quote = Checkouts / Pfeile mit Checkout-Chance. Zählt ab dieser Version (ältere Spiele haben keine Einzelwürfe).</div></div>`;
+    h += `<h2 class="sec">Spiele</h2><div class="card tablecard"><table><tr><th>Datum</th><th>Spiel</th><th>Ergebnis</th></tr>`;
+    H.slice().reverse().forEach(e => {
+      const d = new Date(e.date);
+      const ds = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + '<br><small>' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + '</small>';
+      const ps = e.players.map(p => `${p.name === e.winner ? '<b class="gw">' + escH(p.name) + ' ' + p.legs + '</b>' : escH(p.name) + ' ' + p.legs} <small>Ø ${f1(p.avg)}</small>`).join('<br>');
+      h += `<tr><td>${ds}</td><td>${e.start}<br><small>${e.out === 'double' ? 'Double-Out' : 'Single-Out'}</small></td><td>${ps}</td></tr>`;
+    });
+    return h + `</table></div>`;
+  }
+
+  // ---------- Doppelquote je Feld: Spiel und Training nebeneinander ----------
+  function doubleRates() {
+    const F = {};
+    const add = (f, src, hit, n = 1) => { const a = F[f] = F[f] || { g: [0, 0], t: [0, 0] }; a[src][0] += hit; a[src][1] += n; };
+    TS.sessions().forEach(s => {
+      const list = TS.throws(s.id);
+      if (s.kind === 'game') {
+        const me = (s.players || []).findIndex(p => p.me);
+        if (me < 0) return;
+        list.forEach(w => { if ((w.who || 0) === me && w.aim && (w.aim[0] === 'D' || w.aim === 'Bull')) add(w.aim, 'g', dlabel(w.n, w.m) === w.aim && w.m === 2 ? 1 : 0); });
+      } else if (s.mode === 'double' || s.mode === 'hit') {
+        const isD = i => s.tasks && s.tasks[i] && s.tasks[i].type === 'D';
+        if (s.cfg && s.cfg.perDart) list.forEach(w => { if (isD(w.task)) add(w.aim, 't', w.hit ? 1 : 0); });
+        else if (s.log) s.log.forEach((l, i) => { if (isD(i)) add(dlabel(s.tasks[i].n, 2), 't', l.done ? 1 : 0, l.darts); });
+      }
+    });
+    return F;
+  }
+  function viewDoubles() {
+    const F = doubleRates(), keys = Object.keys(F).sort((a, b) => (F[b].g[1] + F[b].t[1]) - (F[a].g[1] + F[a].t[1])).slice(0, 10);
+    if (!keys.length) return '';
+    const pc = a => a[1] ? `${f1(a[0] / a[1] * 100)} %<br><small>${a[0]}/${a[1]}</small>` : '–';
+    let h = `<h2 class="sec">Doppel: Spiel und Training</h2><div class="card tablecard"><table class="multi"><tr><th>Feld</th><th>Im Spiel</th><th>Im Training</th></tr>`;
+    keys.forEach(k => { h += `<tr><td><b>${k}</b></td><td>${pc(F[k].g)}</td><td>${pc(F[k].t)}</td></tr>`; });
+    return h + `</table><div class="boardhint">Treffer / Pfeile auf dieses Doppel. Im Spiel zählen Pfeile, deren Checkout-Weg auf das Doppel ging.</div></div>`;
+  }
+
+  // ---------- Trainingsfortschritt: Trend und Stufen-Empfehlung ----------
+  const LEVEL_UP = 70, LEVEL_DOWN = 30;   // % in 3 Einheiten nacheinander (leicht änderbar)
+  function trainTrend(l, val) {
+    if (l.length < 6) return '';
+    const a = l.slice(-5), b = l.slice(-10, -5), m = x => x.reduce((s, e) => s + val(e), 0) / x.length, d = m(a) - m(b);
+    return ` · <span class="${d >= 0 ? 'up' : 'down'}">${d >= 0 ? '▲' : '▼'} ${f1(Math.abs(d))}</span>`;
+  }
+  function levelHint(k, l) {
+    if (DR[k] || k === 'score' || l.length < 3) return '';
+    const last = l.slice(-3), L = last[0].level;
+    if (!last.every(e => e.level === L)) return '';
+    if (L < 4 && last.every(e => e.rate >= LEVEL_UP)) return `<em class="lvhint">Bereit für Stufe ${LV[L + 1]}</em>`;
+    if (L > 0 && last.every(e => e.rate <= LEVEL_DOWN)) return `<em class="lvhint">Tipp: Stufe ${LV[L - 1]} probieren</em>`;
+    return '';
+  }
+
   // ===== 70-views-session.js =====
 // Ansichten: laufendes Training, laufendes Spiel, Zusammenfassung
   function viewTask() {
@@ -2125,7 +2433,12 @@ window.DRILLS = (function () {
       const showR = S.level < 3 || T.showRoute;
       h += showR ? `<div class="route">Weg: ${task.route}</div>` : `<button class="link" data-a="route">Weg anzeigen</button>`;
     }
-    if (S.phase === 'task') {
+    if (S.perDart && (S.phase === 'task' || S.phase === 'more')) {
+      const k = S.cur || 0;
+      h += `<div class="setlabel c">Pfeil ${k + 1}${S.phase === 'task' ? ' von ' + task.darts : ' (Zusatz)'}</div>`;
+      h += `<div class="row2 pdrow">${btn('pdHit', '✓ Treffer', undefined, 'mid pdhit')}${btn('pdMiss', '✕ Daneben', undefined, 'mid pdmiss')}</div>`;
+      if (S.phase === 'more') h += `<button class="link" data-a="skip">Aufgeben → nächste Aufgabe</button>`;
+    } else if (S.phase === 'task') {
       h += `<div class="setlabel c">Geschafft mit …</div><div class="okgrid">`;
       for (let i = 1; i <= task.darts; i++) h += btn('ok', `✓ ${i}`, i, 'okb');
       h += `</div><button class="big bad" data-a="fail">✕ Nicht in ${task.darts} Darts geschafft</button>`;
@@ -2294,15 +2607,17 @@ window.DRILLS = (function () {
 
   // ===== 85-data.js =====
 // Daten-Sicherung: Export als JSON-Datei, Import, alles löschen.
-// Gesichert werden beide localStorage-Schlüssel: 'dartsTrainer' (App) und 'zaehler3' (Zähler).
+// Gesichert werden die localStorage-Schlüssel ('dartsTrainer', 'zaehler3', EXT.dataKeys) und die
+// Wurf-Datenbank (Sessions + Würfe aus IndexedDB, Feld 'statsDb'). Format 2; Format-1-Sicherungen lassen sich weiter importieren.
   const DATA_KEYS = ['dartsTrainer', 'zaehler3'];
   const dataKeys = () => DATA_KEYS.concat(EXT.dataKeys);
   T.dataMsg = null;
 
   function exportData() {
     save();
-    const data = { app: 'darts-scorer', format: 1, exported: new Date().toISOString(), version: window.APP_VERSION || '' };
+    const data = { app: 'darts-scorer', format: 2, exported: new Date().toISOString(), version: window.APP_VERSION || '' };
     dataKeys().forEach(k => { data[k] = localStorage.getItem(k); });
+    data.statsDb = TS.dump();
     const name = 'darts-scorer-backup-' + new Date().toISOString().slice(0, 10) + '.json';
     const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
     const file = typeof File === 'function' ? new File([blob], name, { type: 'application/json' }) : null;
@@ -2324,18 +2639,20 @@ window.DRILLS = (function () {
     }
     try { JSON.parse(d.dartsTrainer); } catch (e) { T.dataMsg = { ok: false, t: 'Sicherung ist beschädigt.' }; render(); return; }
     dataKeys().forEach(k => { if (typeof d[k] === 'string') localStorage.setItem(k, d[k]); else localStorage.removeItem(k); });
-    location.reload();
+    // Alte Sicherung ohne Wurf-Datenbank: Sessions werden nach dem Neuladen aus den Einträgen neu angelegt
+    TS.restore(d.statsDb && Array.isArray(d.statsDb.sessions) ? d.statsDb : null).then(() => location.reload());
   }
 
   function wipeData() {
     dataKeys().forEach(k => localStorage.removeItem(k));
-    location.reload();
+    TS.clear().then(() => location.reload());
   }
 
   function viewData() {
-    const G = games().length, Tr = T.hist.length - G;
+    const G = games().length, Tr = T.hist.length - G, xn = x01Hist().length;
+    const wn = TS.sessions().reduce((a, s) => a + TS.throws(s.id).length, 0);
     let h = `<div class="card datacard"><div class="setlabel">Sicherung</div>
-      <p>Deine Daten liegen nur auf diesem Gerät (im Browser). Sichere sie ab und zu – vor allem, bevor du den Browser-Verlauf löschst oder das Handy wechselst.<br>Aktuell gespeichert: <b>${G}</b> Spiel${G === 1 ? '' : 'e'} und <b>${Tr}</b> Training${Tr === 1 ? '' : 's'}.</p>
+      <p>Deine Daten liegen nur auf diesem Gerät (im Browser). Sichere sie ab und zu – vor allem, bevor du den Browser-Verlauf löschst oder das Handy wechselst.<br>Aktuell gespeichert: <b>${G}</b> Spiel${G === 1 ? '' : 'e'} und <b>${Tr}</b> Training${Tr === 1 ? '' : 's'}${xn ? `, <b>${xn}</b> Mehrspieler-Spiel${xn === 1 ? '' : 'e'}` : ''} · <b>${wn.toLocaleString('de-DE')}</b> einzelne Würfe.</p>
       ${btn('export', '⤓ Sicherung exportieren', undefined, 'big go')}
       ${btn('importPick', '⤒ Sicherung importieren', undefined, 'big ghost')}
       <div class="datamsg${T.dataMsg && !T.dataMsg.ok ? ' err' : ''}">${T.dataMsg ? T.dataMsg.t : ''}</div></div>`;
@@ -2492,7 +2809,7 @@ window.DRILLS = (function () {
 </script>
 <script>
 // ===== PWA: Service Worker + Update-Prüfung (nur über http/https, nicht bei file://) =====
-window.APP_VERSION = '17aecf2854';
+window.APP_VERSION = '1d77f2bd6e';
 (function () {
   if (!/^https?:$/.test(location.protocol)) return;
   let shown = false;

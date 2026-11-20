@@ -6,7 +6,7 @@
     T.game = { start: s.start, din: s.din, bot: s.bot, legsTo: s.legs, legs: { p: 0, b: 0 }, legNo: 1, starter: 'p', turn: 'p',
                p: { rem: s.start, in: !s.din }, b: { rem: s.start, in: !s.din },
                visit: null, vis: { p: [], b: [] }, att: { p: 0, b: 0 }, pdots: [], bLast: [], legWins: [],
-               last: { p: '', b: '' }, phase: 'play', undo: [], busy: false, msg: '', date: new Date().toISOString() };
+               last: { p: '', b: '' }, phase: 'play', undo: [], busy: false, msg: '', date: new Date().toISOString(), tl: [] };
   }
   function snapshot() { const g = T.game; g.undo.push(JSON.stringify(Object.assign({}, g, { undo: [] }))); if (g.undo.length > 15) g.undo.shift(); }
   const visitText = ds => ds.map(d => d.l).join(' · ');
@@ -24,15 +24,19 @@
     if (P.in) { const rt = P.rem <= 170 ? route(P.rem, 3 - V.darts.length) : null; aim = rt ? dlabel(rt[0].n, rt[0].m) : 'T20'; }
     if (d.att) g.att.p++;
     V.darts.push(d);
+    // Wurf für die Statistik-Datenbank (tl = throw log, wird mit dem Spiel gespeichert)
+    const w = mkThrow({ who: 0, leg: g.legNo, visit: g.vis.p.filter(v => v.leg === g.legNo).length + 1, dart: V.darts.length,
+      n: d.n, m: d.m, pts: d.v, x: d.x, y: d.y, aim, rem: P.rem, dbl: d.att ? 1 : null, flag: P.in ? null : d.m === 2 ? 'in' : 'noin' });
+    (g.tl = g.tl || []).push(w);
     g.pdots.push({ x: d.x, y: d.y, l: d.l, leg: g.legNo, rb: P.rem, att: d.att, din: !P.in, aim });
     if (!P.in) {
       if (d.m === 2) P.in = true;
       else { if (V.darts.length === 3) closeVisit(false, false); return; }
     }
     const nr = P.rem - d.v;
-    if (nr < 0 || nr === 1 || (nr === 0 && d.m !== 2)) { P.rem = V.start; closeVisit(true, false); return; }
+    if (nr < 0 || nr === 1 || (nr === 0 && d.m !== 2)) { w.flag = 'bust'; P.rem = V.start; closeVisit(true, false); return; }
     P.rem = nr;
-    if (nr === 0) { closeVisit(false, true); legWon('p'); return; }
+    if (nr === 0) { w.flag = 'out'; closeVisit(false, true); legWon('p'); return; }
     if (V.darts.length === 3) closeVisit(false, false);
   }
   function closeVisit(bust, checked) {
@@ -71,6 +75,13 @@
     const g = T.game, r = g.botPending; if (!r) return;
     const scored = r.bust ? 0 : g.b.rem - r.rem;
     g.att.b += r.darts.filter(d => d.att).length;
+    let inn = g.b.in || !g.din; const vn = g.vis.b.filter(v => v.leg === g.legNo).length + 1;
+    r.darts.forEach((d, i) => {
+      let flag = null;
+      if (!inn) { if (d.m === 2) { inn = true; flag = 'in'; } else flag = 'noin'; }
+      if (i === r.darts.length - 1) { if (r.bust) flag = 'bust'; else if (r.checked) flag = 'out'; }
+      (g.tl = g.tl || []).push(mkThrow({ who: 1, leg: g.legNo, visit: vn, dart: i + 1, n: d.n, m: d.m, pts: d.v, x: d.x, y: d.y, rem: d.rb, dbl: d.att ? 1 : null, flag }));
+    });
     g.vis.b.push({ leg: g.legNo, score: scored, n: r.darts.length, bust: !!r.bust, co: r.checked ? g.b.rem : 0 });
     g.last.b = visitText(r.darts) + (r.bust ? ' → Überworfen' : (g.din && !r.isIn) ? ' → nicht drin' : ' = ' + scored) + (r.checked ? ' ✓' : '');
     g.bLast = r.darts.map(d => ({ x: d.x, y: d.y }));
@@ -83,8 +94,12 @@
     const g = T.game; g.legs[w]++; g.legWinner = w; g.legWins.push({ leg: g.legNo, w });
     if (g.legs[w] >= g.legsTo) {
       g.phase = 'over';
-      const P = pstats(g, 'p'), B = pstats(g, 'b');
-      T.hist.push({ date: g.date, mode: 'game', level: g.bot, won: w === 'p', lp: g.legs.p, lb: g.legs.b, avg: P.avg, botAvg: B.avg,
+      const P = pstats(g, 'p'), B = pstats(g, 'b'), sid = 'g_' + g.date, list = g.tl || [];
+      TS.put({ id: sid, v: STATS_V, kind: 'game', mode: 'x01bot', level: g.bot,
+        players: [{ name: 'Du', me: true }, { name: 'Bot ' + BOT[g.bot].n, bot: g.bot }],
+        cfg: { start: g.start, din: g.din, out: 'double', legsTo: g.legsTo }, startedAt: g.date, endedAt: nowIso(),
+        result: { winner: w === 'p' ? 0 : 1, legs: [g.legs.p, g.legs.b] }, totals: totalsFrom(list, 2) }, list);
+      T.hist.push({ sid, date: g.date, mode: 'game', level: g.bot, won: w === 'p', lp: g.legs.p, lb: g.legs.b, avg: P.avg, botAvg: B.avg,
                     start: g.start, din: g.din, best: P.best, hiCO: P.hiCO, P, B,
                     dots: g.pdots.filter(d => d.x !== null && d.x !== undefined).map(d => [d.x, d.y, d.l, d.rb, d.att ? 1 : 0, d.aim === undefined ? null : d.aim]) });
       T.filter = 'game';

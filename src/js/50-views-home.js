@@ -72,7 +72,7 @@
     const L = lifetime(games()), trains = T.hist.filter(e => e.mode !== 'game').length;
     let h = `<div class="topbar"><h1>${LOGO}Darts</h1><div class="tb">${EXT.music ? `<button data-a="nav" data-v="music" aria-label="Musik"><svg class="i" viewBox="0 0 24 24">${EXT.music.icon.replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg></button>` : ''}<button data-a="homeData" aria-label="Einstellungen und Daten"><svg class="i" viewBox="0 0 24 24">${HICON.data.replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg></button></div></div>`;
     const cat = (a, v, icon, t) => `<button data-a="${a}" data-v="${v}"><span class="ci"><svg class="i" viewBox="0 0 24 24">${icon.replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg></span>${t}</button>`;
-    h += `<div class="cats">${cat('nav', 'play', HICON.play, 'Spielen')}${cat('nav', 'train', HICON.train, 'Training')}${window.X01 ? cat('nav', 'x01', HICON.x01, 'Mehrspieler') : ''}${cat('nav', 'stats', HICON.stats, 'Statistik')}${cat('nav', 'counter', HICON.counter, 'Zähler')}${EXT.music ? cat('nav', 'music', EXT.music.icon, 'Musik') : ''}${cat('homeData', '', HICON.data, 'Daten')}</div>`;
+    h += `<div class="cats">${cat('nav', 'play', HICON.play, 'Spielen')}${cat('nav', 'train', HICON.train, 'Training')}${window.X01 ? cat('nav', 'x01', HICON.x01, 'Mehrspieler') : ''}${cat('nav', 'counter', HICON.counter, 'Zähler')}${cat('nav', 'stats', HICON.stats, 'Statistik')}${EXT.music ? cat('nav', 'music', EXT.music.icon, 'Musik') : ''}${cat('homeData', '', HICON.data, 'Daten')}</div>`;
     h += `<div class="statstrip">
       <div><b>${L.n ? f1(L.avg) : '–'}</b><small>Average</small></div>
       <div><b>${L.n}</b><small>Spiele</small></div>

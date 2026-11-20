@@ -14,6 +14,7 @@ with sync_playwright() as p:
     def tap(mx,my):
         if not pg.locator('svg[data-board]').count():
             pg.screenshot(path=os.path.join(OUT,'fail.png'), full_page=True); print('STATE', pg.evaluate("JSON.stringify(JSON.parse(localStorage.getItem('dartsTrainer')).game).slice(0,600)")); raise SystemExit
+        pg.locator('svg[data-board]').scroll_into_view_if_needed()
         box=pg.locator('svg[data-board]').bounding_box()
         pg.mouse.click(box['x']+(mx+246)/492*box['width'], box['y']+(-my+246)/492*box['height'])
     for game in range(2):
@@ -33,13 +34,15 @@ with sync_playwright() as p:
                 tap(r*math.sin(a), r*math.cos(a))
                 pg.wait_for_timeout(50)
                 if not pg.locator('svg[data-board]').count(): continue  # Tipp war ein Miss -> kein Zoom, Pfeil ist schon gezählt
-                box=pg.locator('svg[data-board]').bounding_box(timeout=3000); pg.mouse.click(box['x']+box['width']/2, box['y']+box['height']/2)
+                if pg.locator('.zoombar').count():
+                    box=pg.locator('svg[data-board]').bounding_box(timeout=3000); pg.mouse.click(box['x']+box['width']/2, box['y']+box['height']/2)
                 continue
             if rem>60:
                 tap(random.gauss(0,10), 103+random.gauss(0,10))
                 pg.wait_for_timeout(50)
                 if not pg.locator('svg[data-board]').count(): continue  # Tipp war ein Miss -> kein Zoom, Pfeil ist schon gezählt
-                box=pg.locator('svg[data-board]').bounding_box(timeout=3000); pg.mouse.click(box['x']+box['width']/2, box['y']+box['height']/2)
+                if pg.locator('.zoombar').count():
+                    box=pg.locator('svg[data-board]').bounding_box(timeout=3000); pg.mouse.click(box['x']+box['width']/2, box['y']+box['height']/2)
                 continue
             if rem-20>=2 and rem-20!=1: A('dart',20)
             else: A('dart',1)

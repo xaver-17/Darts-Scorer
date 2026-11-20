@@ -34,6 +34,7 @@ Alle Dateien werden **in Namensreihenfolge** aneinandergehängt und gemeinsam in
 | --- | --- |
 | `00-state.js` | Konstanten (Bot-Stärken, Trainingsmodi `TM`, Icons), der App-Zustand `T`, `save()`, Hilfsfunktionen, Erweiterungs-Register `EXT` |
 | `05-drills.js` | hängt die Trainingsspiele aus `src/modules/drills.js` ein (Around the Clock, Bob's 27, Doppel-Runde, Checkout-Leiter): Einträge in `TM`, Helfer `ctx`, Aktionen `drHit`/`drBob`/`drDR`/`drLad` |
+| `06-coach.js` | Trainer-Coach: Tagesplan „Heute empfohlen“ aus den Stats, Einstufungstest, Wochenziel, Lernmodus (Lektionen-Seite `learn`, Tipps im Training und im Spiel gegen den Bot). Zustand in `T.coach`, eingehängt über `EXT.after.train/play/stats`, CSS in `src/modules/coach.css` |
 | `15-throws.js` | Wurf-Datenbank `TS` (IndexedDB: Sessions + einzelne Würfe), Übernahme alter Daten, Kennzahlen aus Würfen. Siehe [DATENMODELL.md](DATENMODELL.md) |
 | `10-training.js` | Trainings-Aufgaben erzeugen, Sitzung starten/auswerten, Ergebnis in `T.hist` |
 | `20-game.js` | Spiel gegen den Bot: Pfeile, Aufnahmen, Bot-Züge, Leg-/Spielende, Spieler-Statistik |
@@ -108,4 +109,4 @@ Zusätzlich speichert die App jede Session mit allen einzelnen Würfen in **Inde
 
 ## Trainingsspiele (`src/modules/drills.js`)
 
-Jedes Trainingsspiel ist ein Objekt in `window.DRILLS` (`atc`, `bob`, `dr`, `lad`) mit: `name`, `describe(stufe, anzahl, einstellungen)`, `opts()` (eigene Einstellungen statt „Aufgaben“), `start()` (neue Sitzung in `T.sess`), `view()`, `act()` (gibt `'finish'` zurück, wenn fertig), `entry()` (Eintrag für `T.hist`), `metric()`, `summary()`, `series` (Diagramm), `ov` (Kachel in der Übersicht, `low: true` = weniger ist besser), `tip()` und optional `extra()` (eigener Block in der Stats-Übersicht, z.B. Doppelquote pro Feld). Ein neues Trainingsspiel braucht nur ein weiteres Objekt dort und, falls es neue Knöpfe hat, den Aktionsnamen in `05-drills.js`.
+Jedes Trainingsspiel ist ein Objekt in `window.DRILLS` (`atc`, `bob`, `dr`, `lad`, `sh` Shanghai, `hi` Halve-It, `cr` Cricket-Training) mit: `name`, `describe(stufe, anzahl, einstellungen)`, `opts()` (eigene Einstellungen statt „Aufgaben“), `start()` (neue Sitzung in `T.sess`), `view()`, `act()` (gibt `'finish'` zurück, wenn fertig), `entry()` (Eintrag für `T.hist`), `metric()`, `summary()`, `series` (Diagramm), `ov` (Kachel in der Übersicht, `low: true` = weniger ist besser), `tip()` und optional `extra()` (eigener Block in der Stats-Übersicht, z.B. Doppelquote pro Feld). Ein neues Trainingsspiel braucht nur ein weiteres Objekt dort und, falls es neue Knöpfe hat, den Aktionsnamen in `05-drills.js`.

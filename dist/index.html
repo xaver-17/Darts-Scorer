@@ -491,9 +491,40 @@ table.multi td, table.multi th { text-align: left; }
   #updbar { position: fixed; left: 50%; transform: translateX(-50%); top: max(12px, env(safe-area-inset-top)); z-index: 90; display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
             padding: 10px 16px; border: none; border-radius: 8px; background: #111; color: #fff; font: inherit; font-size: 14px; text-align: left; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,.18); animation: vtIn .3s ease-out both; }
   #updbar span { font-size: 12px; color: #d4d4d8; }
-  /* Trainingsspiele (drills.js) */
+  /* Trainer-Coach (06-coach.js) – Farben aus app.css */
+  #viewTrainer .card.coach { margin-bottom: 12px; }
+  .cohead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .cohead b { font-size: 18px; color: var(--ink); } .cohead span { font-size: 13px; color: var(--mute); }
+  .cosub { margin: 6px 0 10px; font-size: 14px; color: var(--mute); line-height: 1.4; }
+  .coitems { display: flex; flex-direction: column; gap: 6px; }
+  .coit { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg); color: var(--ink); text-align: left; cursor: pointer; }
+  .card.list .coit + .coit { margin-top: 6px; }
+  .coit.next { border-color: var(--ink); }
+  .coit.done { background: var(--soft); color: var(--mute); }
+  .con { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--soft); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+  .coit.next .con { background: var(--ink); color: var(--bg); } .coit.done .con { background: var(--ok); color: #fff; }
+  .cot { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .cot b { font-size: 15px; } .cot small { font-size: 12.5px; color: var(--mute); line-height: 1.35; }
+  .corow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .cochip { padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 13px; cursor: pointer; }
+  .cochip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .colv { display: flex; align-items: center; gap: 4px; margin-top: 10px; font-size: 13px; color: var(--mute); }
+  .colv span { margin-right: 6px; }
+  .colv button { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 13px; cursor: pointer; }
+  .colv button.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .cotip { margin: 10px 0; padding: 10px 12px; border-radius: var(--r); background: var(--soft); color: var(--ink); font-size: 14px; line-height: 1.45; text-align: left; }
+  .cotip.intro { border: 1px solid var(--line); background: var(--bg); }
+  .cotip.intro p { margin: 4px 0 8px; color: var(--mute); }
+  .card.lesson p { font-size: 15.5px; line-height: 1.55; color: var(--ink); margin: 0 0 12px; }
+  /* Trainingsspiele (drills.js) – Farben aus den Variablen in app.css */
   .tgrid.dgrid { grid-template-columns: 1fr 1fr; }
-  .okb.zero { background: #f4f4f5; color: #18181b; }
+  .tgrid.dgrid button:last-child:nth-child(odd) { grid-column: span 2; }
+  .okb.zero { background: var(--soft); color: var(--ink); }
+  .crboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 10px 0 4px; text-align: center; }
+  .crboard div { padding: 6px 0; border-radius: var(--r); background: var(--soft); color: var(--ink); }
+  .crboard div.cl { background: var(--ok); color: #fff; }
+  .crboard b { display: block; font-size: 15px; } .crboard span { font-size: 10px; letter-spacing: 1px; }
+  .crgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .crgrid .okb { padding: 12px 0; font-size: 17px; }
   /* ===== X01 mehrere Spieler ===== */
   #viewX01 .card { background: var(--glass, #1e293b) !important; border: 1px solid var(--line, #e4e4e7); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-radius: 22px; padding: 16px; text-align: left; }
   #viewX01 .setlabel { font-size: 13px; color: #71717a; margin: 16px 0 8px; }
@@ -634,10 +665,10 @@ function botTurn(rem, isIn, sigma, doubleIn) {
 
 
 // ===== modules/drills.js =====
-// ===== Trainingsspiele: Around the Clock, Bob's 27, Doppel-Runde, Checkout-Leiter =====
+// ===== Trainingsspiele: Around the Clock, Bob's 27, Doppel-Runde, Checkout-Leiter, Shanghai, Halve-It, Cricket-Training =====
 // Jeder Modus liefert: name, short, describe, opts, start, view, act, entry, metric, series, ov, tip.
 // trainer.js ruft diese Funktionen über window.DRILLS auf und übergibt Helfer in ctx
-// (btn, f1, LV, footer, showRoute).
+// (btn, f1, LV, footer, showRoute, input).
 window.DRILLS = (function () {
   const R20 = Array.from({ length: 20 }, (_, i) => i + 1);
   const TOP_D = [20, 16, 18, 12, 10, 8, 4];
@@ -874,7 +905,182 @@ window.DRILLS = (function () {
     }
   };
 
-  return { atc: ATC, bob: BOB, dr: DR, lad: LAD };
+  // ---------- Shanghai ----------
+  const SH_T = L => L === 0 ? R20.slice(0, 7) : L === 1 ? R20.slice(0, 10) : L === 2 ? R20 : [...R20, 25];
+  const SH_GOAL = [80, 120, 250, 280, 320];
+  function shState(S) {
+    const t = SH_T(S.level); let score = 0, hits = 0, sh = 0, out = false; const rs = [];
+    for (let r = 0; r * 3 < S.d.length; r++) {
+      const ds = S.d.slice(r * 3, r * 3 + 3), n = t[r];
+      let pts = ds.reduce((a, m) => a + m * n, 0); hits += ds.filter(m => m > 0).length;
+      if (ds.length === 3 && n !== 25 && [1, 2, 3].every(m => ds.includes(m))) { pts += 100; sh++; }
+      score += pts; rs.push(pts);
+      if (ds.length === 3 && pts === 0 && S.level === 4) { out = true; break; }
+    }
+    const round = Math.floor(S.d.length / 3);
+    return { score, hits, sh, out, rs, round, darts: S.d.length, done: out || round >= t.length, t };
+  }
+  const SH = {
+    name: 'Shanghai', short: 'Shanghai',
+    describe: L => `${['Zahlen 1–7', 'Zahlen 1–10', 'Zahlen 1–20', 'Zahlen 1–20 + Bull', 'Zahlen 1–20 + Bull'][L]} · je Runde 3 Darts auf die Zahl · Single 1×, Doppel 2×, Triple 3× · Single + Doppel + Triple in einer Runde = Shanghai (+100)`
+      + (L === 4 ? ' · Runde ohne Treffer = Schluss' : '') + ` · Ziel: ${SH_GOAL[L]}+ Punkte`,
+    opts: () => '',
+    start: s => ({ mode: 'sh', level: s.level, d: [], date: now() }),
+    view(S, c) {
+      const st = shState(S), n = st.t[st.round], k = S.d.length % 3, cur = S.d.slice(st.round * 3);
+      let h = `<div class="card">` + top(c, 'Shanghai', S.level, `Runde ${st.round + 1} / ${st.t.length}`) + bar(st.round, st.t.length);
+      h += `<div class="target">${lbl(n)}</div><div class="tcap">Dart ${k + 1} von 3 · ${n === 25 ? 'Bull: 25 oder 50' : 'Single, Doppel und Triple = Shanghai'}</div>`;
+      h += `<div class="tdarts">Stand <b>${st.score}</b>${cur.length ? ' · diese Runde: ' + cur.map(m => m ? dlabel(n, m) : '–').join(' ') : ''}</div>`;
+      h += `<div class="setlabel c">Was hast du getroffen?</div><div class="okgrid">`;
+      (n === 25 ? [[1, '25'], [2, 'Bull 50']] : [[1, 'S' + n], [2, 'D' + n], [3, 'T' + n]]).forEach(([m, l]) => { h += c.btn('drSh', l, m, 'okb'); });
+      h += `</div><button class="big bad" data-a="drSh" data-v="0">✕ Daneben</button>`;
+      h += `<div class="live">Trefferquote <b>${c.f1(pct(st.hits, st.darts))} %</b> · Shanghais <b>${st.sh}</b></div>`;
+      if (st.rs.length) h += `<div class="chips">${st.rs.slice(0, st.round).map((p, i) => `<span class="${p ? 'g' : ''}">${lbl(st.t[i])}: ${p}</span>`).slice(-10).join('')}</div>`;
+      return h + c.footer() + `</div>`;
+    },
+    act(a, v, S) {
+      if (a === 'drSh') { S.d.push(+v); return shState(S).done ? 'finish' : ''; }
+      if (a === 'undoTask') S.d.pop();
+      return '';
+    },
+    entry(S) {
+      if (!S.d.length) return null;
+      const st = shState(S);
+      return { date: S.date, mode: 'sh', level: S.level, score: st.score, sh: st.sh, round: st.round, out: st.out, done: st.done,
+               darts: st.darts, hits: st.hits, hitPct: pct(st.hits, st.darts) };
+    },
+    metric: (e, c) => ({ main: e.score + ' Pkt', det: `${c.f1(e.hitPct)} % Treffer${e.sh ? ' · ' + e.sh + '× Shanghai' : ''}${e.out ? ' · raus in Runde ' + e.round : e.done ? '' : ' · abgebrochen'}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b>${e.score}</b><small>Punkte</small></div><div><b>${c.f1(e.hitPct)} %</b><small>Trefferquote</small></div><div><b>${e.sh}</b><small>Shanghais</small></div></div>`,
+    series: [{ n: 'Punkte', c: '#111', k: 'score' }, { n: 'Trefferquote %', c: '#2563eb', k: 'hitPct' }],
+    ov: { val: e => e.score, unit: ' Pkt', bar: v => v / 4 },
+    tip(e) {
+      const g = SH_GOAL[e.level];
+      if (e.score >= g && e.level < 4) return `Stark! Über ${g} Punkte – probier die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
+      return `Ziel auf dieser Stufe: ${g}+ Punkte.`;
+    }
+  };
+
+  // ---------- Halve-It ----------
+  // Ziele: Zahl (nur diese Zahl, jeder Ring), 'D' beliebiges Doppel, 'T' beliebiges Triple, 'D16'/'T20' nur dieses Feld
+  const HI_T = [
+    [20, 19, 'D', 18, 'T'],
+    [20, 19, 'D', 18, 'T', 17],
+    [20, 19, 'D', 18, 'T', 17, 25],
+    [15, 16, 'D', 17, 'T', 18, 19, 20, 25],
+    [20, 19, 'D', 18, 'T', 17, 'D16', 'T20', 25]
+  ];
+  const HI_GOAL = [80, 120, 150, 200, 200];
+  const hiName = t => t === 'D' ? 'Doppel' : t === 'T' ? 'Triple' : t === 25 ? 'Bull' : String(t);
+  const hiCap = t => t === 'D' ? 'beliebiges Doppel' : t === 'T' ? 'beliebiges Triple' : t === 25 ? '25 oder 50' : /^[DT]/.test(t) ? 'nur genau dieses Feld' : 'jeder Ring zählt';
+  // Ist die Punktzahl mit 3 Darts auf dieses Ziel möglich?
+  function hiValid(t, p) {
+    const vals = t === 'D' ? R20.map(n => 2 * n).concat(50) : t === 'T' ? R20.map(n => 3 * n) : t === 25 ? [25, 50]
+      : t === 'D16' ? [32] : t === 'T20' ? [60] : [t, 2 * t, 3 * t];
+    const v = [0, ...vals];
+    for (const a of v) for (const b of v) for (const x of v) if (a + b + x === p) return true;
+    return false;
+  }
+  function hiState(S) {
+    let score = 0, halves = 0; const rs = [];
+    S.r.forEach(p => { if (p > 0) score += p; else { score = Math.floor(score / 2); halves++; } rs.push(score); });
+    return { score, halves, rs, round: S.r.length };
+  }
+  const HI = {
+    name: 'Halve-It', short: 'Halve-It',
+    describe: L => `${HI_T[L].length} Runden: ${HI_T[L].map(hiName).join(' · ')} · je 3 Darts · Treffer werden addiert, Runde ohne Treffer halbiert den Stand · Ziel: ${HI_GOAL[L]}+ Punkte`,
+    opts: () => '',
+    start: s => ({ mode: 'hi', level: s.level, t: HI_T[s.level].slice(), r: [], date: now() }),
+    view(S, c) {
+      const st = hiState(S), t = S.t[st.round];
+      let h = `<div class="card">` + top(c, 'Halve-It', S.level, `Runde ${st.round + 1} / ${S.t.length}`) + bar(st.round, S.t.length);
+      h += `<div class="target${String(hiName(t)).length > 4 ? ' sm' : ''}">${hiName(t)}</div><div class="tcap">3 Darts · ${hiCap(t)}</div>`;
+      h += `<div class="tdarts">Stand <b>${st.score}</b>${st.halves ? ' · ' + st.halves + '× halbiert' : ''}</div>`;
+      if (S.msg) h += `<div class="msg">${S.msg}</div>`;
+      h += `<div class="disp">${c.input === '' ? '<span class="ph">Punkte auf das Ziel (0 = halbieren)</span>' : c.input}</div><div class="pad">`;
+      [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(k => { h += c.btn('key', k, k); });
+      h += c.btn('back', '⌫') + c.btn('key', 0, 0) + c.btn('drHi', 'OK', undefined, 'okk') + `</div>`;
+      if (st.round) h += `<div class="chips">${S.r.map((p, i) => `<span class="${p ? 'g' : ''}">${hiName(S.t[i])}: ${p || '½'}</span>`).slice(-10).join('')}</div>`;
+      return h + c.footer() + `</div>`;
+    },
+    act(a, v, S) {
+      if (a === 'drHi') {
+        const t = S.t[S.r.length], p = v === '' || v === undefined ? NaN : +v;
+        if (isNaN(p) || !hiValid(t, p)) { S.msg = `${isNaN(p) ? 'Bitte Punkte eingeben' : p + ' geht mit 3 Darts auf ' + hiName(t) + ' nicht'}`; return 'keep'; }
+        S.msg = ''; S.r.push(p); return S.r.length >= S.t.length ? 'finish' : '';
+      }
+      if (a === 'undoTask') { S.msg = ''; S.r.pop(); }
+      return '';
+    },
+    entry(S) {
+      if (!S.r.length) return null;
+      const st = hiState(S);
+      return { date: S.date, mode: 'hi', level: S.level, score: st.score, halves: st.halves, n: st.round, rounds: S.t.length, done: st.round >= S.t.length };
+    },
+    metric: e => ({ main: e.score + ' Pkt', det: `${e.halves}× halbiert · ${e.n}/${e.rounds} Runden` }),
+    summary: e => `<div class="sumgrid"><div><b>${e.score}</b><small>Endstand</small></div><div><b>${e.halves}</b><small>× halbiert</small></div><div><b>${e.n}/${e.rounds}</b><small>Runden</small></div></div>`,
+    series: [{ n: 'Endstand', c: '#111', k: 'score' }],
+    ov: { val: e => e.score, unit: ' Pkt', bar: v => v / 4 },
+    tip(e) {
+      const g = HI_GOAL[e.level];
+      if (e.score >= g && !e.halves && e.level < 4) return `Stark! Über ${g} und nie halbiert – probier die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
+      return `Ziel auf dieser Stufe: ${g}+ Punkte${e.halves ? ' und keine Halbierung' : ''}.`;
+    }
+  };
+
+  // ---------- Cricket-Training ----------
+  const CR_F = [20, 19, 18, 17, 16, 15, 25];
+  const CR_NEED = [1, 2, 3, 3, 3];
+  const CR_GOAL = [15, 30, 45, 40, 50];
+  function crState(S) {
+    const need = CR_NEED[S.level], mk = {}; CR_F.forEach(f => { mk[f] = 0; });
+    let marks = 0;
+    S.d.forEach(([f, m]) => { if (f && mk[f] < need) { const add = Math.min(m, need - mk[f]); mk[f] += add; marks += add; } });
+    const open = CR_F.filter(f => mk[f] < need);
+    return { mk, marks, need, open, darts: S.d.length, done: !open.length };
+  }
+  const CR = {
+    name: 'Cricket-Training', short: 'Cricket',
+    describe: L => `20 bis 15 und Bull je ${CR_NEED[L]}× markieren · Single = 1 Marke, Doppel = 2, Triple = 3 · Ziel: alles mit möglichst wenig Darts schließen`
+      + (L === 4 ? ' · feste Reihenfolge 20 → Bull' : '') + ` · Richtwert: unter ${CR_GOAL[L]} Darts`,
+    opts: () => '',
+    start: s => ({ mode: 'cr', level: s.level, d: [], date: now() }),
+    view(S, c) {
+      const st = crState(S), fields = S.level === 4 ? st.open.slice(0, 1) : st.open;
+      let h = `<div class="card">` + top(c, 'Cricket-Training', S.level, `Dart ${st.darts + 1}`) + bar(CR_F.length - st.open.length, CR_F.length);
+      h += `<div class="crboard">${CR_F.map(f => `<div class="${st.mk[f] >= st.need ? 'cl' : ''}"><b>${lbl(f)}</b><span>${'●'.repeat(st.mk[f])}${'○'.repeat(st.need - st.mk[f])}</span></div>`).join('')}</div>`;
+      h += `<div class="setlabel c">Was hast du getroffen?</div><div class="crgrid">`;
+      fields.forEach(f => {
+        (f === 25 ? [[1, '25'], [2, 'Bull']] : [[1, 'S' + f], [2, 'D' + f], [3, 'T' + f]]).forEach(([m, l]) => { h += c.btn('drCr', l, f + ':' + m, 'okb' + (f === 25 ? ' b' : '')); });
+      });
+      h += `</div><button class="big bad" data-a="drCr" data-v="0:0">✕ Daneben / anderes Feld</button>`;
+      h += `<div class="live">Marken <b>${st.marks}</b> · MPR <b>${c.f1(st.darts ? st.marks / st.darts * 3 : 0)}</b></div>`;
+      return h + c.footer() + `</div>`;
+    },
+    act(a, v, S) {
+      if (a === 'drCr') { S.d.push(String(v).split(':').map(Number)); return crState(S).done ? 'finish' : ''; }
+      if (a === 'undoTask') S.d.pop();
+      return '';
+    },
+    entry(S) {
+      if (!S.d.length) return null;
+      const st = crState(S);
+      return { date: S.date, mode: 'cr', level: S.level, done: st.done, darts: st.darts, marks: st.marks, mpr: st.darts ? st.marks / st.darts * 3 : 0,
+               closed: CR_F.length - st.open.length };
+    },
+    metric: (e, c) => ({ main: e.done ? e.darts + ' Darts' : e.closed + '/7 zu', det: `MPR ${c.f1(e.mpr)}${e.done ? '' : ' · abgebrochen'}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b>${e.done ? e.darts : '–'}</b><small>Darts bis alles zu</small></div><div><b>${c.f1(e.mpr)}</b><small>Marken pro Runde</small></div><div><b>${e.closed}/7</b><small>Felder zu</small></div></div>`,
+    series: [{ n: 'Darts bis alles zu', c: '#111', k: 'darts' }],
+    list: h => h.filter(e => e.done),
+    ov: { val: e => e.darts, unit: ' Darts', low: true, only: e => e.done, bar: v => Math.max(0, 100 - v) },
+    tip(e) {
+      if (!e.done) return 'Nicht alles geschlossen – beim nächsten Mal durchziehen, dann zählt die Darts-Zahl.';
+      const g = CR_GOAL[e.level];
+      if (e.darts <= g && e.level < 4) return `Stark! Unter ${g} Darts – probier die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
+      return `Richtwert auf dieser Stufe: unter ${g} Darts. Gute Spieler schaffen über 2 Marken pro Runde (MPR).`;
+    }
+  };
+
+  return { atc: ATC, bob: BOB, dr: DR, lad: LAD, sh: SH, hi: HI, cr: CR };
 })();
 
 // ===== modules/x01.js =====
@@ -1476,15 +1682,282 @@ window.DRILLS = (function () {
 
 
   // ===== 05-drills.js =====
-// Trainingsspiele aus src/modules/drills.js (Around the Clock, Bob's 27, Doppel-Runde, Checkout-Leiter)
+// Trainingsspiele aus src/modules/drills.js (Around the Clock, Bob's 27, Doppel-Runde, Checkout-Leiter, Shanghai, Halve-It, Cricket-Training)
 // Die Regeln und Ansichten stehen dort; hier werden sie in TM eingetragen und mit Helfern versorgt.
   const DR = window.DRILLS || {};
   delete TM.game; Object.keys(DR).forEach(k => { TM[k] = DR[k].name; }); TM.game = 'Spiel vs. Bot';
-  const ctx = { btn: (...a) => btn(...a), f1, LV, footer: () => footer(), get showRoute() { return T.showRoute; } };
-  // Eingaben während eines Trainingsspiels (drHit, drBob, drDR, drLad)
-  ['drHit', 'drBob', 'drDR', 'drLad'].forEach(a => {
-    EXT.actions[a] = v => { const S = T.sess; if (S && DR[S.mode] && DR[S.mode].act(a, v, S) === 'finish') finish(); };
+  const ctx = { btn: (...a) => btn(...a), f1, LV, footer: () => footer(), get showRoute() { return T.showRoute; }, get input() { return T.input; } };
+  // Eingaben während eines Trainingsspiels. drHi (Halve-It) nimmt die Zahl aus dem Tastenfeld (T.input).
+  ['drHit', 'drBob', 'drDR', 'drLad', 'drSh', 'drHi', 'drCr'].forEach(a => {
+    EXT.actions[a] = v => {
+      const S = T.sess; if (!S || !DR[S.mode]) return;
+      const r = DR[S.mode].act(a, a === 'drHi' ? T.input : v, S);
+      if (a === 'drHi' && r !== 'keep') T.input = '';
+      if (r === 'finish') finish();
+    };
   });
+
+  // ===== 06-coach.js =====
+// Trainer-Coach: Trainingsvorschlag „Heute empfohlen“, Einstufungstest, Wochenziel und Lernmodus (Lektionen + Tipps)
+// Alles wird über EXT eingehängt (after-Hooks, eigene Seite 'learn', eigene Aktionen co*). Zustand in T.coach.
+  T.coach = Object.assign({ level: null, learn: null, plan: null, done: [], lessons: {}, tipSeen: null, weekGoal: 3 }, T.coach || {});
+  const CO = T.coach;
+  const coLearn = () => CO.learn === null ? (CO.level === null || CO.level === 0) : CO.learn;
+
+  // ---------- Bereiche und Zielwerte pro Stufe ----------
+  // Jeder Bereich: Wert aus den letzten Ergebnissen (Ø der letzten 5) und Ziel pro Stufe 0..4
+  const CO_AREAS = {
+    acc: { n: 'Treffsicherheit', u: ' %', goal: [35, 45, 55, 65, 75], modes: ['atc', 'hit', 'single'],
+           val: e => e.mode === 'atc' ? e.hitPct : e.mode === 'hit' || e.mode === 'single' ? e.hitPct : null,
+           why: v => `Deine Trefferquote auf einzelne Zahlen liegt bei ${f1(v)} %` },
+    score: { n: 'Punkte', u: '', goal: [30, 40, 50, 60, 75], modes: ['score', 'sh'],
+             val: e => e.mode === 'score' ? e.avg : e.mode === 'game' ? e.avg : null,
+             why: v => `Dein Schnitt pro Aufnahme liegt bei ${f1(v)}` },
+    dbl: { n: 'Doppel', u: ' %', goal: [10, 15, 22, 28, 35], modes: ['dr', 'bob', 'double'],
+           val: e => e.mode === 'dr' || e.mode === 'bob' || e.mode === 'double' ? e.hitPct : null,
+           why: v => `Deine Doppelquote liegt bei ${f1(v)} %` },
+    co: { n: 'Checkouts', u: ' %', goal: [20, 30, 40, 50, 60], modes: ['lad', 'checkout'],
+          val: e => e.mode === 'lad' || e.mode === 'checkout' ? e.rate : e.mode === 'game' && e.P && e.P.coAtt ? e.P.coHits / e.P.coAtt * 100 : null,
+          why: v => `Deine Checkout-Quote liegt bei ${f1(v)} %` }
+  };
+  function coArea(k) {
+    const A = CO_AREAS[k], vals = T.hist.map(A.val).filter(v => v !== null && v !== undefined && isFinite(v)).slice(-5);
+    const L = CO.level || 0;
+    if (!vals.length) return { k, A, v: null, goal: A.goal[L], ratio: -1 };
+    const v = vals.reduce((a, b) => a + b, 0) / vals.length;
+    return { k, A, v, goal: A.goal[L], ratio: v / A.goal[L] };
+  }
+  // Stufe, die ein Wert in einem Bereich erreicht
+  const coLevelOf = (k, v) => { let l = 0; CO_AREAS[k].goal.forEach((g, i) => { if (v >= g) l = i; }); return l; };
+
+  // ---------- Stufe pro Modus vorschlagen ----------
+  // +1 = nächste Stufe, -1 = eine tiefer, 0 = bleiben
+  function coTrend(e) {
+    if (!e) return 0;
+    if (['hit', 'single', 'double', 'triple', 'checkout'].includes(e.mode)) return e.rate >= 70 ? 1 : e.rate < 30 ? -1 : 0;
+    if (e.mode === 'score') return e.goalPct >= 70 ? 1 : e.goalPct < 30 ? -1 : 0;
+    if (e.mode === 'lad') return e.rate >= 60 ? 1 : e.rate < 25 ? -1 : 0;
+    const tip = DR[e.mode] ? DR[e.mode].tip(e) : '';
+    return /Stark!/.test(tip) ? 1 : 0;
+  }
+  function coSuggestLevel(mode) {
+    const l = T.hist.filter(e => e.mode === mode), last = l[l.length - 1];
+    if (!last) return Math.min(CO.level || 0, 4);
+    return Math.max(0, Math.min(4, last.level + coTrend(last)));
+  }
+
+  // ---------- Plan bauen ----------
+  const CO_FUN = ['sh', 'hi', 'cr', 'atc', 'bob'];
+  const coDay = () => new Date().toISOString().slice(0, 10);
+  function coPick(list, avoid) { const day = new Date().getDate(); const c = list.filter(m => !avoid.includes(m)); return c[day % c.length] || list[0]; }
+  function coBuild() {
+    if (CO.level === null) {
+      return { day: coDay(), test: true, idx: 0, items: [
+        { mode: 'atc', level: 0, why: 'Einstufung: Wie sicher triffst du einzelne Zahlen?' },
+        { mode: 'score', level: 0, tasks: 10, why: 'Einstufung: Wie viele Punkte machst du pro Aufnahme?' },
+        { mode: 'dr', level: 0, why: 'Einstufung: Wie gut triffst du die Doppel?' }] };
+    }
+    const areas = Object.keys(CO_AREAS).map(coArea).sort((a, b) => a.ratio - b.ratio);
+    const items = [];
+    areas.slice(0, 2).forEach(a => {
+      const m = coPick(a.A.modes, items.map(i => i.mode));
+      items.push({ mode: m, level: coSuggestLevel(m), area: a.k,
+                   why: a.v === null ? `${a.A.n}: dazu gibt es noch keine Daten` : `${a.A.why(a.v)}, Ziel auf deiner Stufe: ${a.goal}${a.A.u}` });
+    });
+    const f = coPick(CO_FUN, items.map(i => i.mode));
+    items.push({ mode: f, level: coSuggestLevel(f), why: 'Zur Abwechslung ein Trainingsspiel' });
+    return { day: coDay(), idx: 0, items };
+  }
+  function coPlan() { if (!CO.plan || CO.plan.day !== coDay()) CO.plan = coBuild(); return CO.plan; }
+
+  // Woche (Montag bis Sonntag)
+  function coWeekStart() { const d = new Date(); const w = (d.getDay() + 6) % 7; d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - w); return d; }
+  const coWeekDone = () => CO.done.filter(x => new Date(x) >= coWeekStart()).length;
+
+  // Einstufung auswerten
+  function coPlace(dates) {
+    const es = T.hist.filter(e => dates.includes(e.date));
+    const ls = [];
+    const atc = es.find(e => e.mode === 'atc'); if (atc) ls.push(coLevelOf('acc', atc.hitPct));
+    const sc = es.find(e => e.mode === 'score'); if (sc) ls.push(coLevelOf('score', sc.avg));
+    const dr = es.find(e => e.mode === 'dr'); if (dr) ls.push(coLevelOf('dbl', dr.hitPct));
+    return ls.length ? Math.round(ls.reduce((a, b) => a + b, 0) / ls.length) : 0;
+  }
+
+  // Einheit starten
+  function coStart(i) {
+    const P = coPlan(), it = P.items[i]; if (!it) return;
+    P.idx = i; T.route = 'train'; T.summary = null;
+    Object.assign(T.set, { mode: it.mode, level: it.level, tasks: it.tasks || (it.mode === 'lad' ? 10 : T.set.tasks || 10) });
+    start(); P.cur = T.sess ? T.sess.date : null; CO.tipSeen = null;
+    window.scrollTo(0, 0);
+  }
+  // Nach jedem abgeschlossenen Training prüfen, ob es die laufende Plan-Einheit war
+  function coCheckDone() {
+    const P = CO.plan; if (!P || !P.cur || !T.summary || T.summary.date !== P.cur) return;
+    const it = P.items[P.idx]; it.done = true; (P.dates = P.dates || []).push(P.cur); P.cur = null;
+    if (P.items.every(x => x.done)) {
+      CO.done.push(new Date().toISOString());
+      if (P.test) { CO.level = coPlace(P.dates); P.placed = CO.level; }
+    }
+  }
+
+  EXT.actions.coGo = (v, n) => coStart(n);
+  EXT.actions.coNext = () => { const P = coPlan(); const i = P.items.findIndex(x => !x.done); if (i >= 0) coStart(i); };
+  EXT.actions.coNew = () => { CO.plan = coBuild(); };
+  EXT.actions.coLearn = () => { CO.learn = !coLearn(); };
+  EXT.actions.coLevel = (v, n) => { CO.level = n; CO.plan = coBuild(); };
+  EXT.actions.coTip = () => { CO.tipSeen = T.sess ? T.sess.date : null; };
+  EXT.actions.coLesson = v => { T.lesson = v; T.route = 'learn'; window.scrollTo(0, 0); };
+  EXT.actions.coLessonDone = v => { CO.lessons[v] = true; const L = CO_LESSONS.find(x => x.id === v); if (L && L.ex) { Object.assign(T.set, L.ex); T.route = 'train'; T.summary = null; start(); CO.tipSeen = null; } };
+
+  // ---------- Karte „Heute empfohlen“ ----------
+  function coCard() {
+    const P = coPlan(), wd = coWeekDone(), next = P.items.findIndex(x => !x.done);
+    let h = `<div class="card coach"><div class="cohead"><b>${P.test ? 'Einstufung' : 'Heute empfohlen'}</b><span>Woche ${Math.min(wd, CO.weekGoal)}/${CO.weekGoal}</span></div>`;
+    if (P.test && !P.placed) h += `<p class="cosub">Drei kurze Einheiten, danach kennt die App deine Stufe und schlägt dir passende Trainings vor.</p>`;
+    if (P.placed !== undefined && next < 0) h += `<p class="cosub">Einstufung fertig: Deine Stufe ist <b>${LV[P.placed]}</b>. Ab morgen gibt es hier deinen Trainingsplan.</p>`;
+    h += `<div class="coitems">`;
+    P.items.forEach((it, i) => {
+      h += `<button class="coit${it.done ? ' done' : ''}${i === next ? ' next' : ''}" data-a="coGo" data-v="${i}"><span class="con">${it.done ? '✓' : i + 1}</span><span class="cot"><b>${TM[it.mode]} · ${LV[it.level]}</b><small>${it.why}</small></span></button>`;
+    });
+    h += `</div>`;
+    if (next >= 0) h += btn('coNext', next === 0 ? 'Plan starten' : `Weiter mit Einheit ${next + 1}`, undefined, 'big go');
+    else if (!P.test) h += `<p class="cosub">Plan für heute geschafft. ${wd >= CO.weekGoal ? 'Wochenziel erreicht!' : `Noch ${CO.weekGoal - wd} bis zum Wochenziel.`}</p>`;
+    h += `<div class="corow">${btn('coLearn', `Lernen: <b>${coLearn() ? 'an' : 'aus'}</b>`, undefined, 'cochip' + (coLearn() ? ' on' : ''))}`;
+    h += `${btn('coLesson', `Grundlagen ${Object.keys(CO.lessons).length}/${CO_LESSONS.length}`, 'list', 'cochip')}`;
+    if (!P.test) h += btn('coNew', 'Anderer Plan', undefined, 'cochip');
+    h += `</div>`;
+    if (CO.level !== null) h += `<div class="colv"><span>Deine Stufe</span>${LV.map((l, i) => btn('coLevel', i + 1, i, '', CO.level === i)).join('')}</div>`;
+    return h + `</div>`;
+  }
+
+  // ---------- Lernmodus: Lektionen ----------
+  const CO_LESSONS = [
+    { id: 'stand', t: 'Stand', p: [
+      'Stell dich seitlich zur Scheibe: Rechtshänder mit dem rechten Fuß vorne an der Abwurflinie, Linkshänder umgekehrt.',
+      'Der vordere Fuß zeigt etwa 45 bis 90 Grad zur Scheibe, das Gewicht liegt zu etwa 70 % vorne. Der hintere Fuß hält nur das Gleichgewicht.',
+      'Lehn dich leicht nach vorne, aber so, dass du ruhig stehst. Wichtig ist, dass du jedes Mal genau gleich stehst – markier dir den Platz.'],
+      ex: { mode: 'single', level: 0, tasks: 10 } },
+    { id: 'grip', t: 'Griff', p: [
+      'Halt den Dart locker mit drei Fingern: Daumen, Zeige- und Mittelfinger. So fest, dass er nicht wegrutscht, aber ohne Druck.',
+      'Die Spitze zeigt beim Ausholen leicht nach oben. Zeigt sie nach unten, fliegt der Dart unruhig.',
+      'Probier zwei, drei Griffe aus und bleib dann bei einem. Ein gleichbleibender Griff ist wichtiger als der „perfekte“.'],
+      ex: { mode: 'single', level: 0, tasks: 10 } },
+    { id: 'align', t: 'Ausrichtung', p: [
+      'Auge, Dart und Ziel bilden eine Linie. Die meisten zielen mit dem Auge auf der Wurfseite.',
+      'Der Ellbogen zeigt Richtung Ziel und bleibt beim Wurf möglichst an derselben Stelle. Er ist der Drehpunkt.',
+      'Wenn deine Darts immer auf einer Seite landen: nicht nachzielen, sondern den Stand ein kleines Stück verschieben.'],
+      ex: { mode: 'atc', level: 0 } },
+    { id: 'throw', t: 'Wurfbewegung', p: [
+      'Der Wurf kommt aus dem Unterarm: Ausholen zum Gesicht, dann gerade nach vorne Richtung Ziel. Oberarm und Schulter bleiben ruhig.',
+      'Lass den Arm nach dem Loslassen weiter Richtung Ziel durchschwingen, als würdest du auf das Feld zeigen.',
+      'Nicht werfen wie einen Ball: kein Schwung aus der Schulter, kein Ruck aus dem Handgelenk am Ende.'],
+      ex: { mode: 'atc', level: 0 } },
+    { id: 'aim', t: 'Wohin zielen', p: [
+      'Als Anfänger zielst du auf die große Single-20 statt auf T20: Du triffst sie viel öfter, und Fehlwürfe landen trotzdem oft in der 20.',
+      'Landen deine Darts oft links von der 20 (in der 5 und 1)? Dann zieh auf die 19: Ihre Nachbarn 7 und 3 sind etwas besser, und viele Spieler streuen dort weniger.',
+      'Beim Doppel zielst du auf die Mitte des Doppels, nicht auf die Innenkante. Lieblingsdoppel sind D16 und D20: D16 lässt sich nach einem Fehlwurf gut halbieren (32 → 16 → 8 → 4).',
+      'Beim Checkout gilt: Stell dir einen geraden Rest, der mit einem Doppel geht (z. B. 32 oder 40), und meide das Bull, solange es einen anderen Weg gibt.'],
+      ex: { mode: 'score', level: 0, tasks: 10 } },
+    { id: 'rhythm', t: 'Rhythmus', p: [
+      'Wirf alle drei Darts im gleichen Tempo, ohne lange Pausen dazwischen. Zu langes Zielen macht unsicher.',
+      'Atme vor der Aufnahme einmal ruhig aus, dann wirf. Nach jedem Dart nicht ärgern, sofort den nächsten vorbereiten.',
+      'Übe lieber 15 Minuten täglich als einmal pro Woche zwei Stunden. Kurze, regelmäßige Einheiten bringen am meisten.'],
+      ex: { mode: 'dr', level: 0 } }
+  ];
+  EXT.views.learn = () => {
+    const id = T.lesson;
+    if (!id || id === 'list') {
+      let h = phead('Grundlagen', 'Kurze Lektionen zu Stand, Griff und Wurf') + `<div class="card list">`;
+      CO_LESSONS.forEach((L, i) => { h += `<button class="coit${CO.lessons[L.id] ? ' done' : ''}" data-a="coLesson" data-v="${L.id}"><span class="con">${CO.lessons[L.id] ? '✓' : i + 1}</span><span class="cot"><b>${L.t}</b><small>${L.p[0].slice(0, 70)} …</small></span></button>`; });
+      return h + `</div>` + btn('nav', '← Zurück zum Training', 'train', 'link');
+    }
+    const i = CO_LESSONS.findIndex(x => x.id === id), L = CO_LESSONS[i];
+    let h = phead(`${i + 1}. ${L.t}`, `Lektion ${i + 1} von ${CO_LESSONS.length}`) + `<div class="card lesson">`;
+    L.p.forEach(p => { h += `<p>${p}</p>`; });
+    h += btn('coLessonDone', `Verstanden · Übung starten (${TM[L.ex.mode]})`, L.id, 'big go');
+    if (CO_LESSONS[i + 1]) h += btn('coLesson', `Nächste Lektion: ${CO_LESSONS[i + 1].t} →`, CO_LESSONS[i + 1].id, 'link');
+    return h + `</div>` + btn('coLesson', '← Alle Lektionen', 'list', 'link');
+  };
+
+  // ---------- Lernmodus: Tipps vor und während des Trainings ----------
+  const CO_INTRO = {
+    hit: 'Ein gemischter Plan: erst Zahlen, dann Single, Triple und Doppel. Steh bei jedem Wurf gleich und zieh nicht nach, wenn ein Dart danebengeht.',
+    single: 'Ziel auf die Mitte des großen Single-Felds, nicht auf den Rand. Dort ist am meisten Platz.',
+    double: 'Ziel auf die Mitte des Doppels. Fällt ein Dart knapp darüber ins Aus, ist das normal – lieber etwas tiefer ansetzen als zu hoch.',
+    triple: 'Triple sind schmal. Ziel genau auf die Mitte, und wirf in ruhigem Rhythmus. Ein Single daneben ist kein Fehler, sondern normale Streuung.',
+    checkout: 'Lies erst den Weg, dann wirf. Merk dir die Wege für deine Lieblingsdoppel – mit der Zeit brauchst du die Anzeige nicht mehr.',
+    score: 'Auf deiner Stufe zielst du auf die große Single-20 (bzw. T20 ab Mittel). Landen viele Darts links in der 5 und 1, probier die 19.',
+    atc: 'Ein Feld nach dem anderen. Schau vor jedem Dart kurz auf das neue Ziel und richte Stand und Blick neu aus.',
+    bob: 'Jedes Doppel zählt. Ziel auf die Mitte des Doppels. Die erste Runde (D1) ist am schwersten – keine Sorge, wenn sie danebengeht.',
+    dr: 'Ziel immer auf die Mitte des Doppels. Merk dir, welche Doppel dir liegen – die werden deine Checkout-Doppel.',
+    lad: 'Plane 9 Darts als drei Aufnahmen: erst Punkte, dann einen geraden Rest stellen, zum Schluss das Doppel.',
+    sh: 'Pro Runde eine Zahl. Versuch bewusst einmal Triple, dann Doppel – ein Shanghai bringt 100 Bonuspunkte.',
+    hi: 'Wichtiger als viele Punkte ist, jede Runde wenigstens einmal zu treffen – sonst wird halbiert. Lieber sicher auf die Single zielen.',
+    cr: 'Triple bringen drei Marken auf einmal. Auf den hohen Zahlen (20, 19) lohnt sich der Triple-Versuch am meisten.'
+  };
+  function coLiveTip(S) {
+    const m = S.mode;
+    if (['atc', 'sh', 'cr'].includes(m) && S.d && S.d.length >= 6) {
+      const last = S.d.slice(-6), miss = last.filter(x => Array.isArray(x) ? !x[0] : !x).length;
+      if (miss >= 5) return 'Viele Fehlwürfe hintereinander: kurz durchatmen, Stand prüfen und den Wurf ruhig zu Ende führen. Nicht schneller werfen.';
+    }
+    if (m === 'double' || m === 'dr' || m === 'bob') return 'Tipp: D16 und D20 sind beliebte Lieblingsdoppel. D16 lässt sich nach einem Fehlwurf gut halbieren: 32 → 16 → 8.';
+    if (m === 'checkout' || m === 'lad') return 'Tipp: Stell dir einen geraden Rest, der mit einem Doppel geht (z. B. 32, 40, 36). Meide das Bull, wenn es einen anderen Weg gibt.';
+    if (m === 'score') return 'Tipp: Zähl nicht mit, sondern konzentrier dich nur auf den nächsten Dart. Gleicher Stand, gleicher Rhythmus.';
+    return '';
+  }
+  EXT.after.train = box => {
+    coCheckDone();
+    if (!T.sess && !T.summary) {
+      box.insertAdjacentHTML('afterbegin', coCard());
+      const ph = box.querySelector('.phead'); const c = box.querySelector('.coach'); if (ph && c) ph.after(c);
+    } else if (T.summary && CO.plan && CO.plan.items.some(x => x.done)) {
+      const P = CO.plan, next = P.items.findIndex(x => !x.done);
+      const html = `<div class="card coach"><div class="cohead"><b>${P.test ? 'Einstufung' : 'Heute empfohlen'}</b><span>${P.items.filter(x => x.done).length}/${P.items.length}</span></div>`
+        + (next >= 0 ? btn('coNext', `Weiter mit Einheit ${next + 1}: ${TM[P.items[next].mode]}`, undefined, 'big go')
+          : `<p class="cosub">${P.placed !== undefined ? `Einstufung fertig: Deine Stufe ist <b>${LV[P.placed]}</b>.` : 'Plan für heute geschafft!'}</p>`) + `</div>`;
+      box.insertAdjacentHTML('beforeend', html);
+    } else if (T.sess && coLearn()) {
+      const S = T.sess, card = box.querySelector('.card'); if (!card) return;
+      if (CO.tipSeen !== S.date && CO_INTRO[S.mode]) {
+        card.insertAdjacentHTML('afterbegin', `<div class="cotip intro"><b>So gehst du es an</b><p>${CO_INTRO[S.mode]}</p>${btn('coTip', 'Verstanden', undefined, 'cochip on')}</div>`);
+      } else { const t = coLiveTip(S); if (t) { const f = card.querySelector('.foot, .row2.foot'); (f || card).insertAdjacentHTML(f ? 'beforebegin' : 'beforeend', `<div class="cotip">${t}</div>`); } }
+    }
+  };
+
+  // ---------- Lernmodus: Tipps im Spiel gegen den Bot ----------
+  function coGameTip(g) {
+    const rem = g.p.rem, V = g.visit ? g.visit.darts : [], left = 3 - V.length;
+    if (!g.p.in) return 'Double-In: Ziel auf ein Doppel, das du gut triffst – D20 oder D16. Erst danach zählen die Punkte.';
+    if (rem > 170) return (CO.level || 0) < 2 ? 'Ziel auf die große Single-20. Landen deine Darts oft links, nimm die 19.' : 'Ziel auf T20. Wenn die 20 zugestellt ist oder du links streust, wechsel auf T19.';
+    const rt = route(rem, left);
+    if (rt) return rt.length === 1 ? `Jetzt das Doppel: ${routeText(rt)}. Ziel auf die Mitte des Doppels.` : `Du kannst checken: ${routeText(rt)}. Triffst du den ersten Dart nicht genau, rechne neu.`;
+    if (rem % 2 && left === 1) {
+      const s = rem - 32 >= 1 && rem - 32 <= 20 ? [rem - 32, 'D16'] : rem - 40 >= 1 && rem - 40 <= 20 ? [rem - 40, 'D20'] : [1, (rem - 1) <= 40 ? 'D' + (rem - 1) / 2 : 'einen geraden Rest'];
+      return `Ungerader Rest: Wirf eine S${s[0]}, dann bleibt ${s[1]} für die nächste Aufnahme.`;
+    }
+    if (rem <= 100) return 'Kein Checkout mehr in dieser Aufnahme: stell dir einen geraden Rest wie 32 oder 40 für die nächste Aufnahme.';
+    return 'Punkte machen und einen Rest unter 100 stellen, der mit zwei Darts geht (z. B. 60 oder 80).';
+  }
+  EXT.after.play = box => {
+    if (!coLearn() || !T.game || T.game.phase !== 'play' || T.game.turn !== 'p' || T.game.busy) return;
+    const r = box.querySelector('.gright'); if (r) r.insertAdjacentHTML('afterbegin', `<div class="cotip">💡 ${coGameTip(T.game)}</div>`);
+  };
+
+  // ---------- Stats: Wochenziel und Bereiche ----------
+  EXT.after.stats = box => {
+    if ((T.stab || 'over') !== 'over' || CO.level === null) return;
+    const wd = coWeekDone();
+    let h = `<h2 class="sec">Trainingsziele · Stufe ${LV[CO.level]}</h2><div class="card"><div class="bars">`;
+    h += `<div class="br"><span>Woche</span><i><em class="${wd >= CO.weekGoal ? 'g' : 'y'}" style="width:${Math.min(100, wd / CO.weekGoal * 100)}%"></em></i><b>${wd}/${CO.weekGoal}</b><small>Pläne</small></div>`;
+    Object.keys(CO_AREAS).forEach(k => {
+      const a = coArea(k), r = a.v === null ? 0 : Math.min(100, a.ratio * 100);
+      h += `<div class="br"><span>${a.A.n}</span><i><em class="${r >= 100 ? 'g' : r >= 70 ? 'y' : 'r'}" style="width:${r}%"></em></i><b>${a.v === null ? '–' : f1(a.v) + a.A.u}</b><small>Ziel ${a.goal}${a.A.u}</small></div>`;
+    });
+    box.insertAdjacentHTML('beforeend', h + `</div><div class="boardhint">Ø der letzten 5 Ergebnisse je Bereich. Der schwächste Bereich kommt in deinen Tagesplan.</div></div>`);
+  };
 
   // ===== 10-training.js =====
 // Training: Aufgaben erzeugen, Sitzung, Auswertung
@@ -2809,7 +3282,7 @@ window.DRILLS = (function () {
 </script>
 <script>
 // ===== PWA: Service Worker + Update-Prüfung (nur über http/https, nicht bei file://) =====
-window.APP_VERSION = '1d77f2bd6e';
+window.APP_VERSION = 'd5b84924af';
 (function () {
   if (!/^https?:$/.test(location.protocol)) return;
   let shown = false;

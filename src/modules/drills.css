@@ -1,3 +1,10 @@
-  /* Trainingsspiele (drills.js) */
+  /* Trainingsspiele (drills.js) – Farben aus den Variablen in app.css */
   .tgrid.dgrid { grid-template-columns: 1fr 1fr; }
-  .okb.zero { background: #f4f4f5; color: #18181b; }
+  .tgrid.dgrid button:last-child:nth-child(odd) { grid-column: span 2; }
+  .okb.zero { background: var(--soft); color: var(--ink); }
+  .crboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 10px 0 4px; text-align: center; }
+  .crboard div { padding: 6px 0; border-radius: var(--r); background: var(--soft); color: var(--ink); }
+  .crboard div.cl { background: var(--ok); color: #fff; }
+  .crboard b { display: block; font-size: 15px; } .crboard span { font-size: 10px; letter-spacing: 1px; }
+  .crgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .crgrid .okb { padding: 12px 0; font-size: 17px; }

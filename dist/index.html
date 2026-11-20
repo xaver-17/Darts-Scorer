@@ -2492,7 +2492,7 @@ window.DRILLS = (function () {
 </script>
 <script>
 // ===== PWA: Service Worker + Update-Prüfung (nur über http/https, nicht bei file://) =====
-window.APP_VERSION = '36c328dac1';
+window.APP_VERSION = '17aecf2854';
 (function () {
   if (!/^https?:$/.test(location.protocol)) return;
   let shown = false;
@@ -2520,6 +2520,11 @@ window.APP_VERSION = '36c328dac1';
       const v = (await r.json()).version;
       if (v && v !== window.APP_VERSION) banner();
     } catch (e) {}   // offline: nichts tun
+  }
+  // Übernimmt ein neuer Service Worker die Seite (= Update angekommen), einmal automatisch neu laden
+  if ('serviceWorker' in navigator) {
+    const had = !!navigator.serviceWorker.controller; let done = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !done) { done = true; location.reload(); } });
   }
   window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })

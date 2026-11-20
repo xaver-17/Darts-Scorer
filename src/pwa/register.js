@@ -28,6 +28,11 @@ window.APP_VERSION = '__APP_VERSION__';
       if (v && v !== window.APP_VERSION) banner();
     } catch (e) {}   // offline: nichts tun
   }
+  // Übernimmt ein neuer Service Worker die Seite (= Update angekommen), einmal automatisch neu laden
+  if ('serviceWorker' in navigator) {
+    const had = !!navigator.serviceWorker.controller; let done = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !done) { done = true; location.reload(); } });
+  }
   window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
       .then(reg => { reg.update().catch(() => {}); }).catch(e => console.warn('Service Worker nicht registriert:', e));

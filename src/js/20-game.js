@@ -3,7 +3,7 @@
   function newGame() {
     const s = T.set;
     T.zoom = null; T.mult = 1;
-    T.game = { start: s.start, din: s.din, bot: s.bot, legsTo: s.legs, legs: { p: 0, b: 0 }, legNo: 1, starter: 'p', turn: 'p',
+    T.game = { start: s.start, din: s.din, bot: s.bot, legsTo: s.legs, setsTo: s.sets || 1, legs: { p: 0, b: 0 }, sets: { p: 0, b: 0 }, legTot: { p: 0, b: 0 }, setNo: 1, legNo: 1, starter: 'p', turn: 'p',
                p: { rem: s.start, in: !s.din }, b: { rem: s.start, in: !s.din },
                visit: null, vis: { p: [], b: [] }, att: { p: 0, b: 0 }, pdots: [], bLast: [], legWins: [],
                last: { p: '', b: '' }, phase: 'play', undo: [], busy: false, msg: '', date: new Date().toISOString(), tl: [] };
@@ -43,7 +43,7 @@
     const g = T.game, P = g.p, V = g.visit;
     const score = bust ? 0 : V.start - P.rem;
     g.vis.p.push({ leg: g.legNo, score, n: V.darts.length, bust, co: checked ? V.start : 0 });
-    g.last.p = visitText(V.darts) + (bust ? ' → Überworfen' : (g.din && !P.in) ? ' → nicht drin' : ' = ' + score) + (checked ? ' ✓' : '');
+    g.last.p = visitText(V.darts) + (bust ? ' → bust' : (g.din && !P.in) ? ' → not in' : ' = ' + score) + (checked ? ' ✓' : '');
     g.lastVisit = V.darts; g.visit = null;
     callVisit('p', score, bust, checked);
     if (!checked) endPlayerTurn();
@@ -62,10 +62,10 @@
       if (T.game !== g || g.botPending !== r) return;
       const d = r.darts[i];
       g.bLast.push({ x: d.x, y: d.y });
-      let txt = d.l === 'Miss' ? 'Daneben (0)' : (d.m === 1 && d.n < 25 ? 'S' + d.n : d.l) + ' = ' + d.v;
-      if (!g.bShowIn) { if (d.m === 2) g.bShowIn = true; else txt += ' · nicht drin'; }
+      let txt = d.l === 'Miss' ? 'Miss (0)' : (d.m === 1 && d.n < 25 ? 'S' + d.n : d.l) + ' = ' + d.v;
+      if (!g.bShowIn) { if (d.m === 2) g.bShowIn = true; else txt += ' · not in'; }
       if (g.bShowIn && !(r.bust && i === r.darts.length - 1)) g.bShowRem -= (g.bShowIn ? d.v : 0);
-      if (r.bust && i === r.darts.length - 1) txt += ' → Überworfen!';
+      if (r.bust && i === r.darts.length - 1) txt += ' → bust!';
       if (r.checked && i === r.darts.length - 1) { g.bShowRem = 0; txt += ' → Checkout! ✓'; }
       g.botPop = { i: i + 1, txt };
       render(); animateBot(g, r, i + 1);
@@ -83,7 +83,7 @@
       (g.tl = g.tl || []).push(mkThrow({ who: 1, leg: g.legNo, visit: vn, dart: i + 1, n: d.n, m: d.m, pts: d.v, x: d.x, y: d.y, rem: d.rb, dbl: d.att ? 1 : null, flag }));
     });
     g.vis.b.push({ leg: g.legNo, score: scored, n: r.darts.length, bust: !!r.bust, co: r.checked ? g.b.rem : 0 });
-    g.last.b = visitText(r.darts) + (r.bust ? ' → Überworfen' : (g.din && !r.isIn) ? ' → nicht drin' : ' = ' + scored) + (r.checked ? ' ✓' : '');
+    g.last.b = visitText(r.darts) + (r.bust ? ' → bust' : (g.din && !r.isIn) ? ' → not in' : ' = ' + scored) + (r.checked ? ' ✓' : '');
     g.bLast = r.darts.map(d => ({ x: d.x, y: d.y }));
     g.b.rem = r.rem; g.b.in = r.isIn; g.busy = false; g.botPending = null; g.botPop = null;
     T.zoom = null;
@@ -92,21 +92,27 @@
   }
   function legWon(w) {
     const g = T.game; g.legs[w]++; g.legWinner = w; g.legWins.push({ leg: g.legNo, w });
-    if (g.legs[w] >= g.legsTo) {
+    g.sets = g.sets || { p: 0, b: 0 }; g.legTot = g.legTot || { p: g.legs.p, b: g.legs.b }; g.setsTo = g.setsTo || 1;
+    if (g.setsTo > 1) g.legTot[w]++; else g.legTot = { p: g.legs.p, b: g.legs.b };
+    g.setWon = false;
+    if (g.setsTo > 1 && g.legs[w] >= g.legsTo) { g.sets[w]++; g.setWon = true; }
+    if (g.setsTo > 1 ? g.sets[w] >= g.setsTo : g.legs[w] >= g.legsTo) {
       g.phase = 'over';
       const P = pstats(g, 'p'), B = pstats(g, 'b'), sid = 'g_' + g.date, list = g.tl || [];
       TS.put({ id: sid, v: STATS_V, kind: 'game', mode: 'x01bot', level: g.bot,
-        players: [{ name: 'Du', me: true }, { name: 'Bot ' + BOT[g.bot].n, bot: g.bot }],
-        cfg: { start: g.start, din: g.din, out: 'double', legsTo: g.legsTo }, startedAt: g.date, endedAt: nowIso(),
-        result: { winner: w === 'p' ? 0 : 1, legs: [g.legs.p, g.legs.b] }, totals: totalsFrom(list, 2) }, list);
-      T.hist.push({ sid, date: g.date, mode: 'game', level: g.bot, won: w === 'p', lp: g.legs.p, lb: g.legs.b, avg: P.avg, botAvg: B.avg,
+        players: [{ name: 'You', me: true }, { name: 'Bot ' + BOT[g.bot].n, bot: g.bot }],
+        cfg: { start: g.start, din: g.din, out: 'double', legsTo: g.legsTo, setsTo: g.setsTo }, startedAt: g.date, endedAt: nowIso(),
+        result: { winner: w === 'p' ? 0 : 1, legs: [g.legTot.p, g.legTot.b], sets: [g.sets.p, g.sets.b] }, totals: totalsFrom(list, 2) }, list);
+      T.hist.push({ sid, date: g.date, mode: 'game', level: g.bot, won: w === 'p', lp: g.legTot.p, lb: g.legTot.b, sp: g.sets.p, sb: g.sets.b, setsTo: g.setsTo, avg: P.avg, botAvg: B.avg,
                     start: g.start, din: g.din, best: P.best, hiCO: P.hiCO, P, B,
                     dots: g.pdots.filter(d => d.x !== null && d.x !== undefined).map(d => [d.x, d.y, d.l, d.rb, d.att ? 1 : 0, d.aim === undefined ? null : d.aim]) });
       T.filter = 'game';
     } else g.phase = 'legover';
   }
   function nextLeg() {
-    const g = T.game; g.legNo++; g.starter = g.starter === 'p' ? 'b' : 'p';
+    const g = T.game; g.legNo++;
+    if (g.setWon) { g.legs = { p: 0, b: 0 }; g.setNo = (g.setNo || 1) + 1; g.setWon = false; }
+    g.starter = g.starter === 'p' ? 'b' : 'p';
     g.p = { rem: g.start, in: !g.din }; g.b = { rem: g.start, in: !g.din };
     g.turn = g.starter; g.phase = 'play'; g.last = { p: '', b: '' }; g.undo = []; g.bLast = []; g.lastVisit = null; g.visit = null;
     if (g.turn === 'b') { g.busy = true; setTimeout(botMove, 900); }

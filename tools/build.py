@@ -30,7 +30,7 @@ ext_css = sorted(glob.glob(os.path.join(SRC, 'modules', '*.css')))
 core += ''.join(f'\n// ===== modules/{os.path.basename(m)} =====\n' + open(m, encoding='utf-8').read() for m in ext_js)
 css = rd('trainer.css') + rd('app.css') + rd('pwa', 'pwa.css') + ''.join(open(c, encoding='utf-8').read() for c in ext_css)
 s = s.replace('</style>', css + '</style>', 1)
-s = s.replace('<div class="app">', '<div class="app">\n  <div id="viewCounter" style="display:none">\n  <div class="phead"><h1>Zähler</h1><p>Felder abwerfen, Summe wird geteilt</p></div>', 1)
+s = s.replace('<div class="app">', '<div class="app">\n  <div id="viewCounter" style="display:none">\n  <div class="phead"><h1>Counter</h1><p>Clear the fields, the total gets divided</p></div>', 1)
 s = s.replace('<meta name="viewport" content="width=device-width, initial-scale=1">',
               '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">', 1)
 s = s.replace('<title>Zähler</title>', '<title>Darts-Scorer</title>\n' + rd('pwa', 'head.html').strip() +

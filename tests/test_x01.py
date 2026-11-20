@@ -16,7 +16,7 @@ with sync_playwright() as p:
     st=lambda: pg.evaluate("X01.state()")
     A('xAdd'); pg.fill('#viewX01 input[data-p="0"]','Xaver'); pg.fill('#viewX01 input[data-p="2"]','Anna')
     A('xStart',301); pg.screenshot(path=D+'/setup.png',full_page=True)
-    A('xGo'); g=st()['game']; assert [x['name'] for x in g['players']]==['Xaver','Spieler 2','Anna'],g['players']
+    A('xGo'); g=st()['game']; assert [x['name'] for x in g['players']]==['Xaver','Player 2','Anna'],g['players']
     def T(n): A('xMult',3); A('xDart',n)
     def S(n): A('xDart',n)
     def Dd(n): A('xMult',2); A('xDart',n)
@@ -31,7 +31,7 @@ with sync_playwright() as p:
     # Xaver 121: T20 (61) T15 (16) -> then S16 single on 16 -> bust? 16-16=0 not double -> bust
     T(20);T(15); assert 'D8' in pg.inner_text('#viewX01 .route'), pg.inner_text('#viewX01 .route')
     S(16); g=st()['game']; assert g['players'][0]['rem']==121 and g['cur']==1, 'bust'
-    assert 'überworfen' in pg.inner_text('#viewX01 .msg')
+    assert 'bust' in pg.inner_text('#viewX01 .msg')
     # bust to 1: P2 241, Anna 301 just do misses
     for _ in range(6): A('xMiss')
     # Xaver 121: T20 T11 D14 = 60+33+28=121 checkout
@@ -39,7 +39,7 @@ with sync_playwright() as p:
     assert len(st()['hist'])==1
     pg.screenshot(path=D+'/over.png',full_page=True)
     A('xUndo'); g=st()['game']; assert g['phase']=='play' and len(st()['hist'])==0 and len(g['visit'])==2
-    Dd(14); A('xAgain'); g=st()['game']; assert g['players'][0]['name']=='Spieler 2'
+    Dd(14); A('xAgain'); g=st()['game']; assert g['players'][0]['name']=='Player 2'
     # reload persistence
     S(5); pg.reload(); assert st()['game']['visit'][0]['v']==5
     # single-out + legs

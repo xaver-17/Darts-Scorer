@@ -7,7 +7,7 @@ window.APP_VERSION = '__APP_VERSION__';
     if (shown) return; shown = true;
     const b = document.createElement('button');
     b.id = 'updbar'; b.type = 'button';
-    b.innerHTML = '<b>Neue Version verfügbar</b><span>Tippen zum Aktualisieren</span>';
+    b.innerHTML = '<b>New version available</b><span>Tap to update</span>';
     b.onclick = () => { b.disabled = true; reloadFresh(); };
     document.body.appendChild(b);
   }

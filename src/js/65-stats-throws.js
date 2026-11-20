@@ -5,7 +5,7 @@
   // ---------- X01 Mehrspieler ----------
   function viewMulti() {
     const H = x01Hist();
-    if (!H.length) return `<div class="card empty">Noch keine Mehrspieler-Spiele. Starte unter Spielen → X01 Mehrspieler ein Spiel – danach siehst du hier, wer wie wirft.</div>`;
+    if (!H.length) return `<div class="card empty">No multiplayer games yet. Start one under Play → Multiplayer – then you will see how everyone throws.</div>`;
     // Pro Spielername zusammenfassen; Checkout-Quote nur aus Spielen mit Einzelwürfen
     const P = {};
     H.forEach(e => {
@@ -19,17 +19,17 @@
       });
     });
     const rows = Object.values(P).sort((a, b) => b.wins - a.wins || b.pts / (b.darts || 1) - a.pts / (a.darts || 1));
-    let h = `<div class="card tablecard"><div class="setlabel">Spieler · ${H.length} Spiel${H.length > 1 ? 'e' : ''}</div><table class="multi"><tr><th>Spieler</th><th>Siege</th><th>Ø</th><th>Checkout</th><th>180er</th><th>Finish</th></tr>`;
+    let h = `<div class="card tablecard"><div class="setlabel">Players · ${H.length} game${H.length > 1 ? 's' : ''}</div><table class="multi"><tr><th>Player</th><th>Wins</th><th>Avg</th><th>Checkout</th><th>180s</th><th>Finish</th></tr>`;
     rows.forEach(a => {
-      h += `<tr><td><b>${escH(a.name)}</b><br><small>${a.games} Spiel${a.games > 1 ? 'e' : ''}</small></td><td>${a.wins}</td><td><b>${f1(a.darts ? a.pts / a.darts * 3 : 0)}</b></td>`
+      h += `<tr><td><b>${escH(a.name)}</b><br><small>${a.games} game${a.games > 1 ? 's' : ''}</small></td><td>${a.wins}</td><td><b>${f1(a.darts ? a.pts / a.darts * 3 : 0)}</b></td>`
         + `<td>${a.coAtt ? f1(a.coHits / a.coAtt * 100) + ' %<br><small>' + a.coHits + '/' + a.coAtt + '</small>' : '–'}</td><td>${a.s180}</td><td>${a.hiCO || '–'}</td></tr>`;
     });
-    h += `</table><div class="boardhint">Checkout-Quote = Checkouts / Pfeile mit Checkout-Chance. Zählt ab dieser Version (ältere Spiele haben keine Einzelwürfe).</div></div>`;
-    h += `<h2 class="sec">Spiele</h2><div class="card tablecard"><table><tr><th>Datum</th><th>Spiel</th><th>Ergebnis</th></tr>`;
+    h += `</table><div class="boardhint">Checkout rate = checkouts / darts at a checkout. Counted from this version on (older games have no single darts).</div></div>`;
+    h += `<h2 class="sec">Games</h2><div class="card tablecard"><table><tr><th>Date</th><th>Game</th><th>Result</th></tr>`;
     H.slice().reverse().forEach(e => {
       const d = new Date(e.date);
-      const ds = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + '<br><small>' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + '</small>';
-      const ps = e.players.map(p => `${p.name === e.winner ? '<b class="gw">' + escH(p.name) + ' ' + p.legs + '</b>' : escH(p.name) + ' ' + p.legs} <small>Ø ${f1(p.avg)}</small>`).join('<br>');
+      const ds = d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) + '<br><small>' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + '</small>';
+      const ps = e.players.map(p => `${p.name === e.winner ? '<b class="gw">' + escH(p.name) + ' ' + p.legs + '</b>' : escH(p.name) + ' ' + p.legs} <small>avg ${f1(p.avg)}</small>`).join('<br>');
       h += `<tr><td>${ds}</td><td>${e.start}<br><small>${e.out === 'double' ? 'Double-Out' : 'Single-Out'}</small></td><td>${ps}</td></tr>`;
     });
     return h + `</table></div>`;
@@ -57,9 +57,9 @@
     const F = doubleRates(), keys = Object.keys(F).sort((a, b) => (F[b].g[1] + F[b].t[1]) - (F[a].g[1] + F[a].t[1])).slice(0, 10);
     if (!keys.length) return '';
     const pc = a => a[1] ? `${f1(a[0] / a[1] * 100)} %<br><small>${a[0]}/${a[1]}</small>` : '–';
-    let h = `<h2 class="sec">Doppel: Spiel und Training</h2><div class="card tablecard"><table class="multi"><tr><th>Feld</th><th>Im Spiel</th><th>Im Training</th></tr>`;
+    let h = `<h2 class="sec">Doubles: game and training</h2><div class="card tablecard"><table class="multi"><tr><th>Field</th><th>In games</th><th>In training</th></tr>`;
     keys.forEach(k => { h += `<tr><td><b>${k}</b></td><td>${pc(F[k].g)}</td><td>${pc(F[k].t)}</td></tr>`; });
-    return h + `</table><div class="boardhint">Treffer / Pfeile auf dieses Doppel. Im Spiel zählen Pfeile, deren Checkout-Weg auf das Doppel ging.</div></div>`;
+    return h + `</table><div class="boardhint">Hits / darts at this double. In games, darts count whose checkout route went to this double.</div></div>`;
   }
 
   // ---------- Trainingsfortschritt: Trend und Stufen-Empfehlung ----------
@@ -73,7 +73,7 @@
     if (DR[k] || k === 'score' || l.length < 3) return '';
     const last = l.slice(-3), L = last[0].level;
     if (!last.every(e => e.level === L)) return '';
-    if (L < 4 && last.every(e => e.rate >= LEVEL_UP)) return `<em class="lvhint">Bereit für Stufe ${LV[L + 1]}</em>`;
-    if (L > 0 && last.every(e => e.rate <= LEVEL_DOWN)) return `<em class="lvhint">Tipp: Stufe ${LV[L - 1]} probieren</em>`;
+    if (L < 4 && last.every(e => e.rate >= LEVEL_UP)) return `<em class="lvhint">Ready for level ${LV[L + 1]}</em>`;
+    if (L > 0 && last.every(e => e.rate <= LEVEL_DOWN)) return `<em class="lvhint">Tip: try level ${LV[L - 1]}</em>`;
     return '';
   }

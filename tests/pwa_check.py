@@ -38,7 +38,7 @@ with sync_playwright() as p:
     with pg.expect_navigation(): pg.set_input_files('#importFile', path)
     check('Import stellt Daten wieder her', len(json.loads(pg.evaluate("localStorage.getItem('dartsTrainer')"))['hist']) == 1)
     pg.set_input_files('#importFile', files=[{'name': 'x.json', 'mimeType': 'application/json', 'buffer': b'{"foo":1}'}]); pg.wait_for_timeout(300)
-    check('Ungültige Datei wird abgelehnt', 'keine gültige' in pg.locator('.datamsg').inner_text())
+    check('Ungültige Datei wird abgelehnt', 'not a valid' in pg.locator('.datamsg').inner_text())
     b.close()
 srv.shutdown()
 print('FEHLER:', errs) if errs else print(f'Alle {len(ok)} Prüfungen bestanden')

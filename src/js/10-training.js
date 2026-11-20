@@ -2,10 +2,10 @@
   // ---------- Aufgaben ----------
   function mk(type, n, darts, block) {
     let big, cap;
-    if (type === 'A') { big = String(n); cap = 'Die ' + n + ' treffen – egal welcher Ring'; }
-    else if (type === 'B') { big = 'Bull'; cap = 'Bull treffen (25 oder 50)'; }
+    if (type === 'A') { big = String(n); cap = 'Hit the ' + n + ' – any ring'; }
+    else if (type === 'B') { big = 'Bull'; cap = 'Hit the bull (25 or 50)'; }
     else if (n === 25) { big = type === 'D' ? 'Bull' : '25'; cap = type === 'D' ? 'Bullseye (50)' : 'Single Bull (25)'; }
-    else { big = (type === 'S' ? '' : type) + n; cap = { S: 'Single', D: 'Doppel', T: 'Triple' }[type] + ' ' + n; }
+    else { big = (type === 'S' ? '' : type) + n; cap = { S: 'Single', D: 'Double', T: 'Triple' }[type] + ' ' + n; }
     return { type, n, darts, big, cap, block };
   }
   function checkoutPool(L) {
@@ -35,12 +35,12 @@
   }
   function describe(mode, L, c) {
     if (DR[mode]) return DR[mode].describe(L, c, T.set);
-    if (mode === 'single') return `${c} Aufgaben · Single-Felder ${L >= 3 ? '1–20 + Bull' : '1–20'} · ${[4, 3, 2, 2, 1][L]} Darts pro Feld`;
-    if (mode === 'double') return `${c} Aufgaben · ${['D20, D16, D10, D8', 'Top-Doppel (D20, D16, D18, D12, D10, D8, D4)', 'alle Doppel', 'alle Doppel + Bull', 'alle Doppel + Bull'][L]} · ${[6, 5, 4, 3, 2][L]} Darts pro Feld`;
-    if (mode === 'triple') return `${c} Aufgaben · ${['T20, T19', 'T20–T17', 'T20–T15', 'alle Triple', 'alle Triple'][L]} · ${[9, 6, 5, 4, 3][L]} Darts pro Feld`;
-    if (mode === 'checkout') { const r = [[2, 40], [2, 60], [41, 100], [61, 130], [100, 170]][L]; return `${c} Checkouts von ${r[0]} bis ${r[1]} · ${[9, 9, 6, 6, 3][L]} Darts pro Checkout · Weg wird ${L < 3 ? 'angezeigt' : 'nur auf Wunsch angezeigt'}`; }
-    if (mode === 'score') return `${c} Aufnahmen à 3 Darts auf ${L < 2 ? 'das 20er-Segment' : 'die T20'} · Ziel pro Aufnahme: ${SCORE_GOAL[L]} Punkte`;
-    if (mode === 'hit') return `Kompletter Trainingsplan, ${c} Aufgaben in Blöcken: ` + HIT[L].map(([t, d]) => `${BLOCKNAME[t]} (${d} Darts)`).join(' → ');
+    if (mode === 'single') return `${c} tasks · single fields ${L >= 3 ? '1–20 + bull' : '1–20'} · ${[4, 3, 2, 2, 1][L]} darts per field`;
+    if (mode === 'double') return `${c} tasks · ${['D20, D16, D10, D8', 'top doubles (D20, D16, D18, D12, D10, D8, D4)', 'all doubles', 'all doubles + bull', 'all doubles + bull'][L]} · ${[6, 5, 4, 3, 2][L]} darts per field`;
+    if (mode === 'triple') return `${c} tasks · ${['T20, T19', 'T20–T17', 'T20–T15', 'all trebles', 'all trebles'][L]} · ${[9, 6, 5, 4, 3][L]} darts per field`;
+    if (mode === 'checkout') { const r = [[2, 40], [2, 60], [41, 100], [61, 130], [100, 170]][L]; return `${c} checkouts from ${r[0]} to ${r[1]} · ${[9, 9, 6, 6, 3][L]} darts per checkout · route ${L < 3 ? 'shown' : 'shown on request only'}`; }
+    if (mode === 'score') return `${c} visits of 3 darts at ${L < 2 ? 'the 20 segment' : 'the T20'} · goal per visit: ${SCORE_GOAL[L]} points`;
+    if (mode === 'hit') return `Full training plan, ${c} tasks in blocks: ` + HIT[L].map(([t, d]) => `${BLOCKNAME[t]} (${d} Darts)`).join(' → ');
     return '';
   }
 
@@ -95,7 +95,7 @@
     else { if (!S.log.length) { T.sess = null; return; } entry = Object.assign({ date: S.date, mode: S.mode, level: S.level, planned: S.tasks.length }, taskStats(S)); }
     entry.sid = sidOf(entry);
     const r = Object.assign({}, entry); delete r.date; delete r.mode; delete r.level; delete r.sid;
-    TS.put({ id: entry.sid, v: STATS_V, kind: 'training', mode: S.mode, level: S.level, players: [{ name: 'Du', me: true }],
+    TS.put({ id: entry.sid, v: STATS_V, kind: 'training', mode: S.mode, level: S.level, players: [{ name: 'You', me: true }],
       cfg: { perDart: !!S.perDart }, tasks: S.tasks ? S.tasks.map(t => ({ type: t.type, n: t.n, darts: t.darts })) : undefined,
       log: S.log, visits: S.visits, startedAt: S.date, endedAt: nowIso(), result: r }, S.tl || []);
     T.hist.push(entry); T.summary = entry; T.sess = null; T.filter = entry.mode;

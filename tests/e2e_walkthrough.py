@@ -11,7 +11,11 @@ with sync_playwright() as p:
     pg.goto('file://'+os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','dist','index.html'))
     pg.screenshot(path=os.path.join(OUT,'h0.png'))
     A=lambda a,v=None: pg.click(f'#viewTrainer [data-a="{a}"]'+(f'[data-v="{v}"]' if v is not None else ''))
+    # Handy: Scheibe oder Tastatur (Umschalter im Spiel)
+    def inp(m):
+        if pg.locator(f'#viewTrainer [data-a="inp"][data-v="{m}"]:not(.active)').count(): A('inp', m)
     def tap(mx,my):
+        inp('board')
         if not pg.locator('svg[data-board]').count():
             pg.screenshot(path=os.path.join(OUT,'fail.png'), full_page=True); print('STATE', pg.evaluate("JSON.stringify(JSON.parse(localStorage.getItem('dartsTrainer')).game).slice(0,600)")); raise SystemExit
         pg.locator('svg[data-board]').scroll_into_view_if_needed()
@@ -44,6 +48,7 @@ with sync_playwright() as p:
                 if pg.locator('.zoombar').count():
                     box=pg.locator('svg[data-board]').bounding_box(timeout=3000); pg.mouse.click(box['x']+box['width']/2, box['y']+box['height']/2)
                 continue
+            inp('keys')
             if rem-20>=2 and rem-20!=1: A('dart',20)
             else: A('dart',1)
         if not pg.locator('#viewTrainer [data-a="close"]').count(): print('NO CLOSE', step, pg.evaluate("JSON.stringify(JSON.parse(localStorage.getItem('dartsTrainer')).game||null).slice(0,300)"), pg.evaluate('location.href')); pg.screenshot(path=os.path.join(OUT,'noclose.png'), full_page=True)

@@ -73,17 +73,17 @@ with sync_playwright() as p:
     check('Training: Session mit Einzelpfeilen', len(ts) == 1 and len(tw) == 2 + 8 + 1 and ts[0]['cfg']['perDart'], (len(tw), tw))
     check('Training: Aufgaben-Ergebnis stimmt', [ (l['ok'], l['darts']) for l in log] == [(True, 2), (False, 8), (True, 1)], log)
     # Bot-Spiel: ein paar Aufnahmen, dann über Zustand prüfen, dass Würfe im Spiel gesammelt werden
-    pg.click('#nav [data-route="home"]'); A('qs', '501')
+    pg.click('#nav [data-route="home"]'); A('qs', '501'); A('inp', 'keys')
     for _ in range(3): A('dart', '20')
     pg.wait_for_timeout(7000)
     gm = pg.evaluate("JSON.parse(localStorage.getItem('dartsTrainer')).game")
     check('Bot-Spiel: Würfe von Spieler und Bot im Spiel', gm and sum(1 for w in gm['tl'] if w['who'] == 0) == 3 and sum(1 for w in gm['tl'] if w['who'] == 1) == 3, gm and gm['tl'])
     # Stats ansehen
     pg.click('#nav [data-route="stats"]'); A('stab', 'over'); pg.wait_for_timeout(200); pg.screenshot(path=os.path.join(OUT, 'stats_over.png'), full_page=True)
-    check('Stats: Doppel-Tabelle Spiel/Training', 'Doppel: Spiel und Training' in pg.inner_text('#viewTrainer'))
+    check('Stats: Doppel-Tabelle Spiel/Training', 'Doubles: game and training' in pg.inner_text('#viewTrainer'))
     A('stab', 'multi'); pg.screenshot(path=os.path.join(OUT, 'stats_multi.png'), full_page=True)
     txt = pg.inner_text('#viewTrainer')
-    check('Stats: Mehrspieler zeigt Spieler und Spiele', 'Anna' in txt and 'Spieler 1' in txt, txt[:300])
+    check('Stats: Mehrspieler zeigt Spieler und Spiele', 'Anna' in txt and 'Player 1' in txt, txt[:300])
     # Export / Löschen / Import
     A('stab', 'data'); pg.screenshot(path=os.path.join(OUT, 'stats_data.png'), full_page=True)
     with pg.expect_download() as dl: A('export')

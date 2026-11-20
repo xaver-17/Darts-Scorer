@@ -7,18 +7,18 @@
   // ---------- Bereiche und Zielwerte pro Stufe ----------
   // Jeder Bereich: Wert aus den letzten Ergebnissen (Ø der letzten 5) und Ziel pro Stufe 0..4
   const CO_AREAS = {
-    acc: { n: 'Treffsicherheit', u: ' %', goal: [35, 45, 55, 65, 75], modes: ['atc', 'hit', 'single'],
+    acc: { n: 'Accuracy', u: ' %', goal: [35, 45, 55, 65, 75], modes: ['atc', 'hit', 'single'],
            val: e => e.mode === 'atc' ? e.hitPct : e.mode === 'hit' || e.mode === 'single' ? e.hitPct : null,
-           why: v => `Deine Trefferquote auf einzelne Zahlen liegt bei ${f1(v)} %` },
-    score: { n: 'Punkte', u: '', goal: [30, 40, 50, 60, 75], modes: ['score', 'sh'],
+           why: v => `Your hit rate on single numbers is ${f1(v)} %` },
+    score: { n: 'Scoring', u: '', goal: [30, 40, 50, 60, 75], modes: ['score', 'sh'],
              val: e => e.mode === 'score' ? e.avg : e.mode === 'game' ? e.avg : null,
-             why: v => `Dein Schnitt pro Aufnahme liegt bei ${f1(v)}` },
-    dbl: { n: 'Doppel', u: ' %', goal: [10, 15, 22, 28, 35], modes: ['dr', 'bob', 'double'],
+             why: v => `Your average per visit is ${f1(v)}` },
+    dbl: { n: 'Doubles', u: ' %', goal: [10, 15, 22, 28, 35], modes: ['dr', 'bob', 'double'],
            val: e => e.mode === 'dr' || e.mode === 'bob' || e.mode === 'double' ? e.hitPct : null,
-           why: v => `Deine Doppelquote liegt bei ${f1(v)} %` },
+           why: v => `Your doubles rate is ${f1(v)} %` },
     co: { n: 'Checkouts', u: ' %', goal: [20, 30, 40, 50, 60], modes: ['lad', 'checkout'],
           val: e => e.mode === 'lad' || e.mode === 'checkout' ? e.rate : e.mode === 'game' && e.P && e.P.coAtt ? e.P.coHits / e.P.coAtt * 100 : null,
-          why: v => `Deine Checkout-Quote liegt bei ${f1(v)} %` }
+          why: v => `Your checkout rate is ${f1(v)} %` }
   };
   function coArea(k) {
     const A = CO_AREAS[k], vals = T.hist.map(A.val).filter(v => v !== null && v !== undefined && isFinite(v)).slice(-5);
@@ -38,7 +38,7 @@
     if (e.mode === 'score') return e.goalPct >= 70 ? 1 : e.goalPct < 30 ? -1 : 0;
     if (e.mode === 'lad') return e.rate >= 60 ? 1 : e.rate < 25 ? -1 : 0;
     const tip = DR[e.mode] ? DR[e.mode].tip(e) : '';
-    return /Stark!/.test(tip) ? 1 : 0;
+    return /Strong!/.test(tip) ? 1 : 0;
   }
   function coSuggestLevel(mode) {
     const l = T.hist.filter(e => e.mode === mode), last = l[l.length - 1];
@@ -53,19 +53,19 @@
   function coBuild() {
     if (CO.level === null) {
       return { day: coDay(), test: true, idx: 0, items: [
-        { mode: 'atc', level: 0, why: 'Einstufung: Wie sicher triffst du einzelne Zahlen?' },
-        { mode: 'score', level: 0, tasks: 10, why: 'Einstufung: Wie viele Punkte machst du pro Aufnahme?' },
-        { mode: 'dr', level: 0, why: 'Einstufung: Wie gut triffst du die Doppel?' }] };
+        { mode: 'atc', level: 0, why: 'Placement: how reliably do you hit single numbers?' },
+        { mode: 'score', level: 0, tasks: 10, why: 'Placement: how many points do you score per visit?' },
+        { mode: 'dr', level: 0, why: 'Placement: how well do you hit doubles?' }] };
     }
     const areas = Object.keys(CO_AREAS).map(coArea).sort((a, b) => a.ratio - b.ratio);
     const items = [];
     areas.slice(0, 2).forEach(a => {
       const m = coPick(a.A.modes, items.map(i => i.mode));
       items.push({ mode: m, level: coSuggestLevel(m), area: a.k,
-                   why: a.v === null ? `${a.A.n}: dazu gibt es noch keine Daten` : `${a.A.why(a.v)}, Ziel auf deiner Stufe: ${a.goal}${a.A.u}` });
+                   why: a.v === null ? `${a.A.n}: no data yet` : `${a.A.why(a.v)}, goal at your level: ${a.goal}${a.A.u}` });
     });
     const f = coPick(CO_FUN, items.map(i => i.mode));
-    items.push({ mode: f, level: coSuggestLevel(f), why: 'Zur Abwechslung ein Trainingsspiel' });
+    items.push({ mode: f, level: coSuggestLevel(f), why: 'A training game for some variety' });
     return { day: coDay(), idx: 0, items };
   }
   function coPlan() { if (!CO.plan || CO.plan.day !== coDay()) CO.plan = coBuild(); return CO.plan; }
@@ -114,98 +114,98 @@
   // ---------- Karte „Heute empfohlen“ ----------
   function coCard() {
     const P = coPlan(), wd = coWeekDone(), next = P.items.findIndex(x => !x.done);
-    let h = `<div class="card coach"><div class="cohead"><b>${P.test ? 'Einstufung' : 'Heute empfohlen'}</b><span>Woche ${Math.min(wd, CO.weekGoal)}/${CO.weekGoal}</span></div>`;
-    if (P.test && !P.placed) h += `<p class="cosub">Drei kurze Einheiten, danach kennt die App deine Stufe und schlägt dir passende Trainings vor.</p>`;
-    if (P.placed !== undefined && next < 0) h += `<p class="cosub">Einstufung fertig: Deine Stufe ist <b>${LV[P.placed]}</b>. Ab morgen gibt es hier deinen Trainingsplan.</p>`;
+    let h = `<div class="card coach"><div class="cohead"><b>${P.test ? 'Placement' : 'Recommended today'}</b><span>Week ${Math.min(wd, CO.weekGoal)}/${CO.weekGoal}</span></div>`;
+    if (P.test && !P.placed) h += `<p class="cosub">Three short sessions, then the app knows your level and suggests matching trainings.</p>`;
+    if (P.placed !== undefined && next < 0) h += `<p class="cosub">Placement done: your level is <b>${LV[P.placed]}</b>. From tomorrow your training plan appears here.</p>`;
     h += `<div class="coitems">`;
     P.items.forEach((it, i) => {
       h += `<button class="coit${it.done ? ' done' : ''}${i === next ? ' next' : ''}" data-a="coGo" data-v="${i}"><span class="con">${it.done ? '✓' : i + 1}</span><span class="cot"><b>${TM[it.mode]} · ${LV[it.level]}</b><small>${it.why}</small></span></button>`;
     });
     h += `</div>`;
-    if (next >= 0) h += btn('coNext', next === 0 ? 'Plan starten' : `Weiter mit Einheit ${next + 1}`, undefined, 'big go');
-    else if (!P.test) h += `<p class="cosub">Plan für heute geschafft. ${wd >= CO.weekGoal ? 'Wochenziel erreicht!' : `Noch ${CO.weekGoal - wd} bis zum Wochenziel.`}</p>`;
-    h += `<div class="corow">${btn('coLearn', `Lernen: <b>${coLearn() ? 'an' : 'aus'}</b>`, undefined, 'cochip' + (coLearn() ? ' on' : ''))}`;
-    h += `${btn('coLesson', `Grundlagen ${Object.keys(CO.lessons).length}/${CO_LESSONS.length}`, 'list', 'cochip')}`;
-    if (!P.test) h += btn('coNew', 'Anderer Plan', undefined, 'cochip');
+    if (next >= 0) h += btn('coNext', next === 0 ? 'Start plan' : `Continue with session ${next + 1}`, undefined, 'big go');
+    else if (!P.test) h += `<p class="cosub">Today's plan done. ${wd >= CO.weekGoal ? 'Weekly goal reached!' : `${CO.weekGoal - wd} more to your weekly goal.`}</p>`;
+    h += `<div class="corow">${btn('coLearn', `Learn mode: <b>${coLearn() ? 'on' : 'off'}</b>`, undefined, 'cochip' + (coLearn() ? ' on' : ''))}`;
+    h += `${btn('coLesson', `Basics ${Object.keys(CO.lessons).length}/${CO_LESSONS.length}`, 'list', 'cochip')}`;
+    if (!P.test) h += btn('coNew', 'Different plan', undefined, 'cochip');
     h += `</div>`;
-    if (CO.level !== null) h += `<div class="colv"><span>Deine Stufe</span>${LV.map((l, i) => btn('coLevel', i + 1, i, '', CO.level === i)).join('')}</div>`;
+    if (CO.level !== null) h += `<div class="colv"><span>Your level</span>${LV.map((l, i) => btn('coLevel', i + 1, i, '', CO.level === i)).join('')}</div>`;
     return h + `</div>`;
   }
 
   // ---------- Lernmodus: Lektionen ----------
   const CO_LESSONS = [
-    { id: 'stand', t: 'Stand', p: [
-      'Stell dich seitlich zur Scheibe: Rechtshänder mit dem rechten Fuß vorne an der Abwurflinie, Linkshänder umgekehrt.',
-      'Der vordere Fuß zeigt etwa 45 bis 90 Grad zur Scheibe, das Gewicht liegt zu etwa 70 % vorne. Der hintere Fuß hält nur das Gleichgewicht.',
-      'Lehn dich leicht nach vorne, aber so, dass du ruhig stehst. Wichtig ist, dass du jedes Mal genau gleich stehst – markier dir den Platz.'],
+    { id: 'stand', t: 'Stance', p: [
+      'Stand side-on to the board: right-handers with the right foot forward at the oche, left-handers the other way round.',
+      'Your front foot points about 45 to 90 degrees to the board, with about 70 % of your weight on it. The back foot just keeps your balance.',
+      'Lean slightly forward, but stay steady. What matters is standing exactly the same way every time – mark your spot.'],
       ex: { mode: 'single', level: 0, tasks: 10 } },
-    { id: 'grip', t: 'Griff', p: [
-      'Halt den Dart locker mit drei Fingern: Daumen, Zeige- und Mittelfinger. So fest, dass er nicht wegrutscht, aber ohne Druck.',
-      'Die Spitze zeigt beim Ausholen leicht nach oben. Zeigt sie nach unten, fliegt der Dart unruhig.',
-      'Probier zwei, drei Griffe aus und bleib dann bei einem. Ein gleichbleibender Griff ist wichtiger als der „perfekte“.'],
+    { id: 'grip', t: 'Grip', p: [
+      'Hold the dart loosely with three fingers: thumb, index and middle finger. Firm enough that it does not slip, but without pressure.',
+      'The tip points slightly upwards as you draw back. If it points down, the dart flies unsteadily.',
+      'Try two or three grips, then stick with one. A consistent grip matters more than the "perfect" one.'],
       ex: { mode: 'single', level: 0, tasks: 10 } },
-    { id: 'align', t: 'Ausrichtung', p: [
-      'Auge, Dart und Ziel bilden eine Linie. Die meisten zielen mit dem Auge auf der Wurfseite.',
-      'Der Ellbogen zeigt Richtung Ziel und bleibt beim Wurf möglichst an derselben Stelle. Er ist der Drehpunkt.',
-      'Wenn deine Darts immer auf einer Seite landen: nicht nachzielen, sondern den Stand ein kleines Stück verschieben.'],
+    { id: 'align', t: 'Alignment', p: [
+      'Eye, dart and target form one line. Most players aim with the eye on their throwing side.',
+      'Your elbow points at the target and stays in the same place during the throw. It is the pivot.',
+      'If your darts always land on one side: do not re-aim, move your stance a little instead.'],
       ex: { mode: 'atc', level: 0 } },
-    { id: 'throw', t: 'Wurfbewegung', p: [
-      'Der Wurf kommt aus dem Unterarm: Ausholen zum Gesicht, dann gerade nach vorne Richtung Ziel. Oberarm und Schulter bleiben ruhig.',
-      'Lass den Arm nach dem Loslassen weiter Richtung Ziel durchschwingen, als würdest du auf das Feld zeigen.',
-      'Nicht werfen wie einen Ball: kein Schwung aus der Schulter, kein Ruck aus dem Handgelenk am Ende.'],
+    { id: 'throw', t: 'Throwing motion', p: [
+      'The throw comes from the forearm: draw back towards your face, then straight forward to the target. Upper arm and shoulder stay still.',
+      'After releasing, let your arm follow through towards the target, as if you were pointing at the field.',
+      'Do not throw it like a ball: no swing from the shoulder, no flick of the wrist at the end.'],
       ex: { mode: 'atc', level: 0 } },
-    { id: 'aim', t: 'Wohin zielen', p: [
-      'Als Anfänger zielst du auf die große Single-20 statt auf T20: Du triffst sie viel öfter, und Fehlwürfe landen trotzdem oft in der 20.',
-      'Landen deine Darts oft links von der 20 (in der 5 und 1)? Dann zieh auf die 19: Ihre Nachbarn 7 und 3 sind etwas besser, und viele Spieler streuen dort weniger.',
-      'Beim Doppel zielst du auf die Mitte des Doppels, nicht auf die Innenkante. Lieblingsdoppel sind D16 und D20: D16 lässt sich nach einem Fehlwurf gut halbieren (32 → 16 → 8 → 4).',
-      'Beim Checkout gilt: Stell dir einen geraden Rest, der mit einem Doppel geht (z. B. 32 oder 40), und meide das Bull, solange es einen anderen Weg gibt.'],
+    { id: 'aim', t: 'Where to aim', p: [
+      'As a beginner, aim at the big single 20 instead of T20: you hit it far more often, and misses still often land in the 20.',
+      'Do your darts often land left of the 20 (in the 5 and 1)? Then switch to the 19: its neighbours 7 and 3 are a bit better, and many players scatter less there.',
+      'On doubles, aim at the middle of the double, not the inner edge. Favourite doubles are D16 and D20: D16 halves nicely after a miss (32 → 16 → 8 → 4).',
+      'For checkouts: leave yourself an even number that finishes on a double (e.g. 32 or 40), and avoid the bull as long as there is another way.'],
       ex: { mode: 'score', level: 0, tasks: 10 } },
-    { id: 'rhythm', t: 'Rhythmus', p: [
-      'Wirf alle drei Darts im gleichen Tempo, ohne lange Pausen dazwischen. Zu langes Zielen macht unsicher.',
-      'Atme vor der Aufnahme einmal ruhig aus, dann wirf. Nach jedem Dart nicht ärgern, sofort den nächsten vorbereiten.',
-      'Übe lieber 15 Minuten täglich als einmal pro Woche zwei Stunden. Kurze, regelmäßige Einheiten bringen am meisten.'],
+    { id: 'rhythm', t: 'Rhythm', p: [
+      'Throw all three darts at the same pace, without long pauses. Aiming too long makes you unsure.',
+      'Breathe out calmly before the visit, then throw. Do not get annoyed after a dart, get ready for the next one right away.',
+      'Practise 15 minutes a day rather than two hours once a week. Short, regular sessions help the most.'],
       ex: { mode: 'dr', level: 0 } }
   ];
   EXT.views.learn = () => {
     const id = T.lesson;
     if (!id || id === 'list') {
-      let h = phead('Grundlagen', 'Kurze Lektionen zu Stand, Griff und Wurf') + `<div class="card list">`;
+      let h = phead('Basics', 'Short lessons on stance, grip and throw') + `<div class="card list">`;
       CO_LESSONS.forEach((L, i) => { h += `<button class="coit${CO.lessons[L.id] ? ' done' : ''}" data-a="coLesson" data-v="${L.id}"><span class="con">${CO.lessons[L.id] ? '✓' : i + 1}</span><span class="cot"><b>${L.t}</b><small>${L.p[0].slice(0, 70)} …</small></span></button>`; });
-      return h + `</div>` + btn('nav', '← Zurück zum Training', 'train', 'link');
+      return h + `</div>` + btn('nav', '← Back to training', 'train', 'link');
     }
     const i = CO_LESSONS.findIndex(x => x.id === id), L = CO_LESSONS[i];
-    let h = phead(`${i + 1}. ${L.t}`, `Lektion ${i + 1} von ${CO_LESSONS.length}`) + `<div class="card lesson">`;
+    let h = phead(`${i + 1}. ${L.t}`, `Lesson ${i + 1} of ${CO_LESSONS.length}`) + `<div class="card lesson">`;
     L.p.forEach(p => { h += `<p>${p}</p>`; });
-    h += btn('coLessonDone', `Verstanden · Übung starten (${TM[L.ex.mode]})`, L.id, 'big go');
-    if (CO_LESSONS[i + 1]) h += btn('coLesson', `Nächste Lektion: ${CO_LESSONS[i + 1].t} →`, CO_LESSONS[i + 1].id, 'link');
-    return h + `</div>` + btn('coLesson', '← Alle Lektionen', 'list', 'link');
+    h += btn('coLessonDone', `Got it · start exercise (${TM[L.ex.mode]})`, L.id, 'big go');
+    if (CO_LESSONS[i + 1]) h += btn('coLesson', `Next lesson: ${CO_LESSONS[i + 1].t} →`, CO_LESSONS[i + 1].id, 'link');
+    return h + `</div>` + btn('coLesson', '← All lessons', 'list', 'link');
   };
 
   // ---------- Lernmodus: Tipps vor und während des Trainings ----------
   const CO_INTRO = {
-    hit: 'Ein gemischter Plan: erst Zahlen, dann Single, Triple und Doppel. Steh bei jedem Wurf gleich und zieh nicht nach, wenn ein Dart danebengeht.',
-    single: 'Ziel auf die Mitte des großen Single-Felds, nicht auf den Rand. Dort ist am meisten Platz.',
-    double: 'Ziel auf die Mitte des Doppels. Fällt ein Dart knapp darüber ins Aus, ist das normal – lieber etwas tiefer ansetzen als zu hoch.',
-    triple: 'Triple sind schmal. Ziel genau auf die Mitte, und wirf in ruhigem Rhythmus. Ein Single daneben ist kein Fehler, sondern normale Streuung.',
-    checkout: 'Lies erst den Weg, dann wirf. Merk dir die Wege für deine Lieblingsdoppel – mit der Zeit brauchst du die Anzeige nicht mehr.',
-    score: 'Auf deiner Stufe zielst du auf die große Single-20 (bzw. T20 ab Mittel). Landen viele Darts links in der 5 und 1, probier die 19.',
-    atc: 'Ein Feld nach dem anderen. Schau vor jedem Dart kurz auf das neue Ziel und richte Stand und Blick neu aus.',
-    bob: 'Jedes Doppel zählt. Ziel auf die Mitte des Doppels. Die erste Runde (D1) ist am schwersten – keine Sorge, wenn sie danebengeht.',
-    dr: 'Ziel immer auf die Mitte des Doppels. Merk dir, welche Doppel dir liegen – die werden deine Checkout-Doppel.',
-    lad: 'Plane 9 Darts als drei Aufnahmen: erst Punkte, dann einen geraden Rest stellen, zum Schluss das Doppel.',
-    sh: 'Pro Runde eine Zahl. Versuch bewusst einmal Triple, dann Doppel – ein Shanghai bringt 100 Bonuspunkte.',
-    hi: 'Wichtiger als viele Punkte ist, jede Runde wenigstens einmal zu treffen – sonst wird halbiert. Lieber sicher auf die Single zielen.',
-    cr: 'Triple bringen drei Marken auf einmal. Auf den hohen Zahlen (20, 19) lohnt sich der Triple-Versuch am meisten.'
+    hit: 'A mixed plan: numbers first, then singles, trebles and doubles. Stand the same way for every throw and do not adjust when a dart misses.',
+    single: 'Aim at the middle of the big single field, not the edge. That is where there is most room.',
+    double: 'Aim at the middle of the double. A dart just outside is normal – better aim a little low than too high.',
+    triple: 'Trebles are narrow. Aim right at the middle and throw in a calm rhythm. A single next to it is not a mistake, just normal spread.',
+    checkout: 'Read the route first, then throw. Learn the routes to your favourite doubles – over time you will not need the hint.',
+    score: 'At your level you aim at the big single 20 (or T20 from Medium). If many darts land left in the 5 and 1, try the 19.',
+    atc: 'One field after another. Before each dart, look at the new target and realign stance and eyes.',
+    bob: 'Every double counts. Aim at the middle of the double. The first round (D1) is the hardest – do not worry if it misses.',
+    dr: 'Always aim at the middle of the double. Note which doubles suit you – they become your checkout doubles.',
+    lad: 'Plan 9 darts as three visits: score first, then leave an even number, finally the double.',
+    sh: 'One number per round. Deliberately go for a treble, then a double – a Shanghai gives 100 bonus points.',
+    hi: 'Hitting at least once every round matters more than big scores – otherwise you are halved. Better aim safely at the single.',
+    cr: 'Trebles give three marks at once. On the high numbers (20, 19) going for the treble pays off most.'
   };
   function coLiveTip(S) {
     const m = S.mode;
     if (['atc', 'sh', 'cr'].includes(m) && S.d && S.d.length >= 6) {
       const last = S.d.slice(-6), miss = last.filter(x => Array.isArray(x) ? !x[0] : !x).length;
-      if (miss >= 5) return 'Viele Fehlwürfe hintereinander: kurz durchatmen, Stand prüfen und den Wurf ruhig zu Ende führen. Nicht schneller werfen.';
+      if (miss >= 5) return 'Lots of misses in a row: take a breath, check your stance and follow through calmly. Do not throw faster.';
     }
-    if (m === 'double' || m === 'dr' || m === 'bob') return 'Tipp: D16 und D20 sind beliebte Lieblingsdoppel. D16 lässt sich nach einem Fehlwurf gut halbieren: 32 → 16 → 8.';
-    if (m === 'checkout' || m === 'lad') return 'Tipp: Stell dir einen geraden Rest, der mit einem Doppel geht (z. B. 32, 40, 36). Meide das Bull, wenn es einen anderen Weg gibt.';
-    if (m === 'score') return 'Tipp: Zähl nicht mit, sondern konzentrier dich nur auf den nächsten Dart. Gleicher Stand, gleicher Rhythmus.';
+    if (m === 'double' || m === 'dr' || m === 'bob') return 'Tip: D16 and D20 are popular favourite doubles. D16 halves nicely after a miss: 32 → 16 → 8.';
+    if (m === 'checkout' || m === 'lad') return 'Tip: leave an even number that finishes on a double (e.g. 32, 40, 36). Avoid the bull if there is another way.';
+    if (m === 'score') return 'Tip: do not count along, just focus on the next dart. Same stance, same rhythm.';
     return '';
   }
   EXT.after.train = box => {
@@ -215,14 +215,14 @@
       const ph = box.querySelector('.phead'); const c = box.querySelector('.coach'); if (ph && c) ph.after(c);
     } else if (T.summary && CO.plan && CO.plan.items.some(x => x.done)) {
       const P = CO.plan, next = P.items.findIndex(x => !x.done);
-      const html = `<div class="card coach"><div class="cohead"><b>${P.test ? 'Einstufung' : 'Heute empfohlen'}</b><span>${P.items.filter(x => x.done).length}/${P.items.length}</span></div>`
-        + (next >= 0 ? btn('coNext', `Weiter mit Einheit ${next + 1}: ${TM[P.items[next].mode]}`, undefined, 'big go')
-          : `<p class="cosub">${P.placed !== undefined ? `Einstufung fertig: Deine Stufe ist <b>${LV[P.placed]}</b>.` : 'Plan für heute geschafft!'}</p>`) + `</div>`;
+      const html = `<div class="card coach"><div class="cohead"><b>${P.test ? 'Placement' : 'Recommended today'}</b><span>${P.items.filter(x => x.done).length}/${P.items.length}</span></div>`
+        + (next >= 0 ? btn('coNext', `Continue with session ${next + 1}: ${TM[P.items[next].mode]}`, undefined, 'big go')
+          : `<p class="cosub">${P.placed !== undefined ? `Placement done: your level is <b>${LV[P.placed]}</b>.` : 'Today\'s plan done!'}</p>`) + `</div>`;
       box.insertAdjacentHTML('beforeend', html);
     } else if (T.sess && coLearn()) {
       const S = T.sess, card = box.querySelector('.card'); if (!card) return;
       if (CO.tipSeen !== S.date && CO_INTRO[S.mode]) {
-        card.insertAdjacentHTML('afterbegin', `<div class="cotip intro"><b>So gehst du es an</b><p>${CO_INTRO[S.mode]}</p>${btn('coTip', 'Verstanden', undefined, 'cochip on')}</div>`);
+        card.insertAdjacentHTML('afterbegin', `<div class="cotip intro"><b>How to approach it</b><p>${CO_INTRO[S.mode]}</p>${btn('coTip', 'Got it', undefined, 'cochip on')}</div>`);
       } else { const t = coLiveTip(S); if (t) { const f = card.querySelector('.foot, .row2.foot'); (f || card).insertAdjacentHTML(f ? 'beforebegin' : 'beforeend', `<div class="cotip">${t}</div>`); } }
     }
   };
@@ -230,16 +230,16 @@
   // ---------- Lernmodus: Tipps im Spiel gegen den Bot ----------
   function coGameTip(g) {
     const rem = g.p.rem, V = g.visit ? g.visit.darts : [], left = 3 - V.length;
-    if (!g.p.in) return 'Double-In: Ziel auf ein Doppel, das du gut triffst – D20 oder D16. Erst danach zählen die Punkte.';
-    if (rem > 170) return (CO.level || 0) < 2 ? 'Ziel auf die große Single-20. Landen deine Darts oft links, nimm die 19.' : 'Ziel auf T20. Wenn die 20 zugestellt ist oder du links streust, wechsel auf T19.';
+    if (!g.p.in) return 'Double-in: aim at a double you hit well – D20 or D16. Only then do points count.';
+    if (rem > 170) return (CO.level || 0) < 2 ? 'Aim at the big single 20. If your darts often land left, take the 19.' : 'Aim at T20. If the 20 is blocked or you scatter left, switch to T19.';
     const rt = route(rem, left);
-    if (rt) return rt.length === 1 ? `Jetzt das Doppel: ${routeText(rt)}. Ziel auf die Mitte des Doppels.` : `Du kannst checken: ${routeText(rt)}. Triffst du den ersten Dart nicht genau, rechne neu.`;
+    if (rt) return rt.length === 1 ? `Now the double: ${routeText(rt)}. Aim at the middle of the double.` : `You can check out: ${routeText(rt)}. If the first dart misses, recalculate.`;
     if (rem % 2 && left === 1) {
-      const s = rem - 32 >= 1 && rem - 32 <= 20 ? [rem - 32, 'D16'] : rem - 40 >= 1 && rem - 40 <= 20 ? [rem - 40, 'D20'] : [1, (rem - 1) <= 40 ? 'D' + (rem - 1) / 2 : 'einen geraden Rest'];
-      return `Ungerader Rest: Wirf eine S${s[0]}, dann bleibt ${s[1]} für die nächste Aufnahme.`;
+      const s = rem - 32 >= 1 && rem - 32 <= 20 ? [rem - 32, 'D16'] : rem - 40 >= 1 && rem - 40 <= 20 ? [rem - 40, 'D20'] : [1, (rem - 1) <= 40 ? 'D' + (rem - 1) / 2 : 'an even number'];
+      return `Odd number left: throw S${s[0]} to leave ${s[1]} for the next visit.`;
     }
-    if (rem <= 100) return 'Kein Checkout mehr in dieser Aufnahme: stell dir einen geraden Rest wie 32 oder 40 für die nächste Aufnahme.';
-    return 'Punkte machen und einen Rest unter 100 stellen, der mit zwei Darts geht (z. B. 60 oder 80).';
+    if (rem <= 100) return 'No checkout this visit: leave an even number like 32 or 40 for the next visit.';
+    return 'Score and leave a number under 100 that finishes with two darts (e.g. 60 or 80).';
   }
   EXT.after.play = box => {
     if (!coLearn() || !T.game || T.game.phase !== 'play' || T.game.turn !== 'p' || T.game.busy) return;
@@ -250,11 +250,11 @@
   EXT.after.stats = box => {
     if ((T.stab || 'over') !== 'over' || CO.level === null) return;
     const wd = coWeekDone();
-    let h = `<h2 class="sec">Trainingsziele · Stufe ${LV[CO.level]}</h2><div class="card"><div class="bars">`;
-    h += `<div class="br"><span>Woche</span><i><em class="${wd >= CO.weekGoal ? 'g' : 'y'}" style="width:${Math.min(100, wd / CO.weekGoal * 100)}%"></em></i><b>${wd}/${CO.weekGoal}</b><small>Pläne</small></div>`;
+    let h = `<h2 class="sec">Training goals · level ${LV[CO.level]}</h2><div class="card"><div class="bars">`;
+    h += `<div class="br"><span>Week</span><i><em class="${wd >= CO.weekGoal ? 'g' : 'y'}" style="width:${Math.min(100, wd / CO.weekGoal * 100)}%"></em></i><b>${wd}/${CO.weekGoal}</b><small>plans</small></div>`;
     Object.keys(CO_AREAS).forEach(k => {
       const a = coArea(k), r = a.v === null ? 0 : Math.min(100, a.ratio * 100);
-      h += `<div class="br"><span>${a.A.n}</span><i><em class="${r >= 100 ? 'g' : r >= 70 ? 'y' : 'r'}" style="width:${r}%"></em></i><b>${a.v === null ? '–' : f1(a.v) + a.A.u}</b><small>Ziel ${a.goal}${a.A.u}</small></div>`;
+      h += `<div class="br"><span>${a.A.n}</span><i><em class="${r >= 100 ? 'g' : r >= 70 ? 'y' : 'r'}" style="width:${r}%"></em></i><b>${a.v === null ? '–' : f1(a.v) + a.A.u}</b><small>goal ${a.goal}${a.A.u}</small></div>`;
     });
-    box.insertAdjacentHTML('beforeend', h + `</div><div class="boardhint">Ø der letzten 5 Ergebnisse je Bereich. Der schwächste Bereich kommt in deinen Tagesplan.</div></div>`);
+    box.insertAdjacentHTML('beforeend', h + `</div><div class="boardhint">Avg. of the last 5 results per area. Your weakest area goes into your daily plan.</div></div>`);
   };

@@ -24,7 +24,7 @@
     save();
   }
   document.getElementById('nav').addEventListener('click', e => { const b = e.target.closest('[data-route]'); if (b) act('nav', b.dataset.route); });
-  const NAV = [['home', 'Home', ICON.home], ['play', 'Spielen', ICON.play], ['train', 'Training', ICON.train], ['counter', 'Zähler', ICON.counter], ['stats', 'Stats', ICON.stats]];
+  const NAV = [['home', 'Home', ICON.home], ['play', 'Play', ICON.play], ['train', 'Training', ICON.train], ['counter', 'Counter', ICON.counter], ['stats', 'Stats', ICON.stats]];
   EXT.nav.forEach(x => NAV.splice(NAV.length - 1, 0, [x.route, x.label, x.icon || ICON.play]));
   document.getElementById('nav').innerHTML = NAV.map(([r, l, i]) => `<button data-route="${r}">${i}<span>${l}</span></button>`).join('');
   window.renderTrainer = render;

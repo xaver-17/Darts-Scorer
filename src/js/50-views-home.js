@@ -9,18 +9,29 @@
     if (!list.length) return '';
     return `<h2 class="sec">${title}</h2><div class="quickstart">` + list.map(x => btn('nav', `<b>${x.title}</b><small>${x.sub || ''}</small>`, x.route)).join('') + `</div>`;
   }
+  // Legs: 1/2/3/5 oder eigene Zahl; Sets 1–5. Wird auch vom Mehrspieler-Modul genutzt (window.legsSetsHTML)
+  function legsSetsHTML(s, aLegs, aCustom, aSets, field) {
+    const custom = s.legsCustom || ![1, 2, 3, 5].includes(s.legs);
+    let h = `<div class="setlabel">Sets (First to)</div><div class="seg">${[1, 2, 3, 4, 5].map(n => btn(aSets, n, n, '', (s.sets || 1) === n)).join('')}</div>`;
+    h += `<div class="setlabel">Legs${(s.sets || 1) > 1 ? ' per set' : ''} (First to)</div><div class="seg">${[1, 2, 3, 5].map(n => btn(aLegs, n, n, '', !custom && s.legs === n)).join('')}${btn(aCustom, 'Custom', undefined, '', custom)}</div>`;
+    if (custom) h += `<div class="numin"><input type="number" inputmode="numeric" min="1" max="99" data-set="${field}" value="${s.legs}" aria-label="Legs"><span>legs to win${(s.sets || 1) > 1 ? ' a set' : ''}</span></div>`;
+    return h;
+  }
+  window.legsSetsHTML = legsSetsHTML;
+  const fmtFormat = (sets, legs) => sets > 1 ? `First to ${sets} sets (${legs} leg${legs > 1 ? 's' : ''} each)` : `First to ${legs} leg${legs > 1 ? 's' : ''}`;
+  window.fmtFormat = fmtFormat;
   function viewSetup() {
     const s = T.set;
     if (T.route === 'play') {
       s.mode = 'game';
-      let h = phead('Spielen', 'Du gegen den Darts-Bot') + `<div class="card">`;
+      let h = phead('Spielen', 'Gegen den Bot oder mit mehreren Spielern') + `<div class="seg oppseg">${btn('nav', 'Gegen Bot', 'play', '', true)}${window.X01 ? btn('nav', 'Mehrspieler', 'x01') : ''}</div><div class="card">`;
       h += `<div class="setlabel">Punkte</div><div class="seg">${btn('start', '301', 301, '', s.start === 301)}${btn('start', '501', 501, '', s.start === 501)}</div>`;
       h += `<div class="setlabel">Einwurf</div><div class="seg">${btn('din', 'Single-In', 0, '', !s.din)}${btn('din', 'Double-In', 1, '', s.din)}</div>`;
       h += `<div class="setlabel">Bot-Stärke</div><div class="lvl">`;
       BOT.forEach((b, i) => { h += btn('bot', `<b>${i + 1}</b><small>${b.n}</small><small>Ø ~${b.a}</small>`, i, '', s.bot === i); });
-      h += `</div><div class="setlabel">Legs (First to)</div><div class="seg">${[1, 2, 3, 5].map(n => btn('legs', n, n, '', s.legs === n)).join('')}</div>`;
+      h += `</div>` + legsSetsHTML(s, 'legs', 'legsCustom', 'sets', 'legs');
       h += voiceToggle();
-      h += `<div class="desc">${s.start} · ${s.din ? 'Double-In' : 'Single-In'} · Double-Out · gegen Bot „${BOT[s.bot].n}“ (Ø ~${BOT[s.bot].a}) · First to ${s.legs} Leg${s.legs > 1 ? 's' : ''}. Du trägst jeden Pfeil einzeln ein – per Tippen auf die Scheibe oder über Single/Double/Triple + Zahl. Nach deinen 3 Pfeilen wirft der Bot.</div>`;
+      h += `<div class="desc">${s.start} · ${s.din ? 'Double-In' : 'Single-In'} · Double-Out · gegen Bot „${BOT[s.bot].n}“ (Ø ~${BOT[s.bot].a}) · ${fmtFormat(s.sets || 1, s.legs)}. Du trägst jeden Pfeil einzeln ein – per Tippen auf die Scheibe oder über Single/Double/Triple + Zahl. Nach deinen 3 Pfeilen wirft der Bot.</div>`;
       return h + `<button class="big go" data-a="go">Spiel starten</button></div>` + extLinks(EXT.playLinks, 'Weitere Spielmodi');
     }
     if (s.mode === 'game') s.mode = 'hit';

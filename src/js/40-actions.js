@@ -10,7 +10,9 @@
       case 'bot': s.bot = n; break;
       case 'start': s.start = n; break;
       case 'din': s.din = v === '1'; break;
-      case 'legs': s.legs = n; break;
+      case 'legs': s.legs = n; s.legsCustom = false; break;
+      case 'legsCustom': s.legsCustom = true; if (s.legs <= 5 && s.legs !== 4) s.legs = 7; break;
+      case 'sets': s.sets = n; break;
       case 'perDart': s.perDart = v === '1'; break;
       case 'pdHit': taskDart(true); break;
       case 'pdMiss': taskDart(false); break;
@@ -52,6 +54,7 @@
       case 's25': buttonDart(25, 1); T.mult = 1; T.zoom = null; break;
       case 'bull': buttonDart(25, 2); T.mult = 1; T.zoom = null; break;
       case 'miss': buttonDart(0, 0); T.mult = 1; T.zoom = null; break;
+      case 'inp': T.set.inp = v; T.zoom = null; break;
       case 'zoomOff': T.zoom = null; break;
       case 'zoomSet': T.set.zoom = v === '1'; T.zoom = null; break;
       case 'hm': T.hm = v; break;
@@ -63,7 +66,7 @@
         unlockVoice();
         if (v === '501' || v === '301di') {
           T.route = 'play';
-          if (!T.game) { Object.assign(s, { mode: 'game', start: v === '501' ? 501 : 301, din: v === '301di', bot: 2, legs: 1 }); start(); }
+          if (!T.game) { Object.assign(s, { mode: 'game', start: v === '501' ? 501 : 301, din: v === '301di', bot: 2, legs: 1, sets: 1 }); start(); }
         } else {
           T.route = 'train';
           if (!T.sess) { s.mode = v; T.summary = null; start(); }
@@ -85,6 +88,11 @@
     }
     render();
   }
+  // Freie Zahl-Eingaben (z.B. Legs > 5): data-set="legs" schreibt in T.set
+  el.addEventListener('change', e => {
+    const i = e.target.closest('input[data-set]'); if (!i) return;
+    const v = Math.max(1, Math.min(99, Math.round(+i.value) || 1)); T.set[i.dataset.set] = v; render();
+  });
   el.addEventListener('click', e => {
     const svg = e.target.closest('svg[data-board]'); if (svg) { boardTap(e, svg); return; }
     const b = e.target.closest('[data-a]'); if (b && !b.disabled) { act(b.dataset.a, b.dataset.v); return; }

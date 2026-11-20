@@ -5,6 +5,5 @@
     el.after(box);
     X01.mount(box, { onBack: () => act('nav', 'play') });
     EXT.panels.x01 = { el: box, render: () => X01.render(), nav: 'play' };
-    EXT.playLinks.push({ route: 'x01', title: 'X01 Mehrspieler', sub: 'Mehrere Spieler, ein Gerät' });
     EXT.dataKeys.push('dartsX01');
   }

@@ -222,3 +222,31 @@
     .datacard, .muhelp { max-width: 760px; }
   }
   @media (min-width: 1400px) { .app { max-width: 1320px; } }
+/* Gegner-Umschalter (Bot / Mehrspieler) und freie Zahl-Eingabe */
+.oppseg { margin: 0 0 12px; }
+.numin { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.numin input { width: 84px; padding: 10px 12px; font: inherit; font-size: 16px; font-weight: 700; color: var(--ink); background: var(--soft);
+  border: 1px solid var(--acc); border-radius: var(--r); }
+.numin span { color: var(--mute); font-size: 14px; }
+/* Spiel ohne Scrollen: Handy zeigt entweder Scheibe oder Tastatur */
+.inpseg { display: none; }
+@media (max-width: 899px) {
+  .gamecard { padding-top: 10px !important; padding-bottom: 10px !important; }
+  .gamecard .gboard { margin-top: 6px; }
+  .gamecard .gp { padding: 6px 8px; }
+  .gamecard .grem { font-size: 42px; }
+  .gamecard .glast { font-size: 12px; }
+  .gamecard .inpseg { display: flex; margin-top: 8px; }
+  .gamecard .inpseg button { padding: 7px 0 !important; font-size: 14px; }
+  .gamecard .boardwrap { margin-top: 6px; max-width: min(380px, max(230px, calc(100dvh - 440px))); }
+  .gamecard .boardhint, .gamecard .zoomlink, .gamecard .cotip { display: none; }
+  .gamecard .slots { margin-top: 8px; }
+  .gamecard .slots div { padding: 8px 0; }
+  .gamecard .row2.foot { margin-top: 8px; }
+  .gamecard .row2.foot .mid { padding: 10px 0; }
+  .inp-board .mult, .inp-board .numgrid, .inp-board .numrow { display: none !important; }
+  .inp-keys:not(.busy) .gleft { display: none; }
+}
+  .tophead > span:first-child { display: inline-flex; align-items: center; gap: 8px; }
+  .tophead .vbtn { margin: 0; padding: 3px 6px; font-size: 0; gap: 0; }
+  .gamecard .tophead { white-space: nowrap; font-size: 12px; align-items: center; }

@@ -16,21 +16,22 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: system-ui, -apple-system, sans-serif; background: var(--soft); color: var(--ink);
-         min-height: 100vh; display: flex; justify-content: center; padding: 20px 20px 40px; }
+         min-height: 100vh; display: flex; justify-content: center; padding: 10px 16px 40px; }
   .app { width: 100%; max-width: 420px; text-align: center; }
   .label { font-size: 14px; color: var(--mute); text-transform: uppercase; letter-spacing: .1em; }
   .modebadge { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; font-size: 12px;
                background: var(--soft); color: var(--ink2); letter-spacing: .05em; }
-  .total { font-size: 96px; font-weight: 800; line-height: 1.1; margin: 8px 0 4px; font-variant-numeric: tabular-nums; }
-  .sub { font-size: 14px; color: var(--mute); margin-bottom: 22px; }
-  .choices { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px; }
-  .choice { padding: 16px 0; font-size: 22px; font-weight: 700; border-radius: 12px; border: 2px solid var(--line);
+  .total { font-size: 60px; font-weight: 800; line-height: 1; margin: 2px 0 2px; font-variant-numeric: tabular-nums; }
+  .sub { font-size: 13px; color: var(--mute); margin-bottom: 10px; }
+  .choices { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 8px; }
+  .choice { padding: 9px 0; font-size: 20px; font-weight: 700; border-radius: 12px; border: 2px solid var(--line);
             background: var(--card); color: var(--ink); cursor: pointer; }
   .choice.active { background: var(--acc); border-color: var(--acc); }
   .choice:disabled { opacity: .35; cursor: not-allowed; }
   .choice.active:disabled { opacity: 1; }
-  .lockhint { font-size: 12px; color: var(--mute); margin: -8px 0 12px; min-height: 16px; }
-  .add { width: 100%; padding: 28px; font-size: 32px; font-weight: 800; border: none; border-radius: 18px;
+  .lockhint { font-size: 12px; color: var(--mute); margin: -2px 0 6px; min-height: 0; }
+  .lockhint:empty { display: none; }
+  .add { width: 100%; padding: 16px; font-size: 28px; font-weight: 800; border: none; border-radius: 18px;
          background: #16a34a; color: #fff; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
          transition: transform .08s; }
   .add:active { transform: scale(.97); }
@@ -43,26 +44,37 @@
   .confirm .yes { background: #ef4444; color: #fff; border: none; }
   .log { margin-top: 14px; font-size: 14px; color: var(--mute); min-height: 20px; word-break: break-word; }
 
-  h2 { font-size: 14px; color: var(--mute); text-transform: uppercase; letter-spacing: .1em; margin: 26px 0 10px; font-weight: 600; }
+  h2 { font-size: 13px; color: var(--mute); text-transform: uppercase; letter-spacing: .1em; margin: 26px 0 10px; font-weight: 600; }
+  h2.fh { margin: 12px 0 6px; }
   .done-count { color: #22c55e; }
 
-  .tapmode { display: flex; gap: 6px; margin-bottom: 10px; }
-  .tapmode button { flex: 1; padding: 10px; font-size: 15px; font-weight: 700; border-radius: 10px; border: 1px solid var(--line);
+  .tapmode { display: flex; gap: 6px; margin-bottom: 8px; }
+  .tapmode button { flex: 1; padding: 8px 4px; font-size: 14px; font-weight: 700; border-radius: 10px; border: 1px solid var(--line);
                     background: transparent; color: var(--ink2); cursor: pointer; }
   .tapmode button.active { background: var(--acc); border-color: var(--acc); color: #fff; }
   .tapmode button.active.lock { background: #ef4444; border-color: #ef4444; }
+  .tapmode button.active.extra { background: #f59e0b; border-color: #f59e0b; color: #111; }
 
-  .numbers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .num { position: relative; padding: 14px 0 22px; font-size: 22px; font-weight: 700; border-radius: 12px;
+  .numbers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .num { position: relative; padding: 9px 0 17px; font-size: 20px; font-weight: 700; border-radius: 12px;
          border: 2px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; overflow: hidden;
          user-select: none; -webkit-tap-highlight-color: transparent; transition: background .15s, transform .08s; }
   .num:active { transform: scale(.95); }
-  .num .dots { position: absolute; left: 0; right: 0; bottom: 6px; display: flex; justify-content: center; gap: 4px; }
-  .num .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--soft); }
+  .num .dots { position: absolute; left: 0; right: 0; bottom: 5px; display: flex; justify-content: center; gap: 3px; }
+  .num .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--soft); }
   .num .dot.on { background: #f59e0b; }
   .num.part { border-color: #f59e0b; }
-  .num.done { background: #16a34a; border-color: #16a34a; color: #fff; }
+  .num.done { background: #4ade80; border-color: #4ade80; color: #052e16; }
   .num.done .dot { background: #052e16; }
+  .num .xb { position: absolute; top: 3px; right: 4px; font-size: 11px; font-weight: 800; color: #f59e0b; }
+  .num.done .xb { color: #111; }
+  .numbers.extramode .num.done { border-color: #f59e0b; border-style: dashed; }
+  .numbers.extramode .num:not(.done) { opacity: .45; }
+  .xlist { display: grid; gap: 6px; }
+  .xrow { display: grid; grid-template-columns: 34px 1fr 30px; align-items: center; gap: 8px; font-size: 14px; }
+  .xrow b { text-align: right; }
+  .xbar { height: 10px; border-radius: 5px; background: var(--soft); overflow: hidden; }
+  .xbar i { display: block; height: 100%; background: #f59e0b; }
   .num.wide { grid-column: span 2; }
   .num.locked { background: var(--card); border-color: rgba(248,113,113,.45); color: var(--mute); }
   .num.locked .dots { opacity: .3; }
@@ -70,7 +82,7 @@
                        font-size: 40px; color: #ef4444; opacity: .85; }
   .numbers.lockmode .num:not(.locked) { border-style: dashed; }
 
-  details { margin-top: 18px; background: var(--card); border-radius: 14px; text-align: left; }
+  details { margin-top: 14px; background: var(--card); border-radius: 14px; text-align: left; }
   summary { padding: 14px 16px; font-weight: 700; cursor: pointer; list-style: none; display: flex; justify-content: space-between; }
   summary::-webkit-details-marker { display: none; }
   summary::after { content: '▾'; color: var(--mute); }
@@ -461,6 +473,34 @@ table.multi td, table.multi th { text-align: left; }
     .datacard, .muhelp { max-width: 760px; }
   }
   @media (min-width: 1400px) { .app { max-width: 1320px; } }
+/* Gegner-Umschalter (Bot / Mehrspieler) und freie Zahl-Eingabe */
+.oppseg { margin: 0 0 12px; }
+.numin { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.numin input { width: 84px; padding: 10px 12px; font: inherit; font-size: 16px; font-weight: 700; color: var(--ink); background: var(--soft);
+  border: 1px solid var(--acc); border-radius: var(--r); }
+.numin span { color: var(--mute); font-size: 14px; }
+/* Spiel ohne Scrollen: Handy zeigt entweder Scheibe oder Tastatur */
+.inpseg { display: none; }
+@media (max-width: 899px) {
+  .gamecard { padding-top: 10px !important; padding-bottom: 10px !important; }
+  .gamecard .gboard { margin-top: 6px; }
+  .gamecard .gp { padding: 6px 8px; }
+  .gamecard .grem { font-size: 42px; }
+  .gamecard .glast { font-size: 12px; }
+  .gamecard .inpseg { display: flex; margin-top: 8px; }
+  .gamecard .inpseg button { padding: 7px 0 !important; font-size: 14px; }
+  .gamecard .boardwrap { margin-top: 6px; max-width: min(380px, max(230px, calc(100dvh - 440px))); }
+  .gamecard .boardhint, .gamecard .zoomlink, .gamecard .cotip { display: none; }
+  .gamecard .slots { margin-top: 8px; }
+  .gamecard .slots div { padding: 8px 0; }
+  .gamecard .row2.foot { margin-top: 8px; }
+  .gamecard .row2.foot .mid { padding: 10px 0; }
+  .inp-board .mult, .inp-board .numgrid, .inp-board .numrow { display: none !important; }
+  .inp-keys:not(.busy) .gleft { display: none; }
+}
+  .tophead > span:first-child { display: inline-flex; align-items: center; gap: 8px; }
+  .tophead .vbtn { margin: 0; padding: 3px 6px; font-size: 0; gap: 0; }
+  .gamecard .tophead { white-space: nowrap; font-size: 12px; align-items: center; }
   /* ---- PWA: Platz für Notch / Statusleiste, wenn die App vom Home-Bildschirm startet ---- */
   body { padding-top: env(safe-area-inset-top); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
   html, body { overscroll-behavior-y: none; }
@@ -539,7 +579,7 @@ table.multi td, table.multi th { text-align: left; }
   .xprow .xsm { width: 40px; flex: none; padding: 10px 0; }
   .xboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-top: 10px; }
   .xp { background: var(--soft); border: 2px solid transparent; border-radius: 14px; padding: 10px; text-align: center; min-width: 0; }
-  .xp.act { border-color: #16a34a; }
+  .xp.act { border-color: var(--acc); }
   .xp.win { border-color: #4ade80; }
   .xpname { font-size: 13px; color: var(--mute); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .xprem { font-size: 46px; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
@@ -551,6 +591,26 @@ table.multi td, table.multi th { text-align: left; }
   .x01 table.cmp th, .x01 table.cmp td { text-align: center; } .x01 table.cmp td:first-child { text-align: left; }
   .xprow button.xsm { background: var(--soft); color: var(--ink2); border: 1px solid var(--line, var(--line)); border-radius: 10px; font-size: 15px; cursor: pointer; }
   #viewX01 .xback { display: inline-block; margin: 0 0 4px; padding: 6px 0; }
+  /* Ohne Scrollen auf dem Handy: kompakte Spielerkarten */
+  @media (max-width: 899px) {
+    #viewX01 .x01 { padding: 10px 14px; }
+    .x01 .xboard { grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 6px; }
+    .x01 .xboard.many { grid-template-columns: repeat(4, 1fr); }
+    .x01 .xp { padding: 5px 6px; }
+    .x01 .xprem { font-size: 34px; }
+    .x01 .xboard.many .xprem { font-size: 24px; }
+    .x01 .xboard.many .xpstat { display: none; }
+    .x01 .xplast { margin-top: 0; font-size: 11px; min-height: 14px; }
+    .x01 .xturn { margin-top: 6px; font-size: 14px; }
+    .x01 .slots { margin-top: 6px; }
+    .x01 .slots div { padding: 8px 0; }
+    .x01 .mult { margin-top: 6px; }
+    .x01 .mult button { padding: 8px 0 !important; }
+    .x01 .numgrid { margin-top: 6px; }
+    .x01 .numgrid .nb, .x01 .numrow .nb { padding: 11px 0 !important; }
+    .x01 .row2.foot { margin-top: 8px; }
+    .x01 .row2.foot .mid { padding: 10px 0; }
+  }
 </style>
 </head>
 <body>
@@ -1092,7 +1152,7 @@ window.DRILLS = (function () {
   const R20 = Array.from({ length: 20 }, (_, i) => i + 1);
   const MAXP = 8, MAXUNDO = 200;
 
-  let X = { set: { start: 501, out: 'double', legs: 1, players: ['Spieler 1', 'Spieler 2'] }, game: null, hist: [], mult: 1, confirm: null };
+  let X = { set: { start: 501, out: 'double', legs: 1, sets: 1, players: ['Spieler 1', 'Spieler 2'] }, game: null, hist: [], mult: 1, confirm: null };
   try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) X = Object.assign(X, s, { confirm: null }); } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(X)); } catch (e) {} };
 
@@ -1105,8 +1165,8 @@ window.DRILLS = (function () {
   function newGame() {
     const s = X.set;
     X.game = {
-      start: s.start, out: s.out, legsTo: s.legs, legNo: 1, starter: 0, cur: 0, phase: 'play',
-      players: s.players.map(n => ({ name: n.trim() || 'Spieler', rem: s.start, legs: 0, darts: 0, pts: 0, legDarts: 0, best: 0, s180: 0, hiCO: 0, last: '' })),
+      start: s.start, out: s.out, legsTo: s.legs, setsTo: s.sets || 1, setNo: 1, legNo: 1, starter: 0, cur: 0, phase: 'play',
+      players: s.players.map(n => ({ name: n.trim() || 'Spieler', rem: s.start, legs: 0, sets: 0, legTot: 0, darts: 0, pts: 0, legDarts: 0, best: 0, s180: 0, hiCO: 0, last: '' })),
       visit: [], undo: [], msg: '', legWinner: null, date: new Date().toISOString(), tl: []
     };
     X.mult = 1; X.confirm = null;
@@ -1171,21 +1231,24 @@ window.DRILLS = (function () {
   function nextPlayer() { const g = G(); P().vn = (P().vn || 0) + 1; g.visit = []; g.cur = (g.cur + 1) % g.players.length; X.mult = 1; }
 
   function legWon() {
-    const g = G(), w = P(); w.legs++; g.legWinner = g.cur;
-    g.phase = w.legs >= g.legsTo ? 'over' : 'legover';
+    const g = G(), w = P(); w.legs++; w.legTot = (w.legTot || 0) + 1; g.legWinner = g.cur; g.setWon = false;
+    if ((g.setsTo || 1) > 1 && w.legs >= g.legsTo) { w.sets = (w.sets || 0) + 1; g.setWon = true; }
+    g.phase = ((g.setsTo || 1) > 1 ? w.sets >= g.setsTo : w.legs >= g.legsTo) ? 'over' : 'legover';
     if (g.phase === 'over') recordGame();
   }
   function nextLeg() {
     const g = G(); if (g.phase !== 'legover') return;
-    g.legNo++; g.starter = (g.starter + 1) % g.players.length; g.cur = g.starter;
+    g.legNo++;
+    if (g.setWon) { g.players.forEach(p => { p.legs = 0; }); g.setNo = (g.setNo || 1) + 1; g.setWon = false; }
+    g.starter = (g.starter + 1) % g.players.length; g.cur = g.starter;
     g.players.forEach(p => { p.rem = g.start; p.legDarts = 0; p.last = ''; p.vn = 0; });
     g.visit = []; g.undo = []; g.msg = ''; g.phase = 'play'; g.legWinner = null;
   }
   function recordGame() {
     const g = G();
-    const e = { type: 'x01', sid: 'x_' + g.date, date: g.date, end: new Date().toISOString(), start: g.start, out: g.out, legsTo: g.legsTo,
+    const e = { type: 'x01', sid: 'x_' + g.date, date: g.date, end: new Date().toISOString(), start: g.start, out: g.out, legsTo: g.legsTo, setsTo: g.setsTo || 1,
       winner: g.players[g.legWinner].name,
-      players: g.players.map(p => ({ name: p.name, legs: p.legs, darts: p.darts, pts: p.pts, avg: p.darts ? p.pts / p.darts * 3 : 0, best: p.best, s180: p.s180, hiCO: p.hiCO })) };
+      players: g.players.map(p => ({ name: p.name, legs: p.legTot || p.legs, sets: p.sets || 0, darts: p.darts, pts: p.pts, avg: p.darts ? p.pts / p.darts * 3 : 0, best: p.best, s180: p.s180, hiCO: p.hiCO })) };
     X.hist.push(e);
     if (window.DartsStats) DartsStats.x01Done(e, g.tl || []);   // Würfe in die Statistik-Datenbank
   }
@@ -1201,7 +1264,9 @@ window.DRILLS = (function () {
     switch (a) {
       case 'xStart': s.start = n; break;
       case 'xOut': s.out = v; break;
-      case 'xLegs': s.legs = n; break;
+      case 'xLegs': s.legs = n; s.legsCustom = false; break;
+      case 'xLegsCustom': s.legsCustom = true; if (s.legs <= 5 && s.legs !== 4) s.legs = 7; break;
+      case 'xSets': s.sets = n; break;
       case 'xAdd': if (s.players.length < MAXP) s.players.push('Spieler ' + (s.players.length + 1)); break;
       case 'xDel': if (s.players.length > 1) s.players.splice(n, 1); break;
       case 'xUp': if (n > 0) s.players.splice(n - 1, 0, s.players.splice(n, 1)[0]); break;
@@ -1227,10 +1292,10 @@ window.DRILLS = (function () {
   // ---------- Ansichten ----------
   function viewSetup() {
     const s = X.set;
-    let h = (opts.onBack ? btn('xBack', '← Zurück', undefined, 'link xback') : '') + `<div class="phead"><h1>X01</h1><p>Mehrere Spieler an einem Gerät</p></div><div class="card">`;
+    let h = `<div class="phead"><h1>Spielen</h1><p>Gegen den Bot oder mit mehreren Spielern</p></div>` + (opts.onBack ? `<div class="seg oppseg">${btn('xBack', 'Gegen Bot')}${btn('xNo', 'Mehrspieler', undefined, '', true)}</div>` : '') + `<div class="card">`;
     h += `<div class="setlabel">Punkte</div><div class="seg">${[301, 501, 701].map(v => btn('xStart', v, v, '', s.start === v)).join('')}</div>`;
     h += `<div class="setlabel">Check-out</div><div class="seg">${btn('xOut', 'Double-Out', 'double', '', s.out === 'double')}${btn('xOut', 'Single-Out', 'single', '', s.out === 'single')}</div>`;
-    h += `<div class="setlabel">First to … Legs</div><div class="seg">${[1, 2, 3, 5].map(v => btn('xLegs', v, v, '', s.legs === v)).join('')}</div>`;
+    h += window.legsSetsHTML ? window.legsSetsHTML(s, 'xLegs', 'xLegsCustom', 'xSets', 'xlegs') : `<div class="setlabel">First to … Legs</div><div class="seg">${[1, 2, 3, 5].map(v => btn('xLegs', v, v, '', s.legs === v)).join('')}</div>`;
     h += `<div class="setlabel">Spieler (Reihenfolge = Wurfreihenfolge)</div><div class="xplist">`;
     s.players.forEach((p, i) => {
       h += `<div class="xprow"><span class="xpn">${i + 1}</span><input data-p="${i}" value="${esc(p)}" maxlength="20" aria-label="Name Spieler ${i + 1}">`
@@ -1239,19 +1304,19 @@ window.DRILLS = (function () {
     });
     h += `</div>`;
     if (s.players.length < MAXP) h += btn('xAdd', '+ Spieler hinzufügen', undefined, 'link');
-    h += `<div class="desc">${s.start} · ${s.out === 'double' ? 'Double-Out' : 'Single-Out'} · ${s.players.length} Spieler · First to ${s.legs} Leg${s.legs > 1 ? 's' : ''}. Pfeile werden einzeln eingetragen.</div>`;
+    h += `<div class="desc">${s.start} · ${s.out === 'double' ? 'Double-Out' : 'Single-Out'} · ${s.players.length} Spieler · ${window.fmtFormat ? window.fmtFormat(s.sets || 1, s.legs) : 'First to ' + s.legs + ' Legs'}. Pfeile werden einzeln eingetragen.</div>`;
     h += `<button class="big go" data-a="xGo">Spiel starten</button>`;
     return h + `</div>`;
   }
 
   function scoreboard() {
     const g = G();
-    return `<div class="xboard">${g.players.map((p, i) => {
+    return `<div class="xboard${g.players.length > 4 ? ' many' : ''}">${g.players.map((p, i) => {
       const act = i === g.cur && g.phase === 'play';
       const rem = act ? remNow() : p.rem;
       const avg = p.darts ? p.pts / p.darts * 3 : 0;
       return `<div class="xp${act ? ' act' : ''}${g.legWinner === i ? ' win' : ''}">
-        <div class="xpname">${esc(p.name)}${g.legsTo > 1 ? ` <small>· Legs ${p.legs}</small>` : ''}</div>
+        <div class="xpname">${esc(p.name)}${(g.setsTo || 1) > 1 ? ` <small>· Sets ${p.sets || 0}</small>` : ''}${g.legsTo > 1 || (g.setsTo || 1) > 1 ? ` <small>· Legs ${p.legs}</small>` : ''}</div>
         <div class="xprem">${rem}</div>
         <div class="xpstat">Ø ${f1(avg)} · ${p.legDarts} Darts</div>
         <div class="xplast">${esc(p.last) || '&nbsp;'}</div></div>`;
@@ -1261,7 +1326,7 @@ window.DRILLS = (function () {
   function viewGame() {
     const g = G(), p = P();
     let h = `<div class="card x01">`;
-    h += `<div class="tophead"><span>${g.start} · ${g.out === 'double' ? 'Double-Out' : 'Single-Out'}</span><span>Leg ${g.legNo}${g.legsTo > 1 ? ' · First to ' + g.legsTo : ''}</span></div>`;
+    h += `<div class="tophead"><span>${g.start} · ${g.out === 'double' ? 'Double-Out' : 'Single-Out'}</span><span>${(g.setsTo || 1) > 1 ? 'Set ' + (g.setNo || 1) + ' · ' : ''}Leg ${g.legNo}${g.legsTo > 1 || (g.setsTo || 1) > 1 ? ' · ' + (window.fmtFormat ? window.fmtFormat(g.setsTo || 1, g.legsTo) : 'First to ' + g.legsTo) : ''}</span></div>`;
     h += scoreboard();
     if (g.phase === 'play') {
       const V = g.visit, m = X.mult || 1, rem = remNow();
@@ -1274,10 +1339,11 @@ window.DRILLS = (function () {
       h += `<div class="numrow">${btn('x25', '25', undefined, 'nb')}${btn('xBull', 'Bull', undefined, 'nb bullb')}${btn('xMiss', 'Miss / 0', undefined, 'nb missb')}</div>`;
     } else {
       const w = g.players[g.legWinner];
-      h += `<div class="result win">${esc(w.name)} ${g.phase === 'over' ? 'gewinnt das Spiel! 🏆' : 'gewinnt das Leg! 🎯'}</div>`;
+      h += `<div class="result win">${esc(w.name)} ${g.phase === 'over' ? 'gewinnt das Spiel! 🏆' : g.setWon ? 'gewinnt das Set! 🎯' : 'gewinnt das Leg! 🎯'}</div>`;
+      if (g.players.length > 1 && (g.setsTo || 1) > 1) h += `<div class="live">Sets: ${g.players.map(x => esc(x.name) + ' ' + (x.sets || 0)).join(' · ')}</div>`;
       if (g.players.length > 1 && g.legsTo > 1) h += `<div class="live">Legs: ${g.players.map(x => esc(x.name) + ' ' + x.legs).join(' · ')}</div>`;
       h += statsTable(g);
-      if (g.phase === 'legover') h += `<button class="big go" data-a="xNextLeg">Nächstes Leg</button>`;
+      if (g.phase === 'legover') h += `<button class="big go" data-a="xNextLeg">${g.setWon ? 'Nächstes Set' : 'Nächstes Leg'}</button>`;
       else h += `<div class="row2">${btn('xAgain', 'Neues Spiel', undefined, 'mid')}${btn('xClose', 'Zu den Einstellungen', undefined, 'mid')}</div>`;
     }
     if (X.confirm === 'quit') h += `<div class="confirmbox"><p>Spiel abbrechen? Es wird nicht gespeichert.</p><div class="row2">${btn('xNo', 'Weiterspielen', undefined, 'mid')}${btn('xQuitYes', 'Abbrechen', undefined, 'mid redb')}</div></div>`;
@@ -1301,6 +1367,7 @@ window.DRILLS = (function () {
     el = container; opts = o || {};
     el.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && !b.disabled) act(b.dataset.a, b.dataset.v); });
     el.addEventListener('input', e => { const i = e.target.closest('input[data-p]'); if (i) { X.set.players[+i.dataset.p] = i.value; save(); } });
+    el.addEventListener('change', e => { const i = e.target.closest('input[data-set="xlegs"]'); if (i) { X.set.legs = Math.max(1, Math.min(99, Math.round(+i.value) || 1)); render(); } });
   }
 
   // Zum Testen und für Stats: reine Logik zugänglich machen
@@ -1327,18 +1394,35 @@ window.DRILLS = (function () {
   <div class="lockhint" id="lockhint"></div>
   <button class="add" id="add">+1</button>
 
-  <h2>Felder · <span class="done-count" id="doneCount">0</span> / <span id="activeCount">22</span> abgeschlossen</h2>
+  <h2 class="fh">Felder · <span class="done-count" id="doneCount">0</span> / <span id="activeCount">22</span> abgeschlossen</h2>
   <div class="tapmode">
     <button id="tapHit" class="active">🎯 Treffen</button>
+    <button id="tapExtra" class="extra">+ Extra</button>
     <button id="tapLock" class="lock">✕ Sperren</button>
   </div>
   <div class="numbers" id="numbers"></div>
+  <div class="row">
+    <button id="undo">↶ Rückgängig</button>
+    <button id="reset">Runde zurücksetzen</button>
+  </div>
+  <div class="confirm" id="confirm">
+    <p>Aktuelle Runde (Summe, Felder, Sperren) zurücksetzen?</p>
+    <div class="row" style="margin-top:0">
+      <button id="no">Abbrechen</button>
+      <button class="yes" id="yes">Ja, zurücksetzen</button>
+    </div>
+  </div>
+  <div class="banner" id="banner"></div>
+  <div class="log" id="log"></div>
 
   <details id="settings">
     <summary>⚙️ Einstellungen</summary>
     <div class="setbody">
       <div class="setlabel">Wurfart</div>
       <div class="seg" id="modeSeg"></div>
+
+      <div class="setlabel">Treffer pro Zahl (1–20)</div>
+      <div class="seg" id="needSeg"></div>
 
       <div class="two">
         <div><div class="setlabel">25 treffen</div><div class="seg" data-field="25"></div></div>
@@ -1358,20 +1442,6 @@ window.DRILLS = (function () {
     </div>
   </details>
 
-  <div class="row">
-    <button id="undo">↶ Rückgängig</button>
-    <button id="reset">Runde zurücksetzen</button>
-  </div>
-  <div class="confirm" id="confirm">
-    <p>Aktuelle Runde (Summe, Felder, Sperren) zurücksetzen?</p>
-    <div class="row" style="margin-top:0">
-      <button id="no">Abbrechen</button>
-      <button class="yes" id="yes">Ja, zurücksetzen</button>
-    </div>
-  </div>
-  <div class="banner" id="banner"></div>
-  <div class="log" id="log"></div>
-
   <h2>Ergebnisse</h2>
   <div class="filter" id="filter"></div>
   <div id="results"></div>
@@ -1382,6 +1452,12 @@ window.DRILLS = (function () {
       <button id="no2">Abbrechen</button>
       <button class="yes" id="yes2">Ja, löschen</button>
     </div>
+  </div>
+
+  <h2>Extra-Treffer</h2>
+  <div class="chartbox" style="padding:12px 14px">
+    <div id="extras"></div>
+    <div class="chartnote">Zahlen, die du geworfen hast, obwohl sie schon abgeschlossen waren</div>
   </div>
 
   <h2>Verlauf</h2>
@@ -1397,12 +1473,12 @@ window.DRILLS = (function () {
 <script>
   const FIELDS = [...Array.from({ length: 20 }, (_, i) => i + 1), 25, 50];
   const MODES = { N: 'Normal', D: 'Doppel', T: 'Triple' };
-  let step = 1, history = [], need = { 25: 3, 50: 3 }, results = [];
+  let step = 1, history = [], need = { 25: 3, 50: 3, n: 3 }, results = [];
   let mode = 'N', inPlay = [...FIELDS], locked = [], tap = 'hit', filter = 'all';
   try {
     const s = JSON.parse(localStorage.getItem('zaehler3') || 'null');
     if (s) {
-      step = s.step || 1; history = s.history || []; need = s.need || need; results = s.results || [];
+      step = s.step || 1; history = s.history || []; need = Object.assign(need, s.need || {}); results = s.results || [];
       mode = s.mode || 'N'; inPlay = s.inPlay || inPlay; locked = s.locked || []; filter = s.filter || 'all';
     }
   } catch (e) {}
@@ -1412,7 +1488,8 @@ window.DRILLS = (function () {
 
   const $ = id => document.getElementById(id);
   const choices = $('choices'), numbers = $('numbers');
-  const req = k => (k === 25 || k === 50) ? need[k] : 3;
+  const req = k => (k === 25 || k === 50) ? need[k] : (need.n || 3);
+  const extrasOf = k => history.filter(h => h.t === 'extra' && h.k === k).length;
   const hits = k => Math.min(req(k), history.filter(h => h.t === 'hit' && h.k === k).length);
   const fmt = x => x.toLocaleString('de-DE', { maximumFractionDigits: 2 });
   const adds = () => history.filter(h => h.t === 'add');
@@ -1430,6 +1507,20 @@ window.DRILLS = (function () {
   // Treffen / Sperren
   $('tapHit').onclick = () => { tap = 'hit'; render(); };
   $('tapLock').onclick = () => { tap = 'lock'; render(); };
+  $('tapExtra').onclick = () => { tap = tap === 'extra' ? 'hit' : 'extra'; render(); };
+
+  // Treffer pro Zahl 1–5 (für 1–20)
+  const trimHits = (k, n) => {
+    let extra = history.filter(h => h.t === 'hit' && h.k === k).length - n;
+    for (let i = history.length - 1; i >= 0 && extra > 0; i--)
+      if (history[i].t === 'hit' && history[i].k === k) { history.splice(i, 1); extra--; }
+  };
+  [1, 2, 3, 4, 5].forEach(n => {
+    const b = document.createElement('button');
+    b.textContent = n + '×';
+    b.onclick = () => { need.n = n; FIELDS.filter(k => k <= 20).forEach(k => trimHits(k, n)); render(); checkDone(); };
+    $('needSeg').appendChild(b);
+  });
 
   // Wurfart
   Object.entries(MODES).forEach(([k, v]) => {
@@ -1442,16 +1533,10 @@ window.DRILLS = (function () {
   // 25/50 Anzahl
   document.querySelectorAll('.seg[data-field]').forEach(seg => {
     const k = +seg.dataset.field;
-    [1, 2, 3].forEach(n => {
+    [1, 2, 3, 4, 5].forEach(n => {
       const b = document.createElement('button');
-      b.textContent = n + '×';
-      b.onclick = () => {
-        need[k] = n;
-        let extra = history.filter(h => h.t === 'hit' && h.k === k).length - n;
-        for (let i = history.length - 1; i >= 0 && extra > 0; i--)
-          if (history[i].t === 'hit' && history[i].k === k) { history.splice(i, 1); extra--; }
-        render(); checkDone();
-      };
+      b.textContent = n;
+      b.onclick = () => { need[k] = n; trimHits(k, n); render(); checkDone(); };
       seg.appendChild(b);
     });
   });
@@ -1486,6 +1571,8 @@ window.DRILLS = (function () {
     if (tap === 'lock') {
       locked = locked.includes(k) ? locked.filter(x => x !== k) : [...locked, k];
       render(); checkDone();
+    } else if (tap === 'extra') {
+      if (!locked.includes(k) && hits(k) >= req(k)) { history.push({ t: 'extra', k }); render(); }
     } else if (!locked.includes(k) && hits(k) < req(k)) {
       history.push({ t: 'hit', k }); render(); checkDone();
     }
@@ -1498,8 +1585,10 @@ window.DRILLS = (function () {
     const total = a.reduce((s, h) => s + h.n, 0);
     const div = a.length ? a[0].n : step;
     const result = total / div;
+    const extras = {};
+    history.filter(h => h.t === 'extra').forEach(h => { extras[h.k] = (extras[h.k] || 0) + 1; });
     results.push({ date: new Date().toISOString(), total, count: a.length, div, result, mode,
-                   fields: act, n25: need[25], n50: need[50] });
+                   fields: act, n25: need[25], n50: need[50], need: need.n, extras });
     history = []; locked = []; tap = 'hit';
     showBanner('Abgeschlossen (' + MODES[mode] + ', ' + act.length + ' Felder)! ' + total + ' ÷ ' + div + ' = ' + fmt(result));
     render();
@@ -1530,6 +1619,18 @@ window.DRILLS = (function () {
             '</b> · Geteilt <b>' + fmt(list.reduce((s, r) => s + r.result, 0) / list.length) + '</b></div>';
     box.innerHTML = html;
     box.querySelectorAll('.del').forEach(b => b.onclick = () => { results.splice(+b.dataset.i, 1); render(); });
+  }
+
+  // Extra-Treffer über alle Runden (plus laufende Runde), nach Häufigkeit
+  function renderExtras() {
+    const c = {};
+    shown().forEach(r => Object.entries(r.extras || {}).forEach(([k, n]) => { c[k] = (c[k] || 0) + n; }));
+    history.filter(h => h.t === 'extra').forEach(h => { c[h.k] = (c[h.k] || 0) + 1; });
+    const list = Object.entries(c).sort((a, b) => b[1] - a[1]);
+    if (!list.length) { $('extras').innerHTML = '<div class="empty" style="padding:4px 0">Noch keine Extra-Treffer markiert. Im Zähler „+ Extra“ wählen und eine fertige Zahl antippen.</div>'; return; }
+    const max = list[0][1], tot = list.reduce((s, x) => s + x[1], 0);
+    $('extras').innerHTML = '<div class="xlist">' + list.slice(0, 10).map(([k, n]) => `<div class="xrow"><span>${k}</span><span class="xbar"><i style="width:${n / max * 100}%"></i></span><b>${n}</b></div>`).join('') + '</div>'
+      + `<div class="avg">Gesamt <b>${tot}</b> Extra-Treffer</div>`;
   }
 
   function niceMax(v) {
@@ -1585,7 +1686,9 @@ window.DRILLS = (function () {
 
     $('tapHit').classList.toggle('active', tap === 'hit');
     $('tapLock').classList.toggle('active', tap === 'lock');
+    $('tapExtra').classList.toggle('active', tap === 'extra');
     numbers.classList.toggle('lockmode', tap === 'lock');
+    numbers.classList.toggle('extramode', tap === 'extra');
 
     // Felder neu aufbauen (nur Zahlen im Spiel)
     numbers.innerHTML = '';
@@ -1596,7 +1699,8 @@ window.DRILLS = (function () {
       if (!isL && h >= r) done++;
       const b = document.createElement('button');
       b.className = 'num' + (k >= 25 ? ' wide' : '') + (isL ? ' locked' : h >= r ? ' done' : h ? ' part' : '');
-      b.innerHTML = k + '<span class="dots">' + Array.from({ length: r }, (_, j) => `<span class="dot${j < h ? ' on' : ''}"></span>`).join('') + '</span>';
+      const xn = extrasOf(k);
+      b.innerHTML = k + (xn ? `<span class="xb">+${xn}</span>` : '') + '<span class="dots">' + Array.from({ length: r }, (_, j) => `<span class="dot${j < h ? ' on' : ''}"></span>`).join('') + '</span>';
       b.onclick = () => tapField(k);
       numbers.appendChild(b);
     });
@@ -1604,6 +1708,7 @@ window.DRILLS = (function () {
     $('doneCount').textContent = done;
     $('activeCount').textContent = active().length;
 
+    [...$('needSeg').children].forEach((b, i) => b.classList.toggle('active', i + 1 === (need.n || 3)));
     document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('active', b.dataset.m === mode));
     document.querySelectorAll('.seg[data-field]').forEach(seg => {
       [...seg.children].forEach((b, i) => b.classList.toggle('active', i + 1 === need[+seg.dataset.field]));
@@ -1613,6 +1718,7 @@ window.DRILLS = (function () {
 
     $('log').textContent = a.length ? 'Verlauf: ' + a.slice(-15).map(h => '+' + h.n).join(' ') : '';
     renderResults();
+    renderExtras();
     renderChart();
     save();
   }
@@ -2230,7 +2336,7 @@ window.DRILLS = (function () {
   function newGame() {
     const s = T.set;
     T.zoom = null; T.mult = 1;
-    T.game = { start: s.start, din: s.din, bot: s.bot, legsTo: s.legs, legs: { p: 0, b: 0 }, legNo: 1, starter: 'p', turn: 'p',
+    T.game = { start: s.start, din: s.din, bot: s.bot, legsTo: s.legs, setsTo: s.sets || 1, legs: { p: 0, b: 0 }, sets: { p: 0, b: 0 }, legTot: { p: 0, b: 0 }, setNo: 1, legNo: 1, starter: 'p', turn: 'p',
                p: { rem: s.start, in: !s.din }, b: { rem: s.start, in: !s.din },
                visit: null, vis: { p: [], b: [] }, att: { p: 0, b: 0 }, pdots: [], bLast: [], legWins: [],
                last: { p: '', b: '' }, phase: 'play', undo: [], busy: false, msg: '', date: new Date().toISOString(), tl: [] };
@@ -2319,21 +2425,27 @@ window.DRILLS = (function () {
   }
   function legWon(w) {
     const g = T.game; g.legs[w]++; g.legWinner = w; g.legWins.push({ leg: g.legNo, w });
-    if (g.legs[w] >= g.legsTo) {
+    g.sets = g.sets || { p: 0, b: 0 }; g.legTot = g.legTot || { p: g.legs.p, b: g.legs.b }; g.setsTo = g.setsTo || 1;
+    if (g.setsTo > 1) g.legTot[w]++; else g.legTot = { p: g.legs.p, b: g.legs.b };
+    g.setWon = false;
+    if (g.setsTo > 1 && g.legs[w] >= g.legsTo) { g.sets[w]++; g.setWon = true; }
+    if (g.setsTo > 1 ? g.sets[w] >= g.setsTo : g.legs[w] >= g.legsTo) {
       g.phase = 'over';
       const P = pstats(g, 'p'), B = pstats(g, 'b'), sid = 'g_' + g.date, list = g.tl || [];
       TS.put({ id: sid, v: STATS_V, kind: 'game', mode: 'x01bot', level: g.bot,
         players: [{ name: 'Du', me: true }, { name: 'Bot ' + BOT[g.bot].n, bot: g.bot }],
-        cfg: { start: g.start, din: g.din, out: 'double', legsTo: g.legsTo }, startedAt: g.date, endedAt: nowIso(),
-        result: { winner: w === 'p' ? 0 : 1, legs: [g.legs.p, g.legs.b] }, totals: totalsFrom(list, 2) }, list);
-      T.hist.push({ sid, date: g.date, mode: 'game', level: g.bot, won: w === 'p', lp: g.legs.p, lb: g.legs.b, avg: P.avg, botAvg: B.avg,
+        cfg: { start: g.start, din: g.din, out: 'double', legsTo: g.legsTo, setsTo: g.setsTo }, startedAt: g.date, endedAt: nowIso(),
+        result: { winner: w === 'p' ? 0 : 1, legs: [g.legTot.p, g.legTot.b], sets: [g.sets.p, g.sets.b] }, totals: totalsFrom(list, 2) }, list);
+      T.hist.push({ sid, date: g.date, mode: 'game', level: g.bot, won: w === 'p', lp: g.legTot.p, lb: g.legTot.b, sp: g.sets.p, sb: g.sets.b, setsTo: g.setsTo, avg: P.avg, botAvg: B.avg,
                     start: g.start, din: g.din, best: P.best, hiCO: P.hiCO, P, B,
                     dots: g.pdots.filter(d => d.x !== null && d.x !== undefined).map(d => [d.x, d.y, d.l, d.rb, d.att ? 1 : 0, d.aim === undefined ? null : d.aim]) });
       T.filter = 'game';
     } else g.phase = 'legover';
   }
   function nextLeg() {
-    const g = T.game; g.legNo++; g.starter = g.starter === 'p' ? 'b' : 'p';
+    const g = T.game; g.legNo++;
+    if (g.setWon) { g.legs = { p: 0, b: 0 }; g.setNo = (g.setNo || 1) + 1; g.setWon = false; }
+    g.starter = g.starter === 'p' ? 'b' : 'p';
     g.p = { rem: g.start, in: !g.din }; g.b = { rem: g.start, in: !g.din };
     g.turn = g.starter; g.phase = 'play'; g.last = { p: '', b: '' }; g.undo = []; g.bLast = []; g.lastVisit = null; g.visit = null;
     if (g.turn === 'b') { g.busy = true; setTimeout(botMove, 900); }
@@ -2368,7 +2480,6 @@ window.DRILLS = (function () {
     el.after(box);
     X01.mount(box, { onBack: () => act('nav', 'play') });
     EXT.panels.x01 = { el: box, render: () => X01.render(), nav: 'play' };
-    EXT.playLinks.push({ route: 'x01', title: 'X01 Mehrspieler', sub: 'Mehrere Spieler, ein Gerät' });
     EXT.dataKeys.push('dartsX01');
   }
 
@@ -2469,7 +2580,9 @@ window.DRILLS = (function () {
       case 'bot': s.bot = n; break;
       case 'start': s.start = n; break;
       case 'din': s.din = v === '1'; break;
-      case 'legs': s.legs = n; break;
+      case 'legs': s.legs = n; s.legsCustom = false; break;
+      case 'legsCustom': s.legsCustom = true; if (s.legs <= 5 && s.legs !== 4) s.legs = 7; break;
+      case 'sets': s.sets = n; break;
       case 'perDart': s.perDart = v === '1'; break;
       case 'pdHit': taskDart(true); break;
       case 'pdMiss': taskDart(false); break;
@@ -2511,6 +2624,7 @@ window.DRILLS = (function () {
       case 's25': buttonDart(25, 1); T.mult = 1; T.zoom = null; break;
       case 'bull': buttonDart(25, 2); T.mult = 1; T.zoom = null; break;
       case 'miss': buttonDart(0, 0); T.mult = 1; T.zoom = null; break;
+      case 'inp': T.set.inp = v; T.zoom = null; break;
       case 'zoomOff': T.zoom = null; break;
       case 'zoomSet': T.set.zoom = v === '1'; T.zoom = null; break;
       case 'hm': T.hm = v; break;
@@ -2522,7 +2636,7 @@ window.DRILLS = (function () {
         unlockVoice();
         if (v === '501' || v === '301di') {
           T.route = 'play';
-          if (!T.game) { Object.assign(s, { mode: 'game', start: v === '501' ? 501 : 301, din: v === '301di', bot: 2, legs: 1 }); start(); }
+          if (!T.game) { Object.assign(s, { mode: 'game', start: v === '501' ? 501 : 301, din: v === '301di', bot: 2, legs: 1, sets: 1 }); start(); }
         } else {
           T.route = 'train';
           if (!T.sess) { s.mode = v; T.summary = null; start(); }
@@ -2544,6 +2658,11 @@ window.DRILLS = (function () {
     }
     render();
   }
+  // Freie Zahl-Eingaben (z.B. Legs > 5): data-set="legs" schreibt in T.set
+  el.addEventListener('change', e => {
+    const i = e.target.closest('input[data-set]'); if (!i) return;
+    const v = Math.max(1, Math.min(99, Math.round(+i.value) || 1)); T.set[i.dataset.set] = v; render();
+  });
   el.addEventListener('click', e => {
     const svg = e.target.closest('svg[data-board]'); if (svg) { boardTap(e, svg); return; }
     const b = e.target.closest('[data-a]'); if (b && !b.disabled) { act(b.dataset.a, b.dataset.v); return; }
@@ -2563,18 +2682,29 @@ window.DRILLS = (function () {
     if (!list.length) return '';
     return `<h2 class="sec">${title}</h2><div class="quickstart">` + list.map(x => btn('nav', `<b>${x.title}</b><small>${x.sub || ''}</small>`, x.route)).join('') + `</div>`;
   }
+  // Legs: 1/2/3/5 oder eigene Zahl; Sets 1–5. Wird auch vom Mehrspieler-Modul genutzt (window.legsSetsHTML)
+  function legsSetsHTML(s, aLegs, aCustom, aSets, field) {
+    const custom = s.legsCustom || ![1, 2, 3, 5].includes(s.legs);
+    let h = `<div class="setlabel">Sets (First to)</div><div class="seg">${[1, 2, 3, 4, 5].map(n => btn(aSets, n, n, '', (s.sets || 1) === n)).join('')}</div>`;
+    h += `<div class="setlabel">Legs${(s.sets || 1) > 1 ? ' per set' : ''} (First to)</div><div class="seg">${[1, 2, 3, 5].map(n => btn(aLegs, n, n, '', !custom && s.legs === n)).join('')}${btn(aCustom, 'Custom', undefined, '', custom)}</div>`;
+    if (custom) h += `<div class="numin"><input type="number" inputmode="numeric" min="1" max="99" data-set="${field}" value="${s.legs}" aria-label="Legs"><span>legs to win${(s.sets || 1) > 1 ? ' a set' : ''}</span></div>`;
+    return h;
+  }
+  window.legsSetsHTML = legsSetsHTML;
+  const fmtFormat = (sets, legs) => sets > 1 ? `First to ${sets} sets (${legs} leg${legs > 1 ? 's' : ''} each)` : `First to ${legs} leg${legs > 1 ? 's' : ''}`;
+  window.fmtFormat = fmtFormat;
   function viewSetup() {
     const s = T.set;
     if (T.route === 'play') {
       s.mode = 'game';
-      let h = phead('Spielen', 'Du gegen den Darts-Bot') + `<div class="card">`;
+      let h = phead('Spielen', 'Gegen den Bot oder mit mehreren Spielern') + `<div class="seg oppseg">${btn('nav', 'Gegen Bot', 'play', '', true)}${window.X01 ? btn('nav', 'Mehrspieler', 'x01') : ''}</div><div class="card">`;
       h += `<div class="setlabel">Punkte</div><div class="seg">${btn('start', '301', 301, '', s.start === 301)}${btn('start', '501', 501, '', s.start === 501)}</div>`;
       h += `<div class="setlabel">Einwurf</div><div class="seg">${btn('din', 'Single-In', 0, '', !s.din)}${btn('din', 'Double-In', 1, '', s.din)}</div>`;
       h += `<div class="setlabel">Bot-Stärke</div><div class="lvl">`;
       BOT.forEach((b, i) => { h += btn('bot', `<b>${i + 1}</b><small>${b.n}</small><small>Ø ~${b.a}</small>`, i, '', s.bot === i); });
-      h += `</div><div class="setlabel">Legs (First to)</div><div class="seg">${[1, 2, 3, 5].map(n => btn('legs', n, n, '', s.legs === n)).join('')}</div>`;
+      h += `</div>` + legsSetsHTML(s, 'legs', 'legsCustom', 'sets', 'legs');
       h += voiceToggle();
-      h += `<div class="desc">${s.start} · ${s.din ? 'Double-In' : 'Single-In'} · Double-Out · gegen Bot „${BOT[s.bot].n}“ (Ø ~${BOT[s.bot].a}) · First to ${s.legs} Leg${s.legs > 1 ? 's' : ''}. Du trägst jeden Pfeil einzeln ein – per Tippen auf die Scheibe oder über Single/Double/Triple + Zahl. Nach deinen 3 Pfeilen wirft der Bot.</div>`;
+      h += `<div class="desc">${s.start} · ${s.din ? 'Double-In' : 'Single-In'} · Double-Out · gegen Bot „${BOT[s.bot].n}“ (Ø ~${BOT[s.bot].a}) · ${fmtFormat(s.sets || 1, s.legs)}. Du trägst jeden Pfeil einzeln ein – per Tippen auf die Scheibe oder über Single/Double/Triple + Zahl. Nach deinen 3 Pfeilen wirft der Bot.</div>`;
       return h + `<button class="big go" data-a="go">Spiel starten</button></div>` + extLinks(EXT.playLinks, 'Weitere Spielmodi');
     }
     if (s.mode === 'game') s.mode = 'hit';
@@ -2969,12 +3099,12 @@ window.DRILLS = (function () {
   }
 
   function viewGame() {
-    const g = T.game, P = pstats(g, 'p'), B = pstats(g, 'b');
-    let h = `<div class="card">`;
-    h += `<div class="tophead"><span>${g.start} · ${g.din ? 'Double-In' : 'Single-In'} · Double-Out</span><span>Leg ${g.legNo} · First to ${g.legsTo}</span></div>` + voiceBtn();
+    const g = T.game, P = pstats(g, 'p'), B = pstats(g, 'b'), inp = T.set.inp === 'keys' ? 'keys' : 'board';
+    let h = `<div class="card gamecard inp-${inp}${g.busy ? ' busy' : ''}">`;
+    h += `<div class="tophead"><span>${voiceBtn()}${g.start} · ${g.din ? 'Double-In' : 'Single-In'}</span><span>${(g.setsTo || 1) > 1 ? `Set ${g.setNo || 1} · ` : ''}Leg ${g.legNo} · ${fmtFormat(g.setsTo || 1, g.legsTo)}</span></div>`;
     const panel = (who, name, PL, avg, last, legs) => `<div class="gp ${g.turn === who && g.phase === 'play' ? 'act' : ''}">
         <div class="gn">${name}</div><div class="grem">${PL.rem}</div>
-        <div class="gs">Ø ${f1(avg)} · Legs ${legs}${!PL.in ? ' · <span class="warn">nicht drin</span>' : ''}</div>
+        <div class="gs">Ø ${f1(avg)} · ${(g.setsTo || 1) > 1 ? `Sets ${g.sets[who]} · ` : ''}Legs ${legs}${!PL.in ? ' · <span class="warn">nicht drin</span>' : ''}</div>
         <div class="glast">${last || '&nbsp;'}</div></div>`;
     h += `<div class="gboard">${panel('p', 'Du', g.p, P.avg, g.last.p, g.legs.p)}${panel('b', 'Bot · ' + BOT[g.bot].n, g.botPending ? { rem: g.bShowRem, in: g.bShowIn } : g.b, B.avg, g.botPending ? (g.botPop ? 'Pfeil ' + g.botPop.i + ': ' + g.botPop.txt : 'wirft …') : g.last.b, g.legs.b)}</div>`;
 
@@ -2996,6 +3126,7 @@ window.DRILLS = (function () {
 
       if (g.busy) h += `<div class="wait">Du bist gleich wieder dran …</div>`;
       else {
+        h += `<div class="seg inpseg">${btn('inp', 'Scheibe', 'board', '', inp === 'board')}${btn('inp', 'Tastatur', 'keys', '', inp === 'keys')}</div>`;
         h += `<div class="slots">${[0, 1, 2].map(i => `<div class="${V[i] ? 'f' : ''}">${V[i] ? V[i].l : 'Pfeil ' + (i + 1)}</div>`).join('')}<div class="sum">${V.reduce((a, d) => a + d.v, 0)}</div></div>`;
         if (!g.p.in) h += `<div class="hint">Double-In: Erst ein Doppel bringt dich rein. Pfeile davor zählen 0.</div>`;
         else { const rt = route(g.p.rem, 3 - V.length); if (rt) h += `<div class="route">Checkout: ${routeText(rt)}</div>`; }
@@ -3004,17 +3135,18 @@ window.DRILLS = (function () {
         h += `<div class="mult">${btn('mult', 'Single', 1, 'm1', m === 1)}${btn('mult', 'Double', 2, 'm2', m === 2)}${btn('mult', 'Triple', 3, 'm3', m === 3)}</div>`;
         h += `<div class="numgrid">${R20.map(n => btn('dart', (m === 3 ? 'T' : m === 2 ? 'D' : '') + n, n, 'nb m' + m)).join('')}</div>`;
         h += `<div class="numrow">${btn('s25', '25', undefined, 'nb')}${btn('bull', 'Bull', undefined, 'nb bullb')}${btn('miss', 'Miss / 0', undefined, 'nb missb')}</div>`;
-        h += `<button class="link" data-a="zoomSet" data-v="${T.set.zoom === false ? 1 : 0}">🔍 Zoom beim Tippen auf die Scheibe: ${T.set.zoom === false ? 'aus' : 'an'}</button>`;
+        h += `<button class="link zoomlink" data-a="zoomSet" data-v="${T.set.zoom === false ? 1 : 0}">🔍 Zoom beim Tippen auf die Scheibe: ${T.set.zoom === false ? 'aus' : 'an'}</button>`;
       }
       h += `</div></div>`;
     } else if (g.phase === 'legover') {
       h += `<div class="celebrate"><div class="result ${g.legWinner === 'p' ? 'win' : 'lose'}">${g.legWinner === 'p' ? 'Leg gewonnen!' : 'Leg an den Bot'}</div>`;
-      h += `<div class="live">Stand ${g.legs.p} : ${g.legs.b}</div><button class="big go" data-a="nextLeg">Nächstes Leg</button>`;
+      if (g.setWon) h += `<div class="result ${g.legWinner === 'p' ? 'win' : 'lose'}">${g.legWinner === 'p' ? 'Set gewonnen!' : 'Set an den Bot'}</div>`;
+      h += `<div class="live">${(g.setsTo || 1) > 1 ? `Sets ${g.sets.p} : ${g.sets.b} · ` : ''}Legs ${g.legs.p} : ${g.legs.b}</div><button class="big go" data-a="nextLeg">${g.setWon ? 'Nächstes Set' : 'Nächstes Leg'}</button>`;
       h += `<div class="setlabel">Statistik bisher</div>${cmpTable(P, B)}</div>`;
     } else if (g.phase === 'over') {
       const won = g.legWinner === 'p';
       h += `<div class="celebrate"><div class="result ${won ? 'win' : 'lose'}">${won ? 'Spiel gewonnen!' : 'Spiel verloren'}</div>`;
-      h += `<div class="live">Legs ${g.legs.p} : ${g.legs.b}</div>${cmpTable(P, B)}`;
+      h += `<div class="live">${(g.setsTo || 1) > 1 ? `Sets ${g.sets.p} : ${g.sets.b} · ` : ''}Legs ${(g.legTot || g.legs).p} : ${(g.legTot || g.legs).b}</div>${cmpTable(P, B)}`;
       h += `<div class="row2">${btn('again', 'Revanche', undefined, 'mid')}${btn('close', 'Zu den Einstellungen', undefined, 'mid')}</div></div>`;
       return h + `</div>`;
     }
@@ -3282,7 +3414,7 @@ window.DRILLS = (function () {
 </script>
 <script>
 // ===== PWA: Service Worker + Update-Prüfung (nur über http/https, nicht bei file://) =====
-window.APP_VERSION = 'a8155eea96';
+window.APP_VERSION = 'b8c0601248';
 (function () {
   if (!/^https?:$/.test(location.protocol)) return;
   let shown = false;

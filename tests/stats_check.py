@@ -73,7 +73,7 @@ with sync_playwright() as p:
     check('Training: Session mit Einzelpfeilen', len(ts) == 1 and len(tw) == 2 + 8 + 1 and ts[0]['cfg']['perDart'], (len(tw), tw))
     check('Training: Aufgaben-Ergebnis stimmt', [ (l['ok'], l['darts']) for l in log] == [(True, 2), (False, 8), (True, 1)], log)
     # Bot-Spiel: ein paar Aufnahmen, dann über Zustand prüfen, dass Würfe im Spiel gesammelt werden
-    pg.click('#nav [data-route="home"]'); A('qs', '501')
+    pg.click('#nav [data-route="home"]'); A('qs', '501'); A('inp', 'keys')
     for _ in range(3): A('dart', '20')
     pg.wait_for_timeout(7000)
     gm = pg.evaluate("JSON.parse(localStorage.getItem('dartsTrainer')).game")

@@ -74,12 +74,12 @@
   }
 
   function viewGame() {
-    const g = T.game, P = pstats(g, 'p'), B = pstats(g, 'b');
-    let h = `<div class="card">`;
-    h += `<div class="tophead"><span>${g.start} · ${g.din ? 'Double-In' : 'Single-In'} · Double-Out</span><span>Leg ${g.legNo} · First to ${g.legsTo}</span></div>` + voiceBtn();
+    const g = T.game, P = pstats(g, 'p'), B = pstats(g, 'b'), inp = T.set.inp === 'keys' ? 'keys' : 'board';
+    let h = `<div class="card gamecard inp-${inp}${g.busy ? ' busy' : ''}">`;
+    h += `<div class="tophead"><span>${voiceBtn()}${g.start} · ${g.din ? 'Double-In' : 'Single-In'}</span><span>${(g.setsTo || 1) > 1 ? `Set ${g.setNo || 1} · ` : ''}Leg ${g.legNo} · ${fmtFormat(g.setsTo || 1, g.legsTo)}</span></div>`;
     const panel = (who, name, PL, avg, last, legs) => `<div class="gp ${g.turn === who && g.phase === 'play' ? 'act' : ''}">
         <div class="gn">${name}</div><div class="grem">${PL.rem}</div>
-        <div class="gs">Ø ${f1(avg)} · Legs ${legs}${!PL.in ? ' · <span class="warn">nicht drin</span>' : ''}</div>
+        <div class="gs">Ø ${f1(avg)} · ${(g.setsTo || 1) > 1 ? `Sets ${g.sets[who]} · ` : ''}Legs ${legs}${!PL.in ? ' · <span class="warn">nicht drin</span>' : ''}</div>
         <div class="glast">${last || '&nbsp;'}</div></div>`;
     h += `<div class="gboard">${panel('p', 'Du', g.p, P.avg, g.last.p, g.legs.p)}${panel('b', 'Bot · ' + BOT[g.bot].n, g.botPending ? { rem: g.bShowRem, in: g.bShowIn } : g.b, B.avg, g.botPending ? (g.botPop ? 'Pfeil ' + g.botPop.i + ': ' + g.botPop.txt : 'wirft …') : g.last.b, g.legs.b)}</div>`;
 
@@ -101,6 +101,7 @@
 
       if (g.busy) h += `<div class="wait">Du bist gleich wieder dran …</div>`;
       else {
+        h += `<div class="seg inpseg">${btn('inp', 'Scheibe', 'board', '', inp === 'board')}${btn('inp', 'Tastatur', 'keys', '', inp === 'keys')}</div>`;
         h += `<div class="slots">${[0, 1, 2].map(i => `<div class="${V[i] ? 'f' : ''}">${V[i] ? V[i].l : 'Pfeil ' + (i + 1)}</div>`).join('')}<div class="sum">${V.reduce((a, d) => a + d.v, 0)}</div></div>`;
         if (!g.p.in) h += `<div class="hint">Double-In: Erst ein Doppel bringt dich rein. Pfeile davor zählen 0.</div>`;
         else { const rt = route(g.p.rem, 3 - V.length); if (rt) h += `<div class="route">Checkout: ${routeText(rt)}</div>`; }
@@ -109,17 +110,18 @@
         h += `<div class="mult">${btn('mult', 'Single', 1, 'm1', m === 1)}${btn('mult', 'Double', 2, 'm2', m === 2)}${btn('mult', 'Triple', 3, 'm3', m === 3)}</div>`;
         h += `<div class="numgrid">${R20.map(n => btn('dart', (m === 3 ? 'T' : m === 2 ? 'D' : '') + n, n, 'nb m' + m)).join('')}</div>`;
         h += `<div class="numrow">${btn('s25', '25', undefined, 'nb')}${btn('bull', 'Bull', undefined, 'nb bullb')}${btn('miss', 'Miss / 0', undefined, 'nb missb')}</div>`;
-        h += `<button class="link" data-a="zoomSet" data-v="${T.set.zoom === false ? 1 : 0}">🔍 Zoom beim Tippen auf die Scheibe: ${T.set.zoom === false ? 'aus' : 'an'}</button>`;
+        h += `<button class="link zoomlink" data-a="zoomSet" data-v="${T.set.zoom === false ? 1 : 0}">🔍 Zoom beim Tippen auf die Scheibe: ${T.set.zoom === false ? 'aus' : 'an'}</button>`;
       }
       h += `</div></div>`;
     } else if (g.phase === 'legover') {
       h += `<div class="celebrate"><div class="result ${g.legWinner === 'p' ? 'win' : 'lose'}">${g.legWinner === 'p' ? 'Leg gewonnen!' : 'Leg an den Bot'}</div>`;
-      h += `<div class="live">Stand ${g.legs.p} : ${g.legs.b}</div><button class="big go" data-a="nextLeg">Nächstes Leg</button>`;
+      if (g.setWon) h += `<div class="result ${g.legWinner === 'p' ? 'win' : 'lose'}">${g.legWinner === 'p' ? 'Set gewonnen!' : 'Set an den Bot'}</div>`;
+      h += `<div class="live">${(g.setsTo || 1) > 1 ? `Sets ${g.sets.p} : ${g.sets.b} · ` : ''}Legs ${g.legs.p} : ${g.legs.b}</div><button class="big go" data-a="nextLeg">${g.setWon ? 'Nächstes Set' : 'Nächstes Leg'}</button>`;
       h += `<div class="setlabel">Statistik bisher</div>${cmpTable(P, B)}</div>`;
     } else if (g.phase === 'over') {
       const won = g.legWinner === 'p';
       h += `<div class="celebrate"><div class="result ${won ? 'win' : 'lose'}">${won ? 'Spiel gewonnen!' : 'Spiel verloren'}</div>`;
-      h += `<div class="live">Legs ${g.legs.p} : ${g.legs.b}</div>${cmpTable(P, B)}`;
+      h += `<div class="live">${(g.setsTo || 1) > 1 ? `Sets ${g.sets.p} : ${g.sets.b} · ` : ''}Legs ${(g.legTot || g.legs).p} : ${(g.legTot || g.legs).b}</div>${cmpTable(P, B)}`;
       h += `<div class="row2">${btn('again', 'Revanche', undefined, 'mid')}${btn('close', 'Zu den Einstellungen', undefined, 'mid')}</div></div>`;
       return h + `</div>`;
     }

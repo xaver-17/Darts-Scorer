@@ -43,7 +43,8 @@
   function viewData() {
     const G = games().length, Tr = T.hist.length - G, xn = x01Hist().length;
     const wn = TS.sessions().reduce((a, s) => a + TS.throws(s.id).length, 0);
-    let h = `<div class="card datacard"><div class="setlabel">Backup</div>
+    let h = VOICE_OK ? `<div class="card datacard">${voiceToggle()}</div>` : '';
+    h += `<div class="card datacard"><div class="setlabel">Backup</div>
       <p>Your data is stored only on this device (in the browser). Back it up now and then – especially before clearing your browser history or switching phones.<br>Currently saved: <b>${G}</b> game${G === 1 ? '' : 's'} and <b>${Tr}</b> training${Tr === 1 ? '' : 's'}${xn ? `, <b>${xn}</b> multiplayer game${xn === 1 ? '' : 's'}` : ''} · <b>${wn.toLocaleString('en-GB')}</b> single darts.</p>
       ${btn('export', '⤓ Export backup', undefined, 'big go')}
       ${btn('importPick', '⤒ Import backup', undefined, 'big ghost')}

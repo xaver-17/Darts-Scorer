@@ -22,7 +22,10 @@
     voiceList = speechSynthesis.getVoices().filter(v => voiceScore(v) > -50).sort((a, b) => voiceScore(b) - voiceScore(a));
     enVoice = (T.set.voiceName && voiceList.find(v => v.name === T.set.voiceName)) || voiceList[0] || null;
   }
-  if (VOICE_OK) { pickVoice(); speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', () => { pickVoice(); if (T.route === 'play' && !T.game) render(); }); }
+  if (VOICE_OK) { pickVoice(); speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', voicesReady);
+    // Safari (auch als Web-App im Dock) meldet die Stimmen manchmal erst spät und ohne Ereignis: ein paar Mal nachfragen
+    let tries = 0; const poll = setInterval(() => { if (voiceList.length || ++tries > 20) { clearInterval(poll); if (voiceList.length) voicesReady(); return; } pickVoice(); }, 500); }
+  function voicesReady() { const had = voiceList.length; pickVoice(); if (!had && voiceList.length && typeof render === 'function' && ['play', 'x01', 'stats'].includes(T.route) && !T.game) render(); }
 
   function say(text) {
     if (!VOICE_OK || !T.set.voice || !text) return;
@@ -48,7 +51,8 @@
   EXT.actions.voice = v => { T.set.voice = v === '1'; if (T.set.voice) say('Caller on'); else if (VOICE_OK) speechSynthesis.cancel(); };
   // Stimme wählen (beste natürliche Stimme ist vorausgewählt) und anhören
   EXT.actions.voiceTest = () => { const was = T.set.voice; T.set.voice = true; say('One hundred and eighty!'); T.set.voice = was; };
-  el.addEventListener('change', e => { const sel = e.target.closest('select[data-voice]'); if (!sel) return; T.set.voiceName = sel.value || null; pickVoice(); save(); say('Game shot, and the leg!'); });
+  function voiceSelect(name) { T.set.voiceName = name || null; pickVoice(); save(); say('Game shot, and the leg!'); }
+  el.addEventListener('change', e => { const sel = e.target.closest('select[data-voice]'); if (sel) voiceSelect(sel.value); });
   const voiceToggle = () => {
     if (!VOICE_OK) return '';
     let h = `<div class="setlabel">Score caller</div><div class="seg">${btn('voice', 'On', 1, '', T.set.voice)}${btn('voice', 'Off', 0, '', !T.set.voice)}</div>`;
@@ -63,3 +67,5 @@
   const voiceBtn = () => VOICE_OK ? `<button class="vbtn${T.set.voice ? ' on' : ''}" data-a="voice" data-v="${T.set.voice ? 0 : 1}" aria-label="Turn caller ${T.set.voice ? 'off' : 'on'}">${T.set.voice ? SPK.replace('</svg>', '<path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>') : SPK.replace('</svg>', '<path d="m16 9 5 6m0-6-5 6"/></svg>')}${T.set.voice ? 'Caller on' : 'Caller off'}</button>` : '';
   // Schnittstelle für eigenständige Module (z.B. X01 Mehrspieler)
   window.dartsCall = (score, bust, checked) => callVisit('x', score, bust, checked);
+  // Für das Mehrspieler-Modul: gleiche Ansage-Einstellungen und Stimme
+  window.dartsVoice = { html: () => voiceToggle(), act: (a, v) => { if (a !== 'voice' && a !== 'voiceTest') return false; EXT.actions[a](v); save(); return true; }, select: voiceSelect, unlock: () => unlockVoice() };

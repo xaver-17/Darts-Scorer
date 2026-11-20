@@ -4,11 +4,11 @@ Installierbare Web-App (PWA) zum Darts spielen, trainieren und auswerten:
 
 - **Home**: Überblick mit Average, Spielen, Siegquote, Trainings, Schnellstart und letzten Einheiten
 - **Spielen**: 301/501 gegen den Darts-Bot (5 Stärken, Double-In, Legs) und **X01 Mehrspieler** (mehrere Spieler an einem Gerät)
-- **Training**: Treffen-Plan, Single, Doppel, Triple, Checkouts, Punkte (5 Schwierigkeitsstufen)
-- **Stats**: Übersicht und Entwicklung, Trefferquote mit Trefferbild, Verlauf, **Daten** (Sicherung exportieren/importieren, alles löschen)
+- **Training**: Treffen-Plan, Single, Doppel, Triple, Checkouts, Punkte (5 Schwierigkeitsstufen), Eingabe schnell oder jeder Pfeil einzeln
+- **Stats**: Übersicht und Entwicklung, Trefferquote mit Trefferbild, Verlauf, **Mehrspieler** (X01-Spieler im Vergleich), **Daten** (Sicherung exportieren/importieren, alles löschen)
 - **Zähler**: Felder abwerfen
 
-Kein Server, keine Abhängigkeiten, keine Anmeldung. Alle Daten bleiben im Browser des Geräts (`localStorage`).
+Kein Server, keine Abhängigkeiten, keine Anmeldung. Alle Daten bleiben im Browser des Geräts (`localStorage` und IndexedDB, jeder Pfeil einzeln: [docs/DATENMODELL.md](docs/DATENMODELL.md)).
 
 ## Online
 
@@ -43,6 +43,7 @@ Wichtig: Die Daten liegen pro Gerät und pro Adresse. Über **Stats → Daten** 
 pip install playwright            # einmalig; nutzt das installierte Google Chrome
 python3 tests/pwa_check.py        # Manifest, Service Worker, Offline-Start, Export/Import
 python3 tests/e2e_walkthrough.py  # 2 Spiele gegen den Bot + alle Seiten, Screenshots in tests/out/
+python3 tests/stats_check.py      # Wurf-Datenbank: Migration, alle Modi, Export/Import
 ```
 
 Wie der Code aufgebaut ist und wie du Neues einbaust: **[docs/ENTWICKLUNG.md](docs/ENTWICKLUNG.md)**.

@@ -31,6 +31,7 @@
     h += `</div><div class="setlabel">Schwierigkeit</div><div class="lvl">`;
     LV.forEach((l, i) => { h += btn('level', `<b>${i + 1}</b><small>${l}</small>`, i, '', s.level === i); });
     h += `</div>` + (DR[s.mode] ? DR[s.mode].opts(s, ctx) : `<div class="setlabel">${s.mode === 'score' ? 'Aufnahmen' : 'Aufgaben'}</div><div class="seg">${[10, 20, 30].map(n => btn('tasks', n, n, '', s.tasks === n)).join('')}</div>`);
+    if (PERDART_MODES.includes(s.mode)) h += `<div class="setlabel">Eingabe</div><div class="seg">${btn('perDart', 'Schnell', 0, '', !s.perDart)}${btn('perDart', 'Jeder Pfeil', 1, '', !!s.perDart)}</div>`;
     h += `<div class="desc">${describe(s.mode, s.level, s.tasks)}</div>`;
     return h + `<button class="big go" data-a="go">Training starten</button></div>` + extLinks(EXT.trainLinks, 'Weitere Trainings');
   }

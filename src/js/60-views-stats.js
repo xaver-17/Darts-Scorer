@@ -3,10 +3,11 @@
   function viewStatsPage() {
     const tab = T.stab || 'over';
     let h = phead('Meine Stats', 'Alles aus deinen Spielen und Trainings');
-    h += `<div class="segtabs">${btn('stab', 'Übersicht', 'over', '', tab === 'over')}${btn('stab', 'Trefferquote', 'acc', '', tab === 'acc')}${btn('stab', 'Verlauf', 'hist', '', tab === 'hist')}${btn('stab', 'Daten', 'data', '', tab === 'data')}</div>`;
+    h += `<div class="segtabs">${btn('stab', 'Übersicht', 'over', '', tab === 'over')}${btn('stab', 'Trefferquote', 'acc', '', tab === 'acc')}${btn('stab', 'Verlauf', 'hist', '', tab === 'hist')}${btn('stab', 'Mehrspieler', 'multi', '', tab === 'multi')}${btn('stab', 'Daten', 'data', '', tab === 'data')}</div>`;
     if (tab === 'over') return h + viewOverview();
     if (tab === 'acc') return h + viewAccuracy();
     if (tab === 'data') return h + viewData();
+    if (tab === 'multi') return h + viewMulti();
     return h + viewHistory();
   }
 
@@ -38,10 +39,11 @@
         const avg = last5.reduce((a, e) => a + val(e), 0) / last5.length, best = (O && O.low ? Math.min : Math.max)(...l.map(val));
         const u = O ? O.unit : k === 'score' ? '' : ' %';
         const w = O ? O.bar(avg) : k === 'score' ? avg / 1.2 : avg;
-        h += `<div class="trc"><small>${TM[k]}</small><b>${f1(avg)}${u}</b><span>Ø letzte ${last5.length} · Best ${f1(best)}${u} · ${l.length}×</span><i style="width:${Math.max(0, Math.min(100, w))}%"></i></div>`;
+        h += `<div class="trc"><small>${TM[k]}</small><b>${f1(avg)}${u}</b><span>Ø letzte ${last5.length} · Best ${f1(best)}${u} · ${l.length}×${trainTrend(l, val)}</span>${levelHint(k, l)}<i style="width:${Math.max(0, Math.min(100, w))}%"></i></div>`;
       });
       h += `</div>`;
     }
+    h += viewDoubles();
     Object.values(DR).forEach(d => { if (d.extra) h += d.extra(T.hist, ctx); });
     return h;
   }

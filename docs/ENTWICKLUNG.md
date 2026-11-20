@@ -22,6 +22,7 @@ tools/
 tests/
   pwa_check.py        PWA-Prüfung (Manifest, Service Worker, offline, Export/Import)
   e2e_walkthrough.py  Durchlauf: 2 Spiele gegen den Bot, alle Seiten
+  stats_check.py      Wurf-Datenbank: Migration, Würfe aus allen Modi, Einzelpfeil-Training, Export/Import
 dist/                 Build-Ergebnis – nicht von Hand ändern
 ```
 
@@ -33,6 +34,7 @@ Alle Dateien werden **in Namensreihenfolge** aneinandergehängt und gemeinsam in
 | --- | --- |
 | `00-state.js` | Konstanten (Bot-Stärken, Trainingsmodi `TM`, Icons), der App-Zustand `T`, `save()`, Hilfsfunktionen, Erweiterungs-Register `EXT` |
 | `05-drills.js` | hängt die Trainingsspiele aus `src/modules/drills.js` ein (Around the Clock, Bob's 27, Doppel-Runde, Checkout-Leiter): Einträge in `TM`, Helfer `ctx`, Aktionen `drHit`/`drBob`/`drDR`/`drLad` |
+| `15-throws.js` | Wurf-Datenbank `TS` (IndexedDB: Sessions + einzelne Würfe), Übernahme alter Daten, Kennzahlen aus Würfen. Siehe [DATENMODELL.md](DATENMODELL.md) |
 | `10-training.js` | Trainings-Aufgaben erzeugen, Sitzung starten/auswerten, Ergebnis in `T.hist` |
 | `20-game.js` | Spiel gegen den Bot: Pfeile, Aufnahmen, Bot-Züge, Leg-/Spielende, Spieler-Statistik |
 | `26-x01-hook.js` | hängt das Mehrspieler-X01 aus `src/modules/x01.js` ein |
@@ -40,6 +42,7 @@ Alle Dateien werden **in Namensreihenfolge** aneinandergehängt und gemeinsam in
 | `40-actions.js` | `act(a, v)`: **jeder** Klick auf ein Element mit `data-a="…"` landet hier |
 | `50-views-home.js` | Einstellungsseiten (Spielen, Training) und Startseite |
 | `60-views-stats.js` | Stats-Seite: Übersicht, Trefferquote, Verlauf |
+| `65-stats-throws.js` | Stats aus der Wurf-Datenbank: Tab „Mehrspieler“, Doppelquote Spiel/Training, Trainingstrend und Stufen-Empfehlung |
 | `70-views-session.js` | laufendes Training, laufendes Spiel, Zusammenfassung |
 | `80-charts.js` | Kennzahl pro Eintrag (`metric`), Liniendiagramm (`chart`) |
 | `85-data.js` | Stats → Daten: Sicherung exportieren/importieren, alles löschen |
@@ -88,6 +91,8 @@ Wenn ein neuer Modus in den bestehenden Stats auftauchen soll, braucht er einen 
 | `dartsX01` | Mehrspieler-X01: Einstellungen, laufendes Spiel, eigene Spielhistorie |
 
 Pfeil-Positionen in `hist[].dots`: `[x_mm, y_mm, Feld, Rest_davor, Checkout-Versuch 0/1, Ziel]`, Bull = (0,0), y nach oben, 20 oben.
+
+Zusätzlich speichert die App jede Session mit allen einzelnen Würfen in **IndexedDB** (`darts-scorer`). Aufbau, Migration und Kennzahlen: **[DATENMODELL.md](DATENMODELL.md)**. Neue Spiel- oder Trainingsarten sollten ihre Würfe dort ablegen (`TS.put(session, würfe)`).
 
 **Achtung bei Änderungen am Datenformat:** Nutzer haben alte Daten gespeichert. Neue Felder immer mit Standardwert lesen (`e.neu || 0`), nie alte Felder umbenennen, ohne die alten Einträge umzuwandeln.
 

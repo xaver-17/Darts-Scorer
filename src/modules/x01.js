@@ -21,7 +21,7 @@
     X.game = {
       start: s.start, out: s.out, legsTo: s.legs, legNo: 1, starter: 0, cur: 0, phase: 'play',
       players: s.players.map(n => ({ name: n.trim() || 'Spieler', rem: s.start, legs: 0, darts: 0, pts: 0, legDarts: 0, best: 0, s180: 0, hiCO: 0, last: '' })),
-      visit: [], undo: [], msg: '', legWinner: null, date: new Date().toISOString()
+      visit: [], undo: [], msg: '', legWinner: null, date: new Date().toISOString(), tl: []
     };
     X.mult = 1; X.confirm = null;
   }
@@ -31,12 +31,13 @@
   const remNow = () => P().rem - visitSum();
 
   function snapshot() {
-    const g = G(); g.undo.push(JSON.stringify(Object.assign({}, g, { undo: [] })));
+    // tl (alle Würfe) nicht in jeden Schnappschuss kopieren, nur seine Länge merken
+    const g = G(); g.undo.push(JSON.stringify(Object.assign({}, g, { undo: [], tl: undefined, tlLen: (g.tl || []).length })));
     if (g.undo.length > MAXUNDO) g.undo.shift();
   }
   function undo() {
     const g = G(); if (!g || !g.undo.length) return;
-    const u = g.undo, prev = JSON.parse(u.pop()); prev.undo = u; X.game = prev; X.mult = 1;
+    const u = g.undo, prev = JSON.parse(u.pop()); prev.undo = u; prev.tl = (g.tl || []).slice(0, prev.tlLen); delete prev.tlLen; X.game = prev; X.mult = 1;
   }
 
   function isBust(after, d, out) {
@@ -49,9 +50,15 @@
     const g = G(); if (!g || g.phase !== 'play') return;
     snapshot();
     const p = P(), d = { n, m, v: n * m, l: n === 0 ? 'Miss' : dlabel(n, m) };
-    const after = remNow() - d.v;
+    const rb = remNow(), after = rb - d.v;
     g.visit.push(d); g.msg = '';
+    // Wurf für die Statistik (Felder wie in docs/DATENMODELL.md, leere weggelassen)
+    const w = { who: g.cur, leg: g.legNo, visit: (p.vn || 0) + 1, dart: g.visit.length, n, m: n === 0 ? 0 : m, pts: d.v, rem: rb, t: Date.now() };
+    if (g.out === 'double') { const rt = route(rb, 4 - g.visit.length); w.aim = rt ? dlabel(rt[0].n, rt[0].m) : 'T20'; }
+    if (g.out === 'double' ? !!(ROUTES[rb] && ROUTES[rb][1]) : DARTS.some(x => x.v === rb)) w.dbl = 1;
+    (g.tl = g.tl || []).push(w);
     if (isBust(after, d, g.out)) {
+      w.flag = 'bust';
       p.darts += g.visit.length; p.legDarts += g.visit.length;
       p.last = 'Überworfen (' + g.visit.map(x => x.l).join(' ') + ')';
       g.msg = p.name + ': überworfen, bleibt auf ' + p.rem;
@@ -59,6 +66,7 @@
       nextPlayer(); return;
     }
     if (after === 0) {
+      w.flag = 'out';
       const sc = visitSum();
       p.darts += g.visit.length; p.legDarts += g.visit.length; p.pts += sc; p.rem = 0;
       p.best = Math.max(p.best, sc); p.hiCO = Math.max(p.hiCO, sc); p.last = 'Checkout ' + sc;
@@ -74,7 +82,7 @@
     if (window.dartsCall) window.dartsCall(sc, false, false);
     nextPlayer();
   }
-  function nextPlayer() { const g = G(); g.visit = []; g.cur = (g.cur + 1) % g.players.length; X.mult = 1; }
+  function nextPlayer() { const g = G(); P().vn = (P().vn || 0) + 1; g.visit = []; g.cur = (g.cur + 1) % g.players.length; X.mult = 1; }
 
   function legWon() {
     const g = G(), w = P(); w.legs++; g.legWinner = g.cur;
@@ -84,17 +92,22 @@
   function nextLeg() {
     const g = G(); if (g.phase !== 'legover') return;
     g.legNo++; g.starter = (g.starter + 1) % g.players.length; g.cur = g.starter;
-    g.players.forEach(p => { p.rem = g.start; p.legDarts = 0; p.last = ''; });
+    g.players.forEach(p => { p.rem = g.start; p.legDarts = 0; p.last = ''; p.vn = 0; });
     g.visit = []; g.undo = []; g.msg = ''; g.phase = 'play'; g.legWinner = null;
   }
   function recordGame() {
     const g = G();
-    X.hist.push({ type: 'x01', date: g.date, end: new Date().toISOString(), start: g.start, out: g.out, legsTo: g.legsTo,
+    const e = { type: 'x01', sid: 'x_' + g.date, date: g.date, end: new Date().toISOString(), start: g.start, out: g.out, legsTo: g.legsTo,
       winner: g.players[g.legWinner].name,
-      players: g.players.map(p => ({ name: p.name, legs: p.legs, darts: p.darts, pts: p.pts, avg: p.darts ? p.pts / p.darts * 3 : 0, best: p.best, s180: p.s180, hiCO: p.hiCO })) });
+      players: g.players.map(p => ({ name: p.name, legs: p.legs, darts: p.darts, pts: p.pts, avg: p.darts ? p.pts / p.darts * 3 : 0, best: p.best, s180: p.s180, hiCO: p.hiCO })) };
+    X.hist.push(e);
+    if (window.DartsStats) DartsStats.x01Done(e, g.tl || []);   // Würfe in die Statistik-Datenbank
   }
   // Nach Rückgängig aus "over" das gespeicherte Ergebnis wieder entfernen
-  function undoFromOver() { if (X.hist.length && X.hist[X.hist.length - 1].date === G().date) X.hist.pop(); undo(); }
+  function undoFromOver() {
+    if (X.hist.length && X.hist[X.hist.length - 1].date === G().date) { const e = X.hist.pop(); if (window.DartsStats) DartsStats.x01Undo(e); }
+    undo();
+  }
 
   // ---------- Aktionen ----------
   function act(a, v) {

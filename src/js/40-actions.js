@@ -11,6 +11,9 @@
       case 'start': s.start = n; break;
       case 'din': s.din = v === '1'; break;
       case 'legs': s.legs = n; break;
+      case 'perDart': s.perDart = v === '1'; break;
+      case 'pdHit': taskDart(true); break;
+      case 'pdMiss': taskDart(false); break;
       case 'go': unlockVoice(); start(); break;
       case 'ok': record({ ok: true, done: true, darts: n }); break;
       case 'fail': S.phase = 'fail'; break;
@@ -18,11 +21,12 @@
       case 'moreM': S.more = Math.max(S.tasks[S.idx].darts + 1, S.more - 1); break;
       case 'moreP': S.more = Math.min(99, S.more + 1); break;
       case 'moreOk': record({ ok: false, done: true, darts: S.more }); break;
-      case 'skip': record({ ok: false, done: false, darts: S.tasks[S.idx].darts }); break;
+      case 'skip': record({ ok: false, done: false, darts: Math.max(S.cur || 0, S.tasks[S.idx].darts) }); break;
       case 'route': T.showRoute = !T.showRoute; break;
       case 'undoTask':
         if (DR[S.mode]) DR[S.mode].act(a, v, S);
         else if (S.mode === 'score') { S.visits.pop(); }
+        else if (S.perDart) taskDartUndo();
         else if (S.phase !== 'task') S.phase = 'task';
         else if (S.log.length) { S.log.pop(); S.idx--; }
         break;
@@ -70,7 +74,7 @@
       case 'again': unlockVoice(); start(); break;
       case 'close': T.game = null; T.summary = null; break;
       case 'filter': T.filter = v; break;
-      case 'del': T.hist.splice(n, 1); break;
+      case 'del': { const e = T.hist.splice(n, 1)[0]; if (e) TS.remove(sidOf(e)); break; }
       case 'drOrder': s.drOrder = v; break;
       case 'homeData': T.route = 'stats'; T.stab = 'data'; window.scrollTo(0, 0); break;
       case 'export': exportData(); break;

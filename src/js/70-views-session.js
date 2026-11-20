@@ -11,7 +11,12 @@
       const showR = S.level < 3 || T.showRoute;
       h += showR ? `<div class="route">Weg: ${task.route}</div>` : `<button class="link" data-a="route">Weg anzeigen</button>`;
     }
-    if (S.phase === 'task') {
+    if (S.perDart && (S.phase === 'task' || S.phase === 'more')) {
+      const k = S.cur || 0;
+      h += `<div class="setlabel c">Pfeil ${k + 1}${S.phase === 'task' ? ' von ' + task.darts : ' (Zusatz)'}</div>`;
+      h += `<div class="row2 pdrow">${btn('pdHit', '✓ Treffer', undefined, 'mid pdhit')}${btn('pdMiss', '✕ Daneben', undefined, 'mid pdmiss')}</div>`;
+      if (S.phase === 'more') h += `<button class="link" data-a="skip">Aufgeben → nächste Aufgabe</button>`;
+    } else if (S.phase === 'task') {
       h += `<div class="setlabel c">Geschafft mit …</div><div class="okgrid">`;
       for (let i = 1; i <= task.darts; i++) h += btn('ok', `✓ ${i}`, i, 'okb');
       h += `</div><button class="big bad" data-a="fail">✕ Nicht in ${task.darts} Darts geschafft</button>`;

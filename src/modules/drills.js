@@ -73,7 +73,7 @@ window.DRILLS = (function () {
                          det: `${c.f1(e.hitPct)} % Treffer${e.done ? '' : ' · abgebrochen'}${e.worst && e.worst.length ? ' · zäh: ' + e.worst.map(w => lbl(w[0])).join(', ') : ''}` }),
     summary: (e, c) => `<div class="sumgrid"><div><b>${e.done ? e.darts : '–'}</b><small>Darts bis Bull</small></div><div><b>${c.f1(e.hitPct)} %</b><small>Trefferquote</small></div><div><b>${e.reached}/21</b><small>Felder geschafft</small></div></div>`
       + (e.worst.length ? `<div class="hint">Am meisten Darts gekostet: ${e.worst.map(w => `<b>${lbl(w[0])}</b> (${w[1]})`).join(', ')}</div>` : ''),
-    series: [{ n: 'Darts bis Bull', c: '#111', k: 'darts' }, { n: 'Trefferquote %', c: '#2563eb', k: 'hitPct' }],
+    series: [{ n: 'Darts bis Bull', c: '#ec4899', k: 'darts' }, { n: 'Trefferquote %', c: '#a1a1aa', k: 'hitPct' }],
     list: h => h.filter(e => e.done),
     ov: { val: e => e.darts, unit: ' Darts', low: true, only: e => e.done, bar: v => Math.max(0, 100 - (v - 21) / 1.2) },
     tip(e) {
@@ -123,7 +123,7 @@ window.DRILLS = (function () {
     },
     metric: (e, c) => ({ main: e.score + ' Pkt', det: `${c.f1(e.hitPct)} % Doppel · ${e.out ? 'raus in Runde ' + e.round : e.done ? 'alle 21 Runden' : 'abgebrochen nach ' + e.round}` }),
     summary: (e, c) => `<div class="sumgrid"><div><b class="${e.score > 0 ? '' : 'gl'}">${e.score}</b><small>Endpunktzahl</small></div><div><b>${c.f1(e.hitPct)} %</b><small>Doppelquote</small></div><div><b>${e.round}/21</b><small>Runden</small></div></div>`,
-    series: [{ n: 'Punkte', c: '#111', k: 'score' }],
+    series: [{ n: 'Punkte', c: '#ec4899', k: 'score' }],
     ov: { val: e => e.score, unit: ' Pkt', bar: v => Math.max(0, v / 7) },
     tip(e) {
       const g = BOB_GOAL[e.level], ng = BOB_GOAL[Math.min(4, e.level + 1)];
@@ -173,7 +173,7 @@ window.DRILLS = (function () {
       return `<div class="sumgrid"><div><b>${c.f1(e.hitPct)} %</b><small>Doppelquote</small></div><div><b>${e.hits}</b><small>Treffer</small></div><div><b>${e.darts}</b><small>Darts</small></div></div>`
         + `<div class="hint">${best.length ? 'Beste: ' + best.map(x => `<b>${dl(x[0])}</b> (${x[1]}/3)`).join(', ') + '. ' : ''}${miss.length ? 'Ohne Treffer: ' + miss.join(', ') + '.' : 'Jedes Doppel mindestens einmal getroffen!'}</div>`;
     },
-    series: [{ n: 'Doppelquote %', c: '#111', k: 'hitPct' }], max: 100,
+    series: [{ n: 'Doppelquote %', c: '#ec4899', k: 'hitPct' }], max: 100,
     ov: { val: e => e.hitPct, unit: ' %', bar: v => v },
     // Doppelquote pro Feld über alle Doppel-Runden
     extra(hist, c) {
@@ -230,7 +230,7 @@ window.DRILLS = (function () {
     },
     metric: (e, c) => ({ main: e.high ? 'bis ' + e.high : '–', det: `${e.ok}/${e.n} · ${c.f1(e.rate)} % · ${e.ok ? c.f1(e.dpc) + ' Darts/Finish' : 'kein Finish'}` }),
     summary: (e, c) => `<div class="sumgrid"><div><b>${e.high || '–'}</b><small>Höchstes Finish</small></div><div><b>${c.f1(e.rate)} %</b><small>Erfolgsquote</small></div><div><b>${e.ok ? c.f1(e.dpc) : '–'}</b><small>Darts pro Checkout</small></div></div>`,
-    series: [{ n: 'Höchstes Finish', c: '#111', k: 'high' }, { n: 'Erfolgsquote %', c: '#2563eb', k: 'rate' }],
+    series: [{ n: 'Höchstes Finish', c: '#ec4899', k: 'high' }, { n: 'Erfolgsquote %', c: '#a1a1aa', k: 'rate' }],
     ov: { val: e => e.high, unit: '', bar: v => (v - 40) / 1.3 },
     tip(e) {
       if (e.rate >= 60 && e.level < 4) return `Stark! ${Math.round(e.rate)} % – auf <b>${LVN[e.level + 1]}</b> startest du bei ${LAD_START[e.level + 1]}.`;
@@ -284,7 +284,7 @@ window.DRILLS = (function () {
     },
     metric: (e, c) => ({ main: e.score + ' Pkt', det: `${c.f1(e.hitPct)} % Treffer${e.sh ? ' · ' + e.sh + '× Shanghai' : ''}${e.out ? ' · raus in Runde ' + e.round : e.done ? '' : ' · abgebrochen'}` }),
     summary: (e, c) => `<div class="sumgrid"><div><b>${e.score}</b><small>Punkte</small></div><div><b>${c.f1(e.hitPct)} %</b><small>Trefferquote</small></div><div><b>${e.sh}</b><small>Shanghais</small></div></div>`,
-    series: [{ n: 'Punkte', c: '#111', k: 'score' }, { n: 'Trefferquote %', c: '#2563eb', k: 'hitPct' }],
+    series: [{ n: 'Punkte', c: '#ec4899', k: 'score' }, { n: 'Trefferquote %', c: '#a1a1aa', k: 'hitPct' }],
     ov: { val: e => e.score, unit: ' Pkt', bar: v => v / 4 },
     tip(e) {
       const g = SH_GOAL[e.level];
@@ -351,7 +351,7 @@ window.DRILLS = (function () {
     },
     metric: e => ({ main: e.score + ' Pkt', det: `${e.halves}× halbiert · ${e.n}/${e.rounds} Runden` }),
     summary: e => `<div class="sumgrid"><div><b>${e.score}</b><small>Endstand</small></div><div><b>${e.halves}</b><small>× halbiert</small></div><div><b>${e.n}/${e.rounds}</b><small>Runden</small></div></div>`,
-    series: [{ n: 'Endstand', c: '#111', k: 'score' }],
+    series: [{ n: 'Endstand', c: '#ec4899', k: 'score' }],
     ov: { val: e => e.score, unit: ' Pkt', bar: v => v / 4 },
     tip(e) {
       const g = HI_GOAL[e.level];
@@ -402,7 +402,7 @@ window.DRILLS = (function () {
     },
     metric: (e, c) => ({ main: e.done ? e.darts + ' Darts' : e.closed + '/7 zu', det: `MPR ${c.f1(e.mpr)}${e.done ? '' : ' · abgebrochen'}` }),
     summary: (e, c) => `<div class="sumgrid"><div><b>${e.done ? e.darts : '–'}</b><small>Darts bis alles zu</small></div><div><b>${c.f1(e.mpr)}</b><small>Marken pro Runde</small></div><div><b>${e.closed}/7</b><small>Felder zu</small></div></div>`,
-    series: [{ n: 'Darts bis alles zu', c: '#111', k: 'darts' }],
+    series: [{ n: 'Darts bis alles zu', c: '#ec4899', k: 'darts' }],
     list: h => h.filter(e => e.done),
     ov: { val: e => e.darts, unit: ' Darts', low: true, only: e => e.done, bar: v => Math.max(0, 100 - v) },
     tip(e) {

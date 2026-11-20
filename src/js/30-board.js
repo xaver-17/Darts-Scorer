@@ -10,17 +10,17 @@
     let s = `<circle r="198" fill="#0a0a0a"/><circle r="172" fill="#151515"/>`;
     ORDER.forEach((n, i) => {
       const a1 = i * 18 - 9, a2 = i * 18 + 9, dark = i % 2 === 0;
-      const sg = dark ? '#151515' : '#2a2a2e', rg = dark ? '#ff5a1f' : '#22d3ee';
+      const sg = dark ? '#141416' : '#2a2a30', rg = dark ? '#ff2d87' : '#f5f5f7';
       s += sector(15.9, 99, a1, a2, sg) + sector(99, 107, a1, a2, rg) + sector(107, 162, a1, a2, sg) + sector(162, 170, a1, a2, rg);
       const [tx, ty] = pt(185, i * 18);
       s += `<text x="${tx}" y="${(+ty + 6).toFixed(1)}" fill="#f4f4f5" font-size="17" font-weight="700" text-anchor="middle">${n}</text>`;
     });
-    s += `<circle r="15.9" fill="#22d3ee" stroke="#3a3a3e" stroke-width=".5"/><circle r="6.35" fill="#ff5a1f" stroke="#3a3a3e" stroke-width=".5"/>`;
+    s += `<circle r="15.9" fill="#f5f5f7" stroke="#3a3a3e" stroke-width=".5"/><circle r="6.35" fill="#ff2d87" stroke="#3a3a3e" stroke-width=".5"/>`;
     BOARD_BASE = s;
   })();
   // „Daneben“-Ring rund um die Scheibe: Tipp dort = Fehlwurf (0). Tipp außerhalb = Zoom schließen, nichts eintragen.
   const MISS_R = 240;
-  const MISS_RING = `<circle r="${MISS_R}" fill="#f4f4f5" stroke="#a1a1aa" stroke-width="1.5" stroke-dasharray="6 5"/>` +
+  const MISS_RING = `<circle r="${MISS_R}" fill="#16161b" stroke="#3f3f46" stroke-width="1.5" stroke-dasharray="6 5"/>` +
     `<text y="${-(MISS_R - 26)}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">DANEBEN</text>` +
     `<text y="${MISS_R - 14}" fill="#71717a" font-size="15" font-weight="600" text-anchor="middle" letter-spacing="2">DANEBEN</text>`;
   // Gezoomt: ganz dezent die Feldnamen in jedem Feld, damit man nicht daneben tippt

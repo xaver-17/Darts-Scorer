@@ -24,7 +24,7 @@ with sync_playwright() as p:
     check('Service Worker aktiv', pg.evaluate("navigator.serviceWorker.ready.then(r=>!!r.active)"))
     pg.reload(); pg.wait_for_timeout(500)
     ctx.set_offline(True); pg.reload(); pg.wait_for_selector('#nav [data-route="home"]')
-    check('Startet offline', pg.locator('.hero h1').inner_text() == 'Darts-Scorer')
+    check('Startet offline', 'Darts' in pg.locator('.topbar h1').inner_text())
     ctx.set_offline(False)
     # Export / Import
     pg.evaluate("""localStorage.setItem('dartsTrainer', JSON.stringify({hist:[{date:new Date().toISOString(),mode:'score',level:0,goal:30,n:3,avg:55,best:60,goalPct:100,c100:0,c140:0,c180:0}]}))""")

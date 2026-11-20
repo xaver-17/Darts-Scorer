@@ -24,7 +24,7 @@
     counter: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h6M12 9v6M9 15h6"/></svg>',
     home: '<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>'
   };
-  const LOGO = '<svg viewBox="-20 -20 40 40"><circle r="19" fill="#111"/><circle r="17" fill="none" stroke="#ec4899" stroke-width="3"/><circle r="10.5" fill="none" stroke="#f9a8d4" stroke-width="2.2"/><circle r="4" fill="#ec4899"/><path d="M6 -6 L17 -17 M14 -17 L17 -17 L17 -14" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>';
+  const LOGO = '<svg viewBox="-20 -20 40 40"><circle r="18.5" fill="#111"/><circle r="13" fill="none" stroke="#fff" stroke-width="2"/><circle r="7" fill="none" stroke="#fff" stroke-width="2"/><circle r="2.4" fill="#fff"/></svg>';
   const BLOCKNAME = { A: 'Zahlen treffen', S: 'Single', T: 'Triple', D: 'Doppel', B: 'Bull' };
 
   let T = { set: { mode: 'hit', level: 0, tasks: 10, bot: 2, start: 501, din: false, legs: 1 },

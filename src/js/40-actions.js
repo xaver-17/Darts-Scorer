@@ -71,6 +71,7 @@
       case 'filter': T.filter = v; break;
       case 'del': T.hist.splice(n, 1); break;
       case 'drOrder': s.drOrder = v; break;
+      case 'homeData': T.route = 'stats'; T.stab = 'data'; window.scrollTo(0, 0); break;
       case 'export': exportData(); break;
       case 'importPick': document.getElementById('importFile').click(); break;
       case 'wipe': T.confirm = 'wipe'; break;

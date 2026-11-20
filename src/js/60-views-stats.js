@@ -24,7 +24,7 @@
         <div><b>${L.s100}</b><small>100+</small></div><div><b>${L.s140}</b><small>140+</small></div><div><b>${L.s180}</b><small>180er</small></div></div>`;
       let run = 0, rd = 0;
       const list = G.map(e => { if (e.P) { run += e.P.pts; rd += e.P.darts; } return Object.assign({}, e, { run: rd ? run / rd * 3 : e.avg }); });
-      h += `<h2 class="sec">Entwicklung</h2>` + chart(list, [{ n: 'Ø pro Spiel', c: '#ec4899', k: 'avg' }, { n: 'Gesamt-Average', c: '#60a5fa', k: 'run' }], null, 'Spiel Nr.');
+      h += `<h2 class="sec">Entwicklung</h2>` + chart(list, [{ n: 'Ø pro Spiel', c: '#111', k: 'avg' }, { n: 'Gesamt-Average', c: '#2563eb', k: 'run' }], null, 'Spiel Nr.');
     }
     // Trainings
     const modes = Object.keys(TM).filter(k => k !== 'game' && T.hist.some(e => e.mode === k));

@@ -28,24 +28,18 @@ core = rd('core.js')
 ext_js = sorted(glob.glob(os.path.join(SRC, 'modules', '*.js')))
 ext_css = sorted(glob.glob(os.path.join(SRC, 'modules', '*.css')))
 core += ''.join(f'\n// ===== modules/{os.path.basename(m)} =====\n' + open(m, encoding='utf-8').read() for m in ext_js)
-css = rd('trainer.css') + rd('app.css').replace('BOARDBG', rd('boardbg.txt').strip()) + rd('pwa', 'pwa.css') + ''.join(open(c, encoding='utf-8').read() for c in ext_css)
+css = rd('trainer.css') + rd('app.css') + rd('pwa', 'pwa.css') + ''.join(open(c, encoding='utf-8').read() for c in ext_css)
 s = s.replace('</style>', css + '</style>', 1)
 s = s.replace('<div class="app">', '<div class="app">\n  <div id="viewCounter" style="display:none">\n  <div class="phead"><h1>Zähler</h1><p>Felder abwerfen, Summe wird geteilt</p></div>', 1)
 s = s.replace('<meta name="viewport" content="width=device-width, initial-scale=1">',
               '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">', 1)
 s = s.replace('<title>Zähler</title>', '<title>Darts-Scorer</title>\n' + rd('pwa', 'head.html').strip() +
-              '\n<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">', 1)
+              '', 1)
 i = s.index('\n<script>'); j = s.rindex('</div>', 0, i)
 s = s[:j] + '</div>\n  <div id="viewTrainer"></div>\n' + s[j:]
 s = s.replace('<body>', '<body>\n<nav id="nav"></nav>', 1)
 s = s.replace('\n<script>', '\n<script>\n' + core + '\n</script>\n<script>', 1)
 s = s.replace('</body>', '<script>\n' + tr + '\n</script>\n<script>\n' + rd('pwa', 'register.js') + '</script>\n</body>', 1)
-# Farben des Zählers an das App-Design anpassen (nur innerhalb von <style>)
-for a, c in [('background: #0f172a', 'background: rgba(0,0,0,.28)'), ('background: #1e293b', 'background: rgba(255,255,255,.055)'),
-             ('background: #334155', 'background: rgba(255,255,255,.1)'), ('#334155', 'rgba(255,255,255,.12)'), ('#3b82f6', '#ec4899')]:
-    st = s.index('<style>'); en = s.index('</style>')
-    s = s[:st] + s[st:en].replace(a, c) + s[en:]
-
 # ---------- dist/ schreiben ----------
 os.makedirs(DIST, exist_ok=True)
 shutil.rmtree(os.path.join(DIST, 'icons'), ignore_errors=True)

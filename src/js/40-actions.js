@@ -71,11 +71,12 @@
       case 'filter': T.filter = v; break;
       case 'del': T.hist.splice(n, 1); break;
       case 'drOrder': s.drOrder = v; break;
-      default: if (EXT.actions[a]) EXT.actions[a](v, n); else console.warn('Unbekannte Aktion:', a);
+      case 'homeData': T.route = 'stats'; T.stab = 'data'; window.scrollTo(0, 0); break;
       case 'export': exportData(); break;
       case 'importPick': document.getElementById('importFile').click(); break;
       case 'wipe': T.confirm = 'wipe'; break;
       case 'wipeYes': wipeData(); return;
+      default: if (EXT.actions[a]) EXT.actions[a](v, n); else console.warn('Unbekannte Aktion:', a); break;
     }
     render();
   }

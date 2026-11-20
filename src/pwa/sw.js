@@ -14,9 +14,10 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
+  if (new URL(req.url).pathname.endsWith('/version.json')) return;   // immer frisch vom Server
   // Seite selbst: erst Netz (damit Updates ankommen), offline aus dem Cache
   if (req.mode === 'navigate') {
-    e.respondWith(fetch(req).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put('./index.html', c)); return r; })
+    e.respondWith(fetch(req, { cache: 'no-store' }).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put('./index.html', c)); return r; })
       .catch(() => caches.match('./index.html')));
     return;
   }

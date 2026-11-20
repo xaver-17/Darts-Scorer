@@ -1,7 +1,7 @@
 // ===== Service Worker: macht die App offline-fähig =====
-// 36fe5fe25d und ["./", "./index.html", "./manifest.webmanifest", "./icons/apple-touch-icon.png", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png"] werden von tools/build.py ersetzt. Neue Version = neuer Cache,
+// 36c328dac1 und ["./", "./index.html", "./manifest.webmanifest", "./icons/apple-touch-icon.png", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png"] werden von tools/build.py ersetzt. Neue Version = neuer Cache,
 // alte Caches werden beim Aktivieren gelöscht.
-const CACHE = 'darts-36fe5fe25d';
+const CACHE = 'darts-36c328dac1';
 const PRECACHE = ["./", "./index.html", "./manifest.webmanifest", "./icons/apple-touch-icon.png", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png"];
 
 self.addEventListener('install', e => {
@@ -14,9 +14,10 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
+  if (new URL(req.url).pathname.endsWith('/version.json')) return;   // immer frisch vom Server
   // Seite selbst: erst Netz (damit Updates ankommen), offline aus dem Cache
   if (req.mode === 'navigate') {
-    e.respondWith(fetch(req).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put('./index.html', c)); return r; })
+    e.respondWith(fetch(req, { cache: 'no-store' }).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put('./index.html', c)); return r; })
       .catch(() => caches.match('./index.html')));
     return;
   }

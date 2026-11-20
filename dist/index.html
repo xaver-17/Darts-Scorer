@@ -480,6 +480,10 @@
   @keyframes spDart { from { transform: translate(90px, -90px); opacity: 0; } 30% { opacity: 1; } to { transform: translate(0, 0); opacity: 1; } }
   @keyframes spWave { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(6.5); opacity: 0; } }
   @keyframes spName { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  /* ---- Hinweis auf neue Version ---- */
+  #updbar { position: fixed; left: 50%; transform: translateX(-50%); top: max(12px, env(safe-area-inset-top)); z-index: 90; display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+            padding: 10px 16px; border: none; border-radius: 8px; background: #111; color: #fff; font: inherit; font-size: 14px; text-align: left; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,.18); animation: vtIn .3s ease-out both; }
+  #updbar span { font-size: 12px; color: #d4d4d8; }
   /* Trainingsspiele (drills.js) */
   .tgrid.dgrid { grid-template-columns: 1fr 1fr; }
   .okb.zero { background: #f4f4f5; color: #18181b; }
@@ -2487,11 +2491,45 @@ window.DRILLS = (function () {
 
 </script>
 <script>
-// ===== PWA: Service Worker anmelden (nur über http/https, nicht bei file://) =====
-window.APP_VERSION = '36fe5fe25d';
-if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
-  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service Worker nicht registriert:', e)); });
-}
+// ===== PWA: Service Worker + Update-Prüfung (nur über http/https, nicht bei file://) =====
+window.APP_VERSION = '36c328dac1';
+(function () {
+  if (!/^https?:$/.test(location.protocol)) return;
+  let shown = false;
+  function banner() {
+    if (shown) return; shown = true;
+    const b = document.createElement('button');
+    b.id = 'updbar'; b.type = 'button';
+    b.innerHTML = '<b>Neue Version verfügbar</b><span>Tippen zum Aktualisieren</span>';
+    b.onclick = () => { b.disabled = true; reloadFresh(); };
+    document.body.appendChild(b);
+  }
+  // Neu laden, ohne alte Kopien aus Cache oder Service Worker zu nehmen
+  async function reloadFresh() {
+    try {
+      if ('caches' in window) { const ks = await caches.keys(); await Promise.all(ks.filter(k => k.startsWith('darts-')).map(k => caches.delete(k))); }
+      if (navigator.serviceWorker) { const r = await navigator.serviceWorker.getRegistration(); if (r) await r.update(); }
+    } catch (e) {}
+    location.reload();
+  }
+  // Version auf dem Server mit der laufenden vergleichen (ohne Browser-Cache)
+  async function check() {
+    try {
+      const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) return;
+      const v = (await r.json()).version;
+      if (v && v !== window.APP_VERSION) banner();
+    } catch (e) {}   // offline: nichts tun
+  }
+  window.addEventListener('load', () => {
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+      .then(reg => { reg.update().catch(() => {}); }).catch(e => console.warn('Service Worker nicht registriert:', e));
+    setTimeout(check, 2500);
+  });
+  // Beim Zurückkehren in die App (Dock, Home-Bildschirm) erneut prüfen
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+  setInterval(check, 15 * 60 * 1000);
+})();
 </script>
 </body>
 </html>

@@ -52,4 +52,5 @@ shutil.copy(os.path.join(SRC, 'pwa', 'manifest.webmanifest'), DIST)
 sw = rd('pwa', 'sw.js').replace('__APP_VERSION__', version).replace(
     '__PRECACHE__', json.dumps(['./', './index.html', './manifest.webmanifest'] + ['./icons/' + i for i in icons]))
 open(os.path.join(DIST, 'sw.js'), 'w', encoding='utf-8').write(sw)
+open(os.path.join(DIST, 'version.json'), 'w', encoding='utf-8').write(json.dumps({'version': version}))
 print(f'dist/ gebaut · Version {version} · {len(mods)} JS-Module · index.html {len(s.encode()) // 1024} KB')

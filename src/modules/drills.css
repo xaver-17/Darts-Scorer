@@ -1,0 +1,3 @@
+  /* Trainingsspiele (drills.js) */
+  .tgrid.dgrid { grid-template-columns: 1fr 1fr; }
+  .okb.zero { background: rgba(255,255,255,.12); color: #f1f5f9; }

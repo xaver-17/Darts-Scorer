@@ -1,0 +1,12 @@
+  /* ---- PWA: Platz für Notch / Statusleiste, wenn die App vom Home-Bildschirm startet ---- */
+  body { padding-top: max(20px, env(safe-area-inset-top)); padding-left: max(20px, env(safe-area-inset-left)); padding-right: max(20px, env(safe-area-inset-right)); }
+  html, body { overscroll-behavior-y: none; }
+  button { -webkit-tap-highlight-color: transparent; }
+  /* ---- Daten-Tab (Sicherung) ---- */
+  .datacard p { color: #a1a1aa; font-size: 14px; line-height: 1.45; margin: 4px 0 14px; text-align: left; }
+  .datacard .big { margin-top: 8px; }
+  .datacard .ghost { background: transparent; border: 1px solid rgba(255,255,255,.18); color: #e4e4e7; }
+  .datacard .danger { background: transparent; border: 1px solid rgba(239,68,68,.6); color: #fca5a5; }
+  .datamsg { margin-top: 12px; font-size: 14px; min-height: 18px; color: #86efac; }
+  .datamsg.err { color: #fca5a5; }
+  .appver { margin-top: 18px; font-size: 12px; color: #71717a; text-align: center; }

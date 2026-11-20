@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zähler</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #f1f5f9;
+         min-height: 100vh; display: flex; justify-content: center; padding: 20px 20px 40px; }
+  .app { width: 100%; max-width: 420px; text-align: center; }
+  .label { font-size: 14px; color: #94a3b8; text-transform: uppercase; letter-spacing: .1em; }
+  .modebadge { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; font-size: 12px;
+               background: #312e81; color: #c7d2fe; letter-spacing: .05em; }
+  .total { font-size: 96px; font-weight: 800; line-height: 1.1; margin: 8px 0 4px; font-variant-numeric: tabular-nums; }
+  .sub { font-size: 14px; color: #94a3b8; margin-bottom: 22px; }
+  .choices { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px; }
+  .choice { padding: 16px 0; font-size: 22px; font-weight: 700; border-radius: 12px; border: 2px solid #334155;
+            background: #1e293b; color: #f1f5f9; cursor: pointer; }
+  .choice.active { background: #3b82f6; border-color: #3b82f6; }
+  .choice:disabled { opacity: .35; cursor: not-allowed; }
+  .choice.active:disabled { opacity: 1; }
+  .lockhint { font-size: 12px; color: #64748b; margin: -8px 0 12px; min-height: 16px; }
+  .add { width: 100%; padding: 28px; font-size: 32px; font-weight: 800; border: none; border-radius: 18px;
+         background: #22c55e; color: #052e16; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+         transition: transform .08s; }
+  .add:active { transform: scale(.97); }
+  .row { display: flex; gap: 8px; margin-top: 12px; }
+  .row button { flex: 1; padding: 14px; font-size: 16px; border-radius: 12px; border: 1px solid #334155;
+                background: transparent; color: #cbd5e1; cursor: pointer; }
+  .confirm { display: none; margin-top: 12px; padding: 14px; border-radius: 12px; background: #1e293b; }
+  .confirm.show { display: block; }
+  .confirm p { margin-bottom: 10px; }
+  .confirm .yes { background: #ef4444; color: #fff; border: none; }
+  .log { margin-top: 14px; font-size: 14px; color: #64748b; min-height: 20px; word-break: break-word; }
+
+  h2 { font-size: 14px; color: #94a3b8; text-transform: uppercase; letter-spacing: .1em; margin: 26px 0 10px; font-weight: 600; }
+  .done-count { color: #22c55e; }
+
+  .tapmode { display: flex; gap: 6px; margin-bottom: 10px; }
+  .tapmode button { flex: 1; padding: 10px; font-size: 15px; font-weight: 700; border-radius: 10px; border: 1px solid #334155;
+                    background: transparent; color: #cbd5e1; cursor: pointer; }
+  .tapmode button.active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+  .tapmode button.active.lock { background: #ef4444; border-color: #ef4444; }
+
+  .numbers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .num { position: relative; padding: 14px 0 22px; font-size: 22px; font-weight: 700; border-radius: 12px;
+         border: 2px solid #334155; background: #1e293b; color: #f1f5f9; cursor: pointer; overflow: hidden;
+         user-select: none; -webkit-tap-highlight-color: transparent; transition: background .15s, transform .08s; }
+  .num:active { transform: scale(.95); }
+  .num .dots { position: absolute; left: 0; right: 0; bottom: 6px; display: flex; justify-content: center; gap: 4px; }
+  .num .dot { width: 7px; height: 7px; border-radius: 50%; background: #334155; }
+  .num .dot.on { background: #facc15; }
+  .num.part { border-color: #facc15; }
+  .num.done { background: #22c55e; border-color: #22c55e; color: #052e16; }
+  .num.done .dot { background: #052e16; }
+  .num.wide { grid-column: span 2; }
+  .num.locked { background: #1e293b; border-color: #7f1d1d; color: #64748b; }
+  .num.locked .dots { opacity: .3; }
+  .num.locked::after { content: '✕'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+                       font-size: 40px; color: #ef4444; opacity: .85; }
+  .numbers.lockmode .num:not(.locked) { border-style: dashed; }
+
+  details { margin-top: 18px; background: #1e293b; border-radius: 14px; text-align: left; }
+  summary { padding: 14px 16px; font-weight: 700; cursor: pointer; list-style: none; display: flex; justify-content: space-between; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '▾'; color: #64748b; }
+  details[open] summary::after { content: '▴'; }
+  .setbody { padding: 0 14px 14px; }
+  .setlabel { font-size: 13px; color: #94a3b8; margin: 14px 0 8px; }
+  .setlabel:first-child { margin-top: 0; }
+  .seg { display: flex; gap: 4px; }
+  .seg button { flex: 1; padding: 9px 0; font-size: 15px; font-weight: 700; border-radius: 8px; border: 1px solid #334155;
+                background: transparent; color: #cbd5e1; cursor: pointer; }
+  .seg button.active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+  .two { display: flex; gap: 10px; }
+  .two > div { flex: 1; }
+  .pick { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+  .pick button { padding: 9px 0; font-size: 15px; font-weight: 700; border-radius: 8px; border: 1px solid #334155;
+                 background: transparent; color: #64748b; cursor: pointer; }
+  .pick button.on { background: #334155; border-color: #64748b; color: #f1f5f9; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .presets button { padding: 7px 10px; font-size: 13px; border-radius: 999px; border: 1px solid #334155;
+                    background: transparent; color: #cbd5e1; cursor: pointer; }
+  .hint { font-size: 12px; color: #64748b; margin-top: 6px; }
+
+  .banner { display: none; margin-top: 16px; padding: 14px; border-radius: 12px; background: #14532d; color: #bbf7d0; font-weight: 600; }
+  .banner.show { display: block; }
+
+  .filter { display: flex; gap: 6px; margin-bottom: 10px; }
+  .filter button { flex: 1; padding: 8px 0; font-size: 13px; font-weight: 600; border-radius: 999px; border: 1px solid #334155;
+                   background: transparent; color: #cbd5e1; cursor: pointer; }
+  .filter button.active { background: #f1f5f9; color: #0f172a; border-color: #f1f5f9; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; font-weight: 600;
+       padding: 8px 4px; border-bottom: 1px solid #334155; }
+  td { padding: 10px 4px; border-bottom: 1px solid #1e293b; }
+  td.tot { font-weight: 700; color: #60a5fa; }
+  td.res { font-weight: 800; color: #4ade80; }
+  td.md { font-size: 12px; color: #c7d2fe; }
+  .empty { color: #64748b; font-size: 14px; padding: 14px 0; }
+  .avg { margin-top: 10px; font-size: 14px; color: #94a3b8; }
+  .del { background: none; border: none; color: #64748b; font-size: 18px; cursor: pointer; padding: 0 4px; }
+
+  .chartbox { background: #1e293b; border-radius: 14px; padding: 12px 8px 8px; }
+  .legend { display: flex; justify-content: center; gap: 18px; font-size: 13px; color: #cbd5e1; margin-bottom: 6px; }
+  .legend span::before { content: ''; display: inline-block; width: 14px; height: 3px; border-radius: 2px;
+                         vertical-align: middle; margin-right: 6px; background: var(--c); }
+  .chartnote { font-size: 12px; color: #64748b; margin-top: 4px; }
+  svg text { font-family: inherit; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="label">Gesamt <span class="modebadge" id="modebadge">Normal</span></div>
+  <div class="total" id="total">0</div>
+  <div class="sub" id="sub">0 Eingaben</div>
+
+  <div class="choices" id="choices"></div>
+  <div class="lockhint" id="lockhint"></div>
+  <button class="add" id="add">+1</button>
+
+  <h2>Felder · <span class="done-count" id="doneCount">0</span> / <span id="activeCount">22</span> abgeschlossen</h2>
+  <div class="tapmode">
+    <button id="tapHit" class="active">🎯 Treffen</button>
+    <button id="tapLock" class="lock">✕ Sperren</button>
+  </div>
+  <div class="numbers" id="numbers"></div>
+
+  <details id="settings">
+    <summary>⚙️ Einstellungen</summary>
+    <div class="setbody">
+      <div class="setlabel">Wurfart</div>
+      <div class="seg" id="modeSeg"></div>
+
+      <div class="two">
+        <div><div class="setlabel">25 treffen</div><div class="seg" data-field="25"></div></div>
+        <div><div class="setlabel">50 treffen</div><div class="seg" data-field="50"></div></div>
+      </div>
+
+      <div class="setlabel">Zahlen im Spiel</div>
+      <div class="pick" id="pick"></div>
+      <div class="presets">
+        <button data-p="all">Alle</button>
+        <button data-p="none">Keine</button>
+        <button data-p="1-20">1–20</button>
+        <button data-p="15-20">15–20 + Bull</button>
+        <button data-p="bull">Nur Bull</button>
+      </div>
+      <div class="hint">Gilt dauerhaft. Zum Sperren nur für eine Runde oben „✕ Sperren“ nutzen.</div>
+    </div>
+  </details>
+
+  <div class="row">
+    <button id="undo">↶ Rückgängig</button>
+    <button id="reset">Runde zurücksetzen</button>
+  </div>
+  <div class="confirm" id="confirm">
+    <p>Aktuelle Runde (Summe, Felder, Sperren) zurücksetzen?</p>
+    <div class="row" style="margin-top:0">
+      <button id="no">Abbrechen</button>
+      <button class="yes" id="yes">Ja, zurücksetzen</button>
+    </div>
+  </div>
+  <div class="banner" id="banner"></div>
+  <div class="log" id="log"></div>
+
+  <h2>Ergebnisse</h2>
+  <div class="filter" id="filter"></div>
+  <div id="results"></div>
+  <div class="row" id="clearRow" style="display:none"><button id="clearAll">Tabelle leeren</button></div>
+  <div class="confirm" id="confirm2">
+    <p>Alle Ergebnisse löschen?</p>
+    <div class="row" style="margin-top:0">
+      <button id="no2">Abbrechen</button>
+      <button class="yes" id="yes2">Ja, löschen</button>
+    </div>
+  </div>
+
+  <h2>Verlauf</h2>
+  <div class="chartbox">
+    <div class="legend"><span style="--c:#60a5fa">Gesamtzahl</span><span style="--c:#4ade80">Geteilte Zahl</span></div>
+    <div id="chart"></div>
+    <div class="chartnote">Je höher die Linie, desto niedriger die Zahl</div>
+  </div>
+</div>
+
+<script>
+  const FIELDS = [...Array.from({ length: 20 }, (_, i) => i + 1), 25, 50];
+  const MODES = { N: 'Normal', D: 'Doppel', T: 'Triple' };
+  let step = 1, history = [], need = { 25: 3, 50: 3 }, results = [];
+  let mode = 'N', inPlay = [...FIELDS], locked = [], tap = 'hit', filter = 'all';
+  try {
+    const s = JSON.parse(localStorage.getItem('zaehler3') || 'null');
+    if (s) {
+      step = s.step || 1; history = s.history || []; need = s.need || need; results = s.results || [];
+      mode = s.mode || 'N'; inPlay = s.inPlay || inPlay; locked = s.locked || []; filter = s.filter || 'all';
+    }
+  } catch (e) {}
+  results.forEach(r => {
+    if (r.div === undefined) { r.div = r.count ? Math.round(r.total / r.count) || 1 : 1; r.result = r.total / r.div; }
+  });
+
+  const $ = id => document.getElementById(id);
+  const choices = $('choices'), numbers = $('numbers');
+  const req = k => (k === 25 || k === 50) ? need[k] : 3;
+  const hits = k => Math.min(req(k), history.filter(h => h.t === 'hit' && h.k === k).length);
+  const fmt = x => x.toLocaleString('de-DE', { maximumFractionDigits: 2 });
+  const adds = () => history.filter(h => h.t === 'add');
+  const stepLocked = () => adds().length > 0;
+  const active = () => FIELDS.filter(k => inPlay.includes(k) && !locked.includes(k));
+
+  // Zahlen-Auswahl 1–5
+  for (let i = 1; i <= 5; i++) {
+    const b = document.createElement('button');
+    b.className = 'choice'; b.textContent = i;
+    b.onclick = () => { if (!stepLocked()) { step = i; render(); } };
+    choices.appendChild(b);
+  }
+
+  // Treffen / Sperren
+  $('tapHit').onclick = () => { tap = 'hit'; render(); };
+  $('tapLock').onclick = () => { tap = 'lock'; render(); };
+
+  // Wurfart
+  Object.entries(MODES).forEach(([k, v]) => {
+    const b = document.createElement('button');
+    b.textContent = v; b.dataset.m = k;
+    b.onclick = () => { mode = k; render(); };
+    $('modeSeg').appendChild(b);
+  });
+
+  // 25/50 Anzahl
+  document.querySelectorAll('.seg[data-field]').forEach(seg => {
+    const k = +seg.dataset.field;
+    [1, 2, 3].forEach(n => {
+      const b = document.createElement('button');
+      b.textContent = n + '×';
+      b.onclick = () => {
+        need[k] = n;
+        let extra = history.filter(h => h.t === 'hit' && h.k === k).length - n;
+        for (let i = history.length - 1; i >= 0 && extra > 0; i--)
+          if (history[i].t === 'hit' && history[i].k === k) { history.splice(i, 1); extra--; }
+        render(); checkDone();
+      };
+      seg.appendChild(b);
+    });
+  });
+
+  // Zahlen im Spiel
+  FIELDS.forEach(k => {
+    const b = document.createElement('button');
+    b.textContent = k; b.dataset.k = k;
+    b.onclick = () => {
+      inPlay = inPlay.includes(k) ? inPlay.filter(x => x !== k) : [...inPlay, k];
+      render(); checkDone();
+    };
+    $('pick').appendChild(b);
+  });
+  document.querySelectorAll('.presets button').forEach(b => b.onclick = () => {
+    const p = b.dataset.p;
+    inPlay = p === 'all' ? [...FIELDS] : p === 'none' ? [] : p === '1-20' ? FIELDS.filter(k => k <= 20)
+           : p === '15-20' ? FIELDS.filter(k => k >= 15) : [25, 50];
+    render(); checkDone();
+  });
+
+  // Ergebnis-Filter
+  [['all', 'Alle'], ['N', 'Normal'], ['D', 'Doppel'], ['T', 'Triple']].forEach(([k, v]) => {
+    const b = document.createElement('button');
+    b.textContent = v; b.dataset.f = k;
+    b.onclick = () => { filter = k; render(); };
+    $('filter').appendChild(b);
+  });
+
+  function tapField(k) {
+    hideBanner();
+    if (tap === 'lock') {
+      locked = locked.includes(k) ? locked.filter(x => x !== k) : [...locked, k];
+      render(); checkDone();
+    } else if (!locked.includes(k) && hits(k) < req(k)) {
+      history.push({ t: 'hit', k }); render(); checkDone();
+    }
+  }
+
+  function checkDone() {
+    const act = active();
+    if (!act.length || !act.every(k => hits(k) >= req(k))) return;
+    const a = adds();
+    const total = a.reduce((s, h) => s + h.n, 0);
+    const div = a.length ? a[0].n : step;
+    const result = total / div;
+    results.push({ date: new Date().toISOString(), total, count: a.length, div, result, mode,
+                   fields: act, n25: need[25], n50: need[50] });
+    history = []; locked = []; tap = 'hit';
+    showBanner('Abgeschlossen (' + MODES[mode] + ', ' + act.length + ' Felder)! ' + total + ' ÷ ' + div + ' = ' + fmt(result));
+    render();
+  }
+  function showBanner(t) { $('banner').textContent = t; $('banner').classList.add('show'); }
+  function hideBanner() { $('banner').classList.remove('show'); }
+
+  function save() {
+    try { localStorage.setItem('zaehler3', JSON.stringify({ step, history, need, results, mode, inPlay, locked, filter })); } catch (e) {}
+  }
+
+  const shown = () => results.map((r, i) => ({ ...r, nr: i + 1, idx: i })).filter(r => filter === 'all' || r.mode === filter);
+
+  function renderResults() {
+    const box = $('results'), list = shown();
+    $('clearRow').style.display = results.length ? 'flex' : 'none';
+    if (!list.length) { box.innerHTML = '<div class="empty">' + (results.length ? 'Keine Runden mit dieser Wurfart.' : 'Noch keine abgeschlossenen Runden.') + '</div>'; return; }
+    let html = '<table><tr><th>#</th><th>Datum</th><th>Art</th><th>Summe</th><th>÷</th><th>Ergebnis</th><th></th></tr>';
+    list.forEach(r => {
+      const d = new Date(r.date);
+      const ds = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      const md = r.mode ? MODES[r.mode] : '–';
+      const fl = r.fields ? ' · ' + r.fields.length + 'F' : '';
+      html += `<tr><td>${r.nr}</td><td>${ds}</td><td class="md">${md}${fl}</td><td class="tot">${r.total}</td><td>${r.div}</td><td class="res">${fmt(r.result)}</td><td><button class="del" data-i="${r.idx}">×</button></td></tr>`;
+    });
+    html += '</table>';
+    html += '<div class="avg">Durchschnitt: Gesamt <b>' + fmt(list.reduce((s, r) => s + r.total, 0) / list.length) +
+            '</b> · Geteilt <b>' + fmt(list.reduce((s, r) => s + r.result, 0) / list.length) + '</b></div>';
+    box.innerHTML = html;
+    box.querySelectorAll('.del').forEach(b => b.onclick = () => { results.splice(+b.dataset.i, 1); render(); });
+  }
+
+  function niceMax(v) {
+    if (v <= 0) return 10;
+    const p = Math.pow(10, Math.floor(Math.log10(v)));
+    for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p;
+    return 10 * p;
+  }
+
+  function renderChart() {
+    const box = $('chart'), list = shown();
+    if (!list.length) { box.innerHTML = '<div class="empty">Der Graph erscheint nach der ersten Runde.</div>'; return; }
+    const W = 400, H = 240, L = 36, R = 14, T = 14, B = 26;
+    const pw = W - L - R, ph = H - T - B;
+    const max = niceMax(Math.max(...list.map(r => Math.max(r.total, r.result))));
+    const n = list.length;
+    const x = i => L + (n === 1 ? pw / 2 : i * pw / (n - 1));
+    const y = v => T + (v / max) * ph;   // umgedreht: 0 oben
+
+    let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">`;
+    for (let g = 0; g <= 4; g++) {
+      const v = max * g / 4, yy = y(v);
+      s += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="#334155" stroke-width="1"/>`;
+      s += `<text x="${L - 6}" y="${yy + 4}" fill="#64748b" font-size="11" text-anchor="end">${fmt(v)}</text>`;
+    }
+    const every = Math.ceil(n / 10);
+    list.forEach((r, i) => {
+      if (i % every === 0 || i === n - 1)
+        s += `<text x="${x(i)}" y="${H - 8}" fill="#64748b" font-size="11" text-anchor="middle">${r.nr}</text>`;
+    });
+    const line = (key, color) => {
+      const pts = list.map((r, i) => `${x(i).toFixed(1)},${y(r[key]).toFixed(1)}`).join(' ');
+      let out = n > 1 ? `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>` : '';
+      list.forEach((r, i) => {
+        out += `<circle cx="${x(i)}" cy="${y(r[key])}" r="4" fill="${color}" stroke="#1e293b" stroke-width="2"><title>Runde ${r.nr}: ${fmt(r[key])}</title></circle>`;
+      });
+      return out;
+    };
+    s += line('total', '#60a5fa') + line('result', '#4ade80');
+    s += '</svg>';
+    box.innerHTML = s;
+  }
+
+  function render() {
+    const a = adds();
+    $('total').textContent = a.reduce((s, h) => s + h.n, 0);
+    $('sub').textContent = a.length + (a.length === 1 ? ' Eingabe' : ' Eingaben');
+    $('add').textContent = '+' + step;
+    $('modebadge').textContent = MODES[mode];
+    const lk = stepLocked();
+    [...choices.children].forEach((b, i) => { b.classList.toggle('active', i + 1 === step); b.disabled = lk && i + 1 !== step; });
+    $('lockhint').textContent = lk ? 'Zahl für diese Runde festgelegt: ÷ ' + step : '';
+
+    $('tapHit').classList.toggle('active', tap === 'hit');
+    $('tapLock').classList.toggle('active', tap === 'lock');
+    numbers.classList.toggle('lockmode', tap === 'lock');
+
+    // Felder neu aufbauen (nur Zahlen im Spiel)
+    numbers.innerHTML = '';
+    const shownFields = FIELDS.filter(k => inPlay.includes(k));
+    let done = 0;
+    shownFields.forEach(k => {
+      const r = req(k), h = hits(k), isL = locked.includes(k);
+      if (!isL && h >= r) done++;
+      const b = document.createElement('button');
+      b.className = 'num' + (k >= 25 ? ' wide' : '') + (isL ? ' locked' : h >= r ? ' done' : h ? ' part' : '');
+      b.innerHTML = k + '<span class="dots">' + Array.from({ length: r }, (_, j) => `<span class="dot${j < h ? ' on' : ''}"></span>`).join('') + '</span>';
+      b.onclick = () => tapField(k);
+      numbers.appendChild(b);
+    });
+    if (!shownFields.length) numbers.innerHTML = '<div class="empty" style="grid-column:1/-1">Keine Zahlen im Spiel – in den Einstellungen auswählen.</div>';
+    $('doneCount').textContent = done;
+    $('activeCount').textContent = active().length;
+
+    document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('active', b.dataset.m === mode));
+    document.querySelectorAll('.seg[data-field]').forEach(seg => {
+      [...seg.children].forEach((b, i) => b.classList.toggle('active', i + 1 === need[+seg.dataset.field]));
+    });
+    document.querySelectorAll('#pick button').forEach(b => b.classList.toggle('on', inPlay.includes(+b.dataset.k)));
+    document.querySelectorAll('#filter button').forEach(b => b.classList.toggle('active', b.dataset.f === filter));
+
+    $('log').textContent = a.length ? 'Verlauf: ' + a.slice(-15).map(h => '+' + h.n).join(' ') : '';
+    renderResults();
+    renderChart();
+    save();
+  }
+
+  $('add').onclick = () => { history.push({ t: 'add', n: step }); hideBanner(); render(); };
+  $('undo').onclick = () => { history.pop(); render(); };
+  $('reset').onclick = () => $('confirm').classList.add('show');
+  $('no').onclick = () => $('confirm').classList.remove('show');
+  $('yes').onclick = () => { history = []; locked = []; $('confirm').classList.remove('show'); render(); };
+  $('clearAll').onclick = () => $('confirm2').classList.add('show');
+  $('no2').onclick = () => $('confirm2').classList.remove('show');
+  $('yes2').onclick = () => { results = []; $('confirm2').classList.remove('show'); render(); };
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,2175 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Darts-Scorer</title>
+<meta name="theme-color" content="#0b0b12">
+<meta name="description" content="Darts-Scorer: X01 gegen den Bot, Training und Statistiken">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Darts">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: rgba(0,0,0,.28); color: #f1f5f9;
+         min-height: 100vh; display: flex; justify-content: center; padding: 20px 20px 40px; }
+  .app { width: 100%; max-width: 420px; text-align: center; }
+  .label { font-size: 14px; color: #94a3b8; text-transform: uppercase; letter-spacing: .1em; }
+  .modebadge { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; font-size: 12px;
+               background: #312e81; color: #c7d2fe; letter-spacing: .05em; }
+  .total { font-size: 96px; font-weight: 800; line-height: 1.1; margin: 8px 0 4px; font-variant-numeric: tabular-nums; }
+  .sub { font-size: 14px; color: #94a3b8; margin-bottom: 22px; }
+  .choices { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px; }
+  .choice { padding: 16px 0; font-size: 22px; font-weight: 700; border-radius: 12px; border: 2px solid rgba(255,255,255,.12);
+            background: rgba(255,255,255,.055); color: #f1f5f9; cursor: pointer; }
+  .choice.active { background: #ec4899; border-color: #ec4899; }
+  .choice:disabled { opacity: .35; cursor: not-allowed; }
+  .choice.active:disabled { opacity: 1; }
+  .lockhint { font-size: 12px; color: #64748b; margin: -8px 0 12px; min-height: 16px; }
+  .add { width: 100%; padding: 28px; font-size: 32px; font-weight: 800; border: none; border-radius: 18px;
+         background: #22c55e; color: #052e16; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+         transition: transform .08s; }
+  .add:active { transform: scale(.97); }
+  .row { display: flex; gap: 8px; margin-top: 12px; }
+  .row button { flex: 1; padding: 14px; font-size: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12);
+                background: transparent; color: #cbd5e1; cursor: pointer; }
+  .confirm { display: none; margin-top: 12px; padding: 14px; border-radius: 12px; background: rgba(255,255,255,.055); }
+  .confirm.show { display: block; }
+  .confirm p { margin-bottom: 10px; }
+  .confirm .yes { background: #ef4444; color: #fff; border: none; }
+  .log { margin-top: 14px; font-size: 14px; color: #64748b; min-height: 20px; word-break: break-word; }
+
+  h2 { font-size: 14px; color: #94a3b8; text-transform: uppercase; letter-spacing: .1em; margin: 26px 0 10px; font-weight: 600; }
+  .done-count { color: #22c55e; }
+
+  .tapmode { display: flex; gap: 6px; margin-bottom: 10px; }
+  .tapmode button { flex: 1; padding: 10px; font-size: 15px; font-weight: 700; border-radius: 10px; border: 1px solid rgba(255,255,255,.12);
+                    background: transparent; color: #cbd5e1; cursor: pointer; }
+  .tapmode button.active { background: #ec4899; border-color: #ec4899; color: #fff; }
+  .tapmode button.active.lock { background: #ef4444; border-color: #ef4444; }
+
+  .numbers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .num { position: relative; padding: 14px 0 22px; font-size: 22px; font-weight: 700; border-radius: 12px;
+         border: 2px solid rgba(255,255,255,.12); background: rgba(255,255,255,.055); color: #f1f5f9; cursor: pointer; overflow: hidden;
+         user-select: none; -webkit-tap-highlight-color: transparent; transition: background .15s, transform .08s; }
+  .num:active { transform: scale(.95); }
+  .num .dots { position: absolute; left: 0; right: 0; bottom: 6px; display: flex; justify-content: center; gap: 4px; }
+  .num .dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.1); }
+  .num .dot.on { background: #facc15; }
+  .num.part { border-color: #facc15; }
+  .num.done { background: #22c55e; border-color: #22c55e; color: #052e16; }
+  .num.done .dot { background: #052e16; }
+  .num.wide { grid-column: span 2; }
+  .num.locked { background: rgba(255,255,255,.055); border-color: #7f1d1d; color: #64748b; }
+  .num.locked .dots { opacity: .3; }
+  .num.locked::after { content: '✕'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+                       font-size: 40px; color: #ef4444; opacity: .85; }
+  .numbers.lockmode .num:not(.locked) { border-style: dashed; }
+
+  details { margin-top: 18px; background: rgba(255,255,255,.055); border-radius: 14px; text-align: left; }
+  summary { padding: 14px 16px; font-weight: 700; cursor: pointer; list-style: none; display: flex; justify-content: space-between; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '▾'; color: #64748b; }
+  details[open] summary::after { content: '▴'; }
+  .setbody { padding: 0 14px 14px; }
+  .setlabel { font-size: 13px; color: #94a3b8; margin: 14px 0 8px; }
+  .setlabel:first-child { margin-top: 0; }
+  .seg { display: flex; gap: 4px; }
+  .seg button { flex: 1; padding: 9px 0; font-size: 15px; font-weight: 700; border-radius: 8px; border: 1px solid rgba(255,255,255,.12);
+                background: transparent; color: #cbd5e1; cursor: pointer; }
+  .seg button.active { background: #ec4899; border-color: #ec4899; color: #fff; }
+  .two { display: flex; gap: 10px; }
+  .two > div { flex: 1; }
+  .pick { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+  .pick button { padding: 9px 0; font-size: 15px; font-weight: 700; border-radius: 8px; border: 1px solid rgba(255,255,255,.12);
+                 background: transparent; color: #64748b; cursor: pointer; }
+  .pick button.on { background: rgba(255,255,255,.1); border-color: #64748b; color: #f1f5f9; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .presets button { padding: 7px 10px; font-size: 13px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12);
+                    background: transparent; color: #cbd5e1; cursor: pointer; }
+  .hint { font-size: 12px; color: #64748b; margin-top: 6px; }
+
+  .banner { display: none; margin-top: 16px; padding: 14px; border-radius: 12px; background: #14532d; color: #bbf7d0; font-weight: 600; }
+  .banner.show { display: block; }
+
+  .filter { display: flex; gap: 6px; margin-bottom: 10px; }
+  .filter button { flex: 1; padding: 8px 0; font-size: 13px; font-weight: 600; border-radius: 999px; border: 1px solid rgba(255,255,255,.12);
+                   background: transparent; color: #cbd5e1; cursor: pointer; }
+  .filter button.active { background: #f1f5f9; color: #0f172a; border-color: #f1f5f9; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; font-weight: 600;
+       padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,.12); }
+  td { padding: 10px 4px; border-bottom: 1px solid #1e293b; }
+  td.tot { font-weight: 700; color: #60a5fa; }
+  td.res { font-weight: 800; color: #4ade80; }
+  td.md { font-size: 12px; color: #c7d2fe; }
+  .empty { color: #64748b; font-size: 14px; padding: 14px 0; }
+  .avg { margin-top: 10px; font-size: 14px; color: #94a3b8; }
+  .del { background: none; border: none; color: #64748b; font-size: 18px; cursor: pointer; padding: 0 4px; }
+
+  .chartbox { background: rgba(255,255,255,.055); border-radius: 14px; padding: 12px 8px 8px; }
+  .legend { display: flex; justify-content: center; gap: 18px; font-size: 13px; color: #cbd5e1; margin-bottom: 6px; }
+  .legend span::before { content: ''; display: inline-block; width: 14px; height: 3px; border-radius: 2px;
+                         vertical-align: middle; margin-right: 6px; background: var(--c); }
+  .chartnote { font-size: 12px; color: #64748b; margin-top: 4px; }
+  svg text { font-family: inherit; }
+  .tabs { display: flex; gap: 6px; background: rgba(255,255,255,.055); padding: 5px; border-radius: 14px; margin-bottom: 22px; position: sticky; top: 8px; z-index: 5; }
+  .tabs button { flex: 1; padding: 12px; font-size: 16px; font-weight: 700; border-radius: 10px; border: none; background: transparent; color: #94a3b8; cursor: pointer; }
+  .tabs button.active { background: #ec4899; color: #fff; }
+  #viewTrainer .card { background: rgba(255,255,255,.055); border-radius: 16px; padding: 16px; text-align: left; }
+  #viewTrainer .setlabel { font-size: 13px; color: #94a3b8; margin: 16px 0 8px; }
+  #viewTrainer .setlabel:first-child { margin-top: 0; }
+  #viewTrainer .setlabel.c { text-align: center; margin-top: 18px; }
+  .tgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .tgrid button, .lvl button { padding: 12px 4px; font-size: 14px; font-weight: 700; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.28); color: #cbd5e1; cursor: pointer; }
+  .tgrid button.wide2 { grid-column: span 3; }
+  .tgrid button.active, .lvl button.active { background: #ec4899; border-color: #ec4899; color: #fff; }
+  .lvl { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .lvl button { padding: 8px 2px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .lvl b { font-size: 18px; } .lvl small { font-size: 10px; font-weight: 500; line-height: 1.2; }
+  #viewTrainer .seg button { padding: 11px 0; }
+  .desc { margin-top: 14px; font-size: 14px; line-height: 1.45; color: #cbd5e1; background: rgba(0,0,0,.28); border-radius: 10px; padding: 12px; }
+  .big { width: 100%; margin-top: 14px; padding: 18px; font-size: 19px; font-weight: 800; border: none; border-radius: 14px; cursor: pointer; }
+  .big.go { background: #22c55e; color: #052e16; }
+  .big.bad { background: #7f1d1d; color: #fecaca; }
+  .tophead { display: flex; justify-content: space-between; font-size: 13px; color: #94a3b8; gap: 8px; }
+  .bar { height: 5px; background: rgba(0,0,0,.28); border-radius: 3px; margin: 8px 0 4px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: #ec4899; transition: width .2s; }
+  .block { text-align: center; margin-top: 10px; font-size: 13px; font-weight: 700; color: #facc15; text-transform: uppercase; letter-spacing: .08em; }
+  .target { text-align: center; font-size: 84px; font-weight: 900; line-height: 1; margin-top: 12px; letter-spacing: -.02em; }
+  .target.sm { font-size: 60px; }
+  .tcap { text-align: center; font-size: 16px; color: #cbd5e1; margin-top: 6px; }
+  .tdarts { text-align: center; margin-top: 8px; }
+  .tdarts, .route { font-weight: 700; }
+  .tdarts { display: block; width: max-content; margin: 10px auto 0; padding: 5px 14px; border-radius: 999px; background: #312e81; color: #c7d2fe; font-size: 14px; }
+  .route { text-align: center; margin-top: 12px; padding: 10px; border-radius: 10px; background: rgba(0,0,0,.28); color: #facc15; font-size: 17px; }
+  .link { display: block; margin: 12px auto 0; background: none; border: none; color: #60a5fa; font-size: 15px; cursor: pointer; padding: 6px; }
+  .link.red { color: #f87171; }
+  .okgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(56px, 1fr)); gap: 8px; }
+  .okb { padding: 16px 0; font-size: 20px; font-weight: 800; border-radius: 12px; border: none; background: #22c55e; color: #052e16; cursor: pointer; }
+  .okb:disabled { opacity: .25; }
+  .row2 { display: flex; gap: 8px; margin-top: 12px; }
+  .row2 .mid { flex: 1; padding: 14px 6px; font-size: 15px; font-weight: 700; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.28); color: #e2e8f0; cursor: pointer; }
+  .row2 .mid.redb { background: #7f1d1d; border-color: #7f1d1d; }
+  .row2.foot .mid { font-weight: 500; color: #94a3b8; background: transparent; }
+  .stepper { display: flex; align-items: center; justify-content: center; gap: 18px; }
+  .stepper button { width: 56px; height: 56px; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.28); color: #fff; font-size: 28px; cursor: pointer; }
+  .stepper span { font-size: 48px; font-weight: 900; min-width: 70px; text-align: center; }
+  .live { text-align: center; margin-top: 14px; font-size: 14px; color: #94a3b8; }
+  .live b { color: #f1f5f9; }
+  .disp { margin-top: 14px; padding: 14px; text-align: center; font-size: 40px; font-weight: 800; background: rgba(0,0,0,.28); border-radius: 12px; min-height: 72px; font-variant-numeric: tabular-nums; }
+  .disp .ph { font-size: 16px; font-weight: 500; color: #475569; line-height: 44px; }
+  .quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+  .quick button { padding: 9px 0; font-size: 15px; font-weight: 600; border-radius: 9px; border: 1px solid rgba(255,255,255,.12); background: transparent; color: #cbd5e1; cursor: pointer; }
+  .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
+  .pad button { padding: 16px 0; font-size: 24px; font-weight: 700; border-radius: 12px; border: none; background: rgba(255,255,255,.1); color: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .pad button:active { background: #475569; }
+  .pad .okk { background: #22c55e; color: #052e16; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-top: 10px; }
+  .chips span { padding: 3px 9px; border-radius: 999px; background: rgba(0,0,0,.28); font-size: 13px; color: #94a3b8; }
+  .chips span.g { color: #4ade80; }
+  .msg { margin-top: 10px; text-align: center; color: #f87171; font-weight: 600; }
+  .hint { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: rgba(0,0,0,.28); color: #cbd5e1; font-size: 14px; line-height: 1.4; }
+  .confirmbox { margin-top: 14px; padding: 12px; border-radius: 12px; background: rgba(0,0,0,.28); text-align: center; }
+  .gboard { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .gp { background: rgba(0,0,0,.28); border: 2px solid transparent; border-radius: 14px; padding: 10px; text-align: center; }
+  .gp.act { border-color: #22c55e; }
+  .gn { font-size: 13px; color: #94a3b8; font-weight: 600; }
+  .grem { font-size: 52px; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .gs { font-size: 12px; color: #94a3b8; }
+  .gs .warn { color: #facc15; }
+  .glast { margin-top: 6px; font-size: 12px; color: #cbd5e1; min-height: 16px; }
+  .wait { text-align: center; padding: 30px 0; color: #94a3b8; font-size: 18px; }
+  .result { text-align: center; font-size: 26px; font-weight: 900; margin-top: 14px; }
+  .result.win { color: #4ade80; } .result.lose { color: #f87171; }
+  .sumgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+  .sumgrid div { background: rgba(0,0,0,.28); border-radius: 12px; padding: 10px 4px; text-align: center; }
+  .sumgrid b { display: block; font-size: 20px; } .sumgrid small { font-size: 11px; color: #94a3b8; }
+  .chipsel { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; justify-content: center; }
+  .chipsel button { padding: 7px 11px; font-size: 13px; font-weight: 600; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: transparent; color: #cbd5e1; cursor: pointer; }
+  .chipsel button.active { background: #f1f5f9; color: #0f172a; border-color: #f1f5f9; }
+  #viewTrainer table { margin-top: 12px; text-align: left; }
+  #viewTrainer td { vertical-align: top; }
+  #viewTrainer td small { color: #64748b; font-size: 11px; }
+  b.gw { color: #4ade80; } b.gl { color: #f87171; }
+  #viewTrainer .chartbox { margin-bottom: 4px; }
+  .boardwrap { margin: 12px auto 0; max-width: 380px; }
+  .boardhint { text-align: center; font-size: 12px; color: #64748b; margin-top: 6px; }
+  .zoombar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; padding: 8px 10px; background: rgba(0,0,0,.28); border-radius: 10px; font-size: 14px; color: #facc15; }
+  .zoombar .zb { padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,.12); background: transparent; color: #cbd5e1; cursor: pointer; }
+  .slots { display: grid; grid-template-columns: 1fr 1fr 1fr .8fr; gap: 6px; margin-top: 12px; }
+  .slots div { padding: 12px 0; text-align: center; border-radius: 10px; background: rgba(0,0,0,.28); color: #475569; font-weight: 700; font-size: 15px; }
+  .slots div.f { color: #facc15; font-size: 18px; }
+  .slots .sum { background: #312e81; color: #fff; font-size: 20px; }
+  .mult { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
+  .mult button { padding: 12px 0; font-size: 16px; font-weight: 800; border-radius: 10px; border: 2px solid rgba(255,255,255,.12); background: rgba(0,0,0,.28); color: #cbd5e1; cursor: pointer; }
+  .mult .m1.active { background: #e2e8f0; color: #0f172a; border-color: #e2e8f0; }
+  .mult .m2.active { background: #16a34a; color: #fff; border-color: #16a34a; }
+  .mult .m3.active { background: #dc2626; color: #fff; border-color: #dc2626; }
+  .numgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 8px; }
+  .numrow { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 5px; margin-top: 5px; }
+  .nb { padding: 13px 0; font-size: 17px; font-weight: 700; border-radius: 9px; border: none; background: rgba(255,255,255,.1); color: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .nb:active { background: #475569; }
+  .nb.m2 { background: #14532d; } .nb.m3 { background: #7f1d1d; }
+  .nb.bullb { background: #7f1d1d; } .nb.missb { background: rgba(255,255,255,.055); color: #94a3b8; border: 1px solid rgba(255,255,255,.12); }
+  table.cmp { width: 100%; margin-top: 10px; font-size: 14px; }
+  table.cmp th { text-align: center; } table.cmp th:first-child { text-align: left; }
+  table.cmp td { padding: 7px 4px; border-bottom: 1px solid #0f172a; text-align: center; font-variant-numeric: tabular-nums; }
+  table.cmp td:first-child { text-align: left; color: #94a3b8; }
+  table.cmp td small { color: #64748b; }
+  #viewTrainer .card table.cmp td { border-bottom-color: rgba(255,255,255,.12); }
+  tr.clk { cursor: pointer; }
+  .botpop { margin-top: 12px; padding: 10px; border-radius: 12px; background: #172554; border: 2px solid #2563eb; text-align: center; font-size: 24px; font-weight: 900; color: #fff; min-height: 70px; }
+  .botpop small { display: block; font-size: 12px; font-weight: 600; color: #93c5fd; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px; }
+  .botpop.on { animation: pop .35s ease-out; }
+  @keyframes pop { from { transform: scale(.9); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+  .mult .m2.active, .mult .m3.active { background: #db2777; border-color: #db2777; }
+  .nb.m2, .nb.m3, .nb.bullb { background: #831843; }
+  :root { --pink: #ec4899; --pink2: #db2777; --violet: #8b5cf6; --glass: rgba(255,255,255,.055); --line: rgba(255,255,255,.1); }
+  body { font-family: 'Outfit', system-ui, -apple-system, sans-serif; background: #07060b; padding: 16px 16px 112px; display: block; }
+  body::before { content: ''; position: fixed; inset: 0; z-index: -2;
+    background: radial-gradient(620px 420px at 90% -8%, rgba(236,72,153,.30), transparent 60%),
+                radial-gradient(520px 520px at -15% 105%, rgba(139,92,246,.24), transparent 60%), #07060b; }
+  body::after { content: ''; position: fixed; z-index: -1; width: 860px; height: 860px; right: -360px; top: -300px;
+    background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%22-180%20-180%20360%20360%22%3E%3Cg%20fill%3D%22%23ec4899%22%20fill-opacity%3D%22.10%22%3E%3Cpath%20d%3D%22M-26.6%20-167.9A170%20170%200%200%201%2026.6%20-167.9L25.3%20-160.0A162%20162%200%200%200%20-25.3%20-160.0Z%22/%3E%3Cpath%20d%3D%22M77.2%20-151.5A170%20170%200%200%201%20120.2%20-120.2L114.6%20-114.6A162%20162%200%200%200%2073.5%20-144.3Z%22/%3E%3Cpath%20d%3D%22M151.5%20-77.2A170%20170%200%200%201%20167.9%20-26.6L160.0%20-25.3A162%20162%200%200%200%20144.3%20-73.5Z%22/%3E%3Cpath%20d%3D%22M167.9%2026.6A170%20170%200%200%201%20151.5%2077.2L144.3%2073.5A162%20162%200%200%200%20160.0%2025.3Z%22/%3E%3Cpath%20d%3D%22M120.2%20120.2A170%20170%200%200%201%2077.2%20151.5L73.5%20144.3A162%20162%200%200%200%20114.6%20114.6Z%22/%3E%3Cpath%20d%3D%22M26.6%20167.9A170%20170%200%200%201%20-26.6%20167.9L-25.3%20160.0A162%20162%200%200%200%2025.3%20160.0Z%22/%3E%3Cpath%20d%3D%22M-77.2%20151.5A170%20170%200%200%201%20-120.2%20120.2L-114.6%20114.6A162%20162%200%200%200%20-73.5%20144.3Z%22/%3E%3Cpath%20d%3D%22M-151.5%2077.2A170%20170%200%200%201%20-167.9%2026.6L-160.0%2025.3A162%20162%200%200%200%20-144.3%2073.5Z%22/%3E%3Cpath%20d%3D%22M-167.9%20-26.6A170%20170%200%200%201%20-151.5%20-77.2L-144.3%20-73.5A162%20162%200%200%200%20-160.0%20-25.3Z%22/%3E%3Cpath%20d%3D%22M-120.2%20-120.2A170%20170%200%200%201%20-77.2%20-151.5L-73.5%20-144.3A162%20162%200%200%200%20-114.6%20-114.6Z%22/%3E%3C/g%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%22.07%22%20stroke-width%3D%22.8%22%3E%3Cline%20x1%3D%22-2.5%22%20y1%3D%22-15.8%22%20x2%3D%22-26.6%22%20y2%3D%22-167.9%22/%3E%3Cline%20x1%3D%222.5%22%20y1%3D%22-15.8%22%20x2%3D%2226.6%22%20y2%3D%22-167.9%22/%3E%3Cline%20x1%3D%227.3%22%20y1%3D%22-14.3%22%20x2%3D%2277.2%22%20y2%3D%22-151.5%22/%3E%3Cline%20x1%3D%2211.3%22%20y1%3D%22-11.3%22%20x2%3D%22120.2%22%20y2%3D%22-120.2%22/%3E%3Cline%20x1%3D%2214.3%22%20y1%3D%22-7.3%22%20x2%3D%22151.5%22%20y2%3D%22-77.2%22/%3E%3Cline%20x1%3D%2215.8%22%20y1%3D%22-2.5%22%20x2%3D%22167.9%22%20y2%3D%22-26.6%22/%3E%3Cline%20x1%3D%2215.8%22%20y1%3D%222.5%22%20x2%3D%22167.9%22%20y2%3D%2226.6%22/%3E%3Cline%20x1%3D%2214.3%22%20y1%3D%227.3%22%20x2%3D%22151.5%22%20y2%3D%2277.2%22/%3E%3Cline%20x1%3D%2211.3%22%20y1%3D%2211.3%22%20x2%3D%22120.2%22%20y2%3D%22120.2%22/%3E%3Cline%20x1%3D%227.3%22%20y1%3D%2214.3%22%20x2%3D%2277.2%22%20y2%3D%22151.5%22/%3E%3Cline%20x1%3D%222.5%22%20y1%3D%2215.8%22%20x2%3D%2226.6%22%20y2%3D%22167.9%22/%3E%3Cline%20x1%3D%22-2.5%22%20y1%3D%2215.8%22%20x2%3D%22-26.6%22%20y2%3D%22167.9%22/%3E%3Cline%20x1%3D%22-7.3%22%20y1%3D%2214.3%22%20x2%3D%22-77.2%22%20y2%3D%22151.5%22/%3E%3Cline%20x1%3D%22-11.3%22%20y1%3D%2211.3%22%20x2%3D%22-120.2%22%20y2%3D%22120.2%22/%3E%3Cline%20x1%3D%22-14.3%22%20y1%3D%227.3%22%20x2%3D%22-151.5%22%20y2%3D%2277.2%22/%3E%3Cline%20x1%3D%22-15.8%22%20y1%3D%222.5%22%20x2%3D%22-167.9%22%20y2%3D%2226.6%22/%3E%3Cline%20x1%3D%22-15.8%22%20y1%3D%22-2.5%22%20x2%3D%22-167.9%22%20y2%3D%22-26.6%22/%3E%3Cline%20x1%3D%22-14.3%22%20y1%3D%22-7.3%22%20x2%3D%22-151.5%22%20y2%3D%22-77.2%22/%3E%3Cline%20x1%3D%22-11.3%22%20y1%3D%22-11.3%22%20x2%3D%22-120.2%22%20y2%3D%22-120.2%22/%3E%3Cline%20x1%3D%22-7.3%22%20y1%3D%22-14.3%22%20x2%3D%22-77.2%22%20y2%3D%22-151.5%22/%3E%3Ccircle%20r%3D%226.35%22/%3E%3Ccircle%20r%3D%2216%22/%3E%3Ccircle%20r%3D%2299%22/%3E%3Ccircle%20r%3D%22107%22/%3E%3Ccircle%20r%3D%22162%22/%3E%3Ccircle%20r%3D%22170%22/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat; transform: rotate(9deg); pointer-events: none; }
+  .app { max-width: 440px; margin: 0 auto; }
+  button { font-family: inherit; }
+  .phead { text-align: left; margin: 6px 2px 16px; }
+  .phead h1 { font-size: 32px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1;
+    background: linear-gradient(90deg, #fff, #f9a8d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .phead p { color: #a1a1aa; font-size: 15px; margin-top: 4px; }
+  #viewTrainer .card, details, .chartbox { background: var(--glass) !important; border: 1px solid var(--line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-radius: 22px; }
+  #viewTrainer .card + .card, #viewTrainer .card + .sumgrid, #viewTrainer .sumgrid + .card { margin-top: 12px; }
+  .big.go, .add { background: linear-gradient(135deg, var(--pink), var(--violet)) !important; color: #fff !important; box-shadow: 0 8px 28px -8px rgba(236,72,153,.7); }
+  h2, h2.sec { color: #a1a1aa; }
+  h2.sec { text-align: left; margin: 24px 4px 10px; font-size: 13px; }
+  .empty.card { padding: 22px; text-align: center; }
+
+  /* Home */
+  .hero { display: flex; align-items: center; gap: 14px; text-align: left; margin: 8px 2px 18px; }
+  .hero .logo { width: 58px; height: 58px; flex: none; filter: drop-shadow(0 6px 18px rgba(236,72,153,.55)); }
+  .hero h1 { font-size: 34px; font-weight: 900; letter-spacing: -.03em; line-height: 1;
+    background: linear-gradient(90deg, #fff 30%, #f472b6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { color: #a1a1aa; margin-top: 4px; }
+  .statstrip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 12px 6px; border-radius: 20px; background: var(--glass); border: 1px solid var(--line); backdrop-filter: blur(14px); }
+  .statstrip b { display: block; font-size: 20px; font-weight: 800; } .statstrip small { font-size: 11px; color: #a1a1aa; }
+  .resume { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 14px 16px; border-radius: 16px; border: 1px solid rgba(236,72,153,.5); background: rgba(236,72,153,.12); color: #fff; font-size: 15px; cursor: pointer; }
+  .resume b { color: #f9a8d4; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .tile { position: relative; overflow: hidden; text-align: left; padding: 16px 14px 14px; min-height: 138px; border-radius: 22px; border: 1px solid var(--line); color: #fff; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; gap: 3px; }
+  .tile b { font-size: 19px; font-weight: 800; } .tile small { font-size: 12px; color: rgba(255,255,255,.75); }
+  .tile .ti { position: absolute; top: 14px; left: 14px; width: 40px; height: 40px; border-radius: 13px; background: rgba(255,255,255,.18); display: grid; place-items: center; }
+  .tile .ti svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .tile::after { content: ''; position: absolute; right: -30px; bottom: -30px; width: 110px; height: 110px; border-radius: 50%; border: 14px solid rgba(255,255,255,.08); }
+  .tile.t1 { background: linear-gradient(140deg, #ec4899, #9d174d); }
+  .tile.t2 { background: linear-gradient(140deg, #8b5cf6, #4c1d95); }
+  .tile.t3 { background: linear-gradient(140deg, #0ea5e9, #1e3a8a); }
+  .tile.t4 { background: linear-gradient(140deg, #f59e0b, #9a3412); }
+  .quickstart { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .quickstart button { padding: 12px 6px; border-radius: 16px; border: 1px solid var(--line); background: var(--glass); color: #fff; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+  .quickstart b { font-size: 16px; } .quickstart small { font-size: 11px; color: #a1a1aa; }
+  .card.list { padding: 6px 14px; }
+  .li { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--line); text-align: left; }
+  .li:last-child { border-bottom: none; } .li small { display: block; font-size: 12px; color: #71717a; }
+
+  /* Stats */
+  .segtabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 16px; background: var(--glass); border: 1px solid var(--line); margin-bottom: 14px; }
+  .segtabs button { padding: 10px 0; border: none; border-radius: 12px; background: transparent; color: #a1a1aa; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .segtabs button.active { background: linear-gradient(135deg, var(--pink), var(--violet)); color: #fff; }
+  .bigavg { text-align: center; padding: 22px 16px !important; }
+  .bigavg small { color: #a1a1aa; font-size: 13px; }
+  .bigavg .avgnum { font-size: 76px; font-weight: 900; line-height: 1; letter-spacing: -.03em; margin: 6px 0;
+    background: linear-gradient(180deg, #fff, #f9a8d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .bigavg .form { color: #a1a1aa; } .bigavg .up { color: #4ade80; font-weight: 700; } .bigavg .down { color: #f87171; font-weight: 700; }
+  .trgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .trc { position: relative; overflow: hidden; text-align: left; padding: 12px; border-radius: 18px; background: var(--glass); border: 1px solid var(--line); }
+  .trc small { color: #a1a1aa; font-size: 12px; } .trc b { display: block; font-size: 24px; font-weight: 800; } .trc span { font-size: 11px; color: #71717a; }
+  .trc i { position: absolute; left: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, var(--pink), var(--violet)); }
+  .tchips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tchips button { padding: 7px 11px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0,0,0,.25); color: #fff; font-weight: 800; font-size: 15px; cursor: pointer; display: flex; align-items: baseline; gap: 6px; }
+  .tchips button small { font-size: 11px; font-weight: 700; } .tchips small.mid { color: #facc15; }
+  .tchips button.active { background: linear-gradient(135deg, var(--pink), var(--violet)); border-color: transparent; }
+  .tchips button.active small { color: #fff; }
+  .legend2 { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; font-size: 12px; color: #d4d4d8; margin-top: 6px; }
+  .legend2 span::before { content: ''; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--c); margin-right: 5px; }
+  .bars { display: flex; flex-direction: column; gap: 7px; }
+  .br { display: grid; grid-template-columns: 46px 1fr 50px auto; align-items: center; gap: 8px; font-size: 14px; text-align: left; }
+  .br span { font-weight: 800; } .br b { text-align: right; font-size: 13px; } .br small { color: #71717a; font-size: 11px; min-width: 26px; }
+  .br i { height: 9px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; }
+  .br em { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--pink), var(--violet)); }
+  .br em.g { background: #22c55e; } .br em.y { background: #facc15; } .br em.r { background: #ef4444; }
+  .tablecard { padding: 8px 10px !important; overflow-x: auto; }
+
+  /* Navigation */
+  #nav { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(12px, env(safe-area-inset-bottom)); width: calc(100% - 24px); max-width: 440px; z-index: 20;
+    display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px; border-radius: 24px; background: rgba(15,12,22,.78); border: 1px solid var(--line);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: 0 12px 40px -10px rgba(0,0,0,.8); }
+  #nav button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 6px; border: none; border-radius: 18px; background: transparent; color: #8b8b95; font-size: 11px; font-weight: 600; cursor: pointer; }
+  #nav svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  #nav button.active { color: #fff; background: linear-gradient(135deg, rgba(236,72,153,.9), rgba(139,92,246,.9)); box-shadow: 0 6px 20px -6px rgba(236,72,153,.8); }
+  .result.win { color: #4ade80; }
+  #viewCounter .total { background: linear-gradient(180deg, #fff, #f9a8d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  /* ---- PWA: Platz für Notch / Statusleiste, wenn die App vom Home-Bildschirm startet ---- */
+  body { padding-top: max(20px, env(safe-area-inset-top)); padding-left: max(20px, env(safe-area-inset-left)); padding-right: max(20px, env(safe-area-inset-right)); }
+  html, body { overscroll-behavior-y: none; }
+  button { -webkit-tap-highlight-color: transparent; }
+  /* ---- Daten-Tab (Sicherung) ---- */
+  .datacard p { color: #a1a1aa; font-size: 14px; line-height: 1.45; margin: 4px 0 14px; text-align: left; }
+  .datacard .big { margin-top: 8px; }
+  .datacard .ghost { background: transparent; border: 1px solid rgba(255,255,255,.18); color: #e4e4e7; }
+  .datacard .danger { background: transparent; border: 1px solid rgba(239,68,68,.6); color: #fca5a5; }
+  .datamsg { margin-top: 12px; font-size: 14px; min-height: 18px; color: #86efac; }
+  .datamsg.err { color: #fca5a5; }
+  .appver { margin-top: 18px; font-size: 12px; color: #71717a; text-align: center; }
+  /* Trainingsspiele (drills.js) */
+  .tgrid.dgrid { grid-template-columns: 1fr 1fr; }
+  .okb.zero { background: rgba(255,255,255,.12); color: #f1f5f9; }
+  /* ===== X01 mehrere Spieler ===== */
+  #viewX01 .card { background: var(--glass, #1e293b) !important; border: 1px solid var(--line, rgba(255,255,255,.12)); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-radius: 22px; padding: 16px; text-align: left; }
+  #viewX01 .setlabel { font-size: 13px; color: #94a3b8; margin: 16px 0 8px; }
+  #viewX01 .setlabel:first-child { margin-top: 0; }
+  #viewX01 .seg button { padding: 11px 0; }
+  #viewX01 table { margin-top: 12px; text-align: left; }
+  #viewX01 td small { color: #64748b; font-size: 11px; }
+  .xplist { display: flex; flex-direction: column; gap: 6px; }
+  .xprow { display: flex; align-items: center; gap: 6px; }
+  .xprow .xpn { width: 22px; text-align: center; color: #94a3b8; font-weight: 700; }
+  .xprow input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line, rgba(255,255,255,.12)); background: rgba(0,0,0,.28); color: #fff; font: inherit; font-size: 16px; }
+  .xprow .xsm { width: 40px; flex: none; padding: 10px 0; }
+  .xboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-top: 10px; }
+  .xp { background: rgba(0,0,0,.28); border: 2px solid transparent; border-radius: 14px; padding: 10px; text-align: center; min-width: 0; }
+  .xp.act { border-color: #22c55e; }
+  .xp.win { border-color: #4ade80; }
+  .xpname { font-size: 13px; color: #94a3b8; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .xprem { font-size: 46px; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .xp:not(.act) .xprem { opacity: .75; }
+  .xpstat { font-size: 12px; color: #94a3b8; }
+  .xplast { margin-top: 4px; font-size: 12px; color: #cbd5e1; min-height: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .xturn { margin-top: 12px; text-align: center; color: #cbd5e1; }
+  .x01 .mult { grid-template-columns: 1fr 1fr; }
+  .x01 table.cmp th, .x01 table.cmp td { text-align: center; } .x01 table.cmp td:first-child { text-align: left; }
+  .xprow button.xsm { background: rgba(0,0,0,.28); color: #cbd5e1; border: 1px solid var(--line, rgba(255,255,255,.12)); border-radius: 10px; font-size: 15px; cursor: pointer; }
+  #viewX01 .xback { display: inline-block; margin: 0 0 4px; padding: 6px 0; }
+</style>
+</head>
+<body>
+<nav id="nav"></nav>
+<div class="app">
+  <div id="viewCounter" style="display:none">
+  <div class="phead"><h1>Zähler</h1><p>Felder abwerfen, Summe wird geteilt</p></div>
+  <div class="label">Gesamt <span class="modebadge" id="modebadge">Normal</span></div>
+  <div class="total" id="total">0</div>
+  <div class="sub" id="sub">0 Eingaben</div>
+
+  <div class="choices" id="choices"></div>
+  <div class="lockhint" id="lockhint"></div>
+  <button class="add" id="add">+1</button>
+
+  <h2>Felder · <span class="done-count" id="doneCount">0</span> / <span id="activeCount">22</span> abgeschlossen</h2>
+  <div class="tapmode">
+    <button id="tapHit" class="active">🎯 Treffen</button>
+    <button id="tapLock" class="lock">✕ Sperren</button>
+  </div>
+  <div class="numbers" id="numbers"></div>
+
+  <details id="settings">
+    <summary>⚙️ Einstellungen</summary>
+    <div class="setbody">
+      <div class="setlabel">Wurfart</div>
+      <div class="seg" id="modeSeg"></div>
+
+      <div class="two">
+        <div><div class="setlabel">25 treffen</div><div class="seg" data-field="25"></div></div>
+        <div><div class="setlabel">50 treffen</div><div class="seg" data-field="50"></div></div>
+      </div>
+
+      <div class="setlabel">Zahlen im Spiel</div>
+      <div class="pick" id="pick"></div>
+      <div class="presets">
+        <button data-p="all">Alle</button>
+        <button data-p="none">Keine</button>
+        <button data-p="1-20">1–20</button>
+        <button data-p="15-20">15–20 + Bull</button>
+        <button data-p="bull">Nur Bull</button>
+      </div>
+      <div class="hint">Gilt dauerhaft. Zum Sperren nur für eine Runde oben „✕ Sperren“ nutzen.</div>
+    </div>
+  </details>
+
+  <div class="row">
+    <button id="undo">↶ Rückgängig</button>
+    <button id="reset">Runde zurücksetzen</button>
+  </div>
+  <div class="confirm" id="confirm">
+    <p>Aktuelle Runde (Summe, Felder, Sperren) zurücksetzen?</p>
+    <div class="row" style="margin-top:0">
+      <button id="no">Abbrechen</button>
+      <button class="yes" id="yes">Ja, zurücksetzen</button>
+    </div>
+  </div>
+  <div class="banner" id="banner"></div>
+  <div class="log" id="log"></div>
+
+  <h2>Ergebnisse</h2>
+  <div class="filter" id="filter"></div>
+  <div id="results"></div>
+  <div class="row" id="clearRow" style="display:none"><button id="clearAll">Tabelle leeren</button></div>
+  <div class="confirm" id="confirm2">
+    <p>Alle Ergebnisse löschen?</p>
+    <div class="row" style="margin-top:0">
+      <button id="no2">Abbrechen</button>
+      <button class="yes" id="yes2">Ja, löschen</button>
+    </div>
+  </div>
+
+  <h2>Verlauf</h2>
+  <div class="chartbox">
+    <div class="legend"><span style="--c:#60a5fa">Gesamtzahl</span><span style="--c:#4ade80">Geteilte Zahl</span></div>
+    <div id="chart"></div>
+    <div class="chartnote">Je höher die Linie, desto niedriger die Zahl</div>
+  </div>
+</div>
+  <div id="viewTrainer"></div>
+</div>
+
+<script>
+// ===== Darts-Kern: Board, Checkouts, Bot =====
+const ORDER = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
+const dlabel = (n, m) => n === 25 ? (m === 2 ? 'Bull' : '25') : (m === 3 ? 'T' : m === 2 ? 'D' : '') + n;
+
+function scoreAt(x, y) {
+  const r = Math.hypot(x, y);
+  if (r <= 6.35) return { v: 50, m: 2, n: 25, l: 'Bull' };
+  if (r <= 15.9) return { v: 25, m: 1, n: 25, l: '25' };
+  if (r > 170) return { v: 0, m: 0, n: 0, l: 'Miss' };
+  const deg = Math.atan2(y, x) * 180 / Math.PI;
+  const cw = ((90 - deg) % 360 + 360) % 360;
+  const n = ORDER[Math.floor(((cw + 9) % 360) / 18)];
+  const m = (r >= 99 && r <= 107) ? 3 : (r >= 162) ? 2 : 1;
+  return { v: n * m, m, n, l: dlabel(n, m) };
+}
+function aimPoint(n, m) {
+  if (n === 25) return [0, 0];
+  const rad = (90 - ORDER.indexOf(n) * 18) * Math.PI / 180;
+  const r = m === 3 ? 103 : m === 2 ? 165 : 134;
+  return [r * Math.cos(rad), r * Math.sin(rad)];
+}
+function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function throwDart(n, m, sigma) { const [ax, ay] = aimPoint(n, m); const x = ax + gauss() * sigma, y = ay + gauss() * sigma; return Object.assign(scoreAt(x, y), { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 }); }
+
+// Alle Darts
+const DARTS = [];
+for (let n = 1; n <= 20; n++) for (const m of [1, 2, 3]) DARTS.push({ n, m, v: n * m });
+DARTS.push({ n: 25, m: 1, v: 25 }, { n: 25, m: 2, v: 50 });
+const DPREF = [20, 16, 18, 12, 10, 8, 14, 6, 4, 2, 17, 19, 15, 13, 11, 9, 7, 5, 3, 1, 25];
+const FINISH = DARTS.filter(d => d.m === 2);
+const setupCost = d => d.m === 1 ? (d.n === 25 ? 3 : (20 - d.n) * 0.01) : d.m === 3 ? 1 + (20 - d.n) * 0.05 : d.n === 25 ? 3.5 : 5;
+const finCost = d => DPREF.indexOf(d.n) * 0.3;
+
+// best[r] = { k1, k2, k3 } beste Route mit genau 1/2/3 Darts
+const ROUTES = {};
+(function build() {
+  const fin = {}; FINISH.forEach(d => { fin[d.v] = d; });
+  for (let r = 2; r <= 170; r++) {
+    const res = {};
+    if (fin[r]) res[1] = { darts: [fin[r]], c: finCost(fin[r]) };
+    let b2 = null;
+    for (const a of DARTS) { const f = fin[r - a.v]; if (f) { const c = setupCost(a) + finCost(f); if (!b2 || c < b2.c) b2 = { darts: [a, f], c }; } }
+    if (b2) res[2] = b2;
+    let b3 = null;
+    for (const a of DARTS) for (const b of DARTS) {
+      const f = fin[r - a.v - b.v]; if (f) { const c = 2 * setupCost(a) + setupCost(b) + finCost(f) + (a.v < b.v ? 0.5 : 0); if (!b3 || c < b3.c) b3 = { darts: [a, b, f], c }; }
+    }
+    if (b3) res[3] = b3;
+    ROUTES[r] = res;
+  }
+})();
+// Kürzester Weg mit höchstens k Darts
+function route(r, k = 3) {
+  const R = ROUTES[r]; if (!R) return null;
+  for (let i = 1; i <= k; i++) if (R[i]) return R[i].darts;
+  return null;
+}
+const routeText = ds => ds ? ds.map(d => dlabel(d.n, d.m)).join(' · ') : '';
+const minDarts = r => { const R = ROUTES[r]; if (!R) return 99; for (let i = 1; i <= 3; i++) if (R[i]) return i; return 99; };
+
+// Bot: wohin zielen?
+function botAim(rem, left, isIn) {
+  if (!isIn) return { n: 20, m: 2 };
+  if (rem <= 170) {
+    const rt = route(rem, left);
+    if (rt) return rt[0];
+  }
+  if (rem > 100) {
+    // Nicht auf 1 oder in schlechte Reste stellen
+    if (rem - 60 >= 2 || rem > 170) return { n: 20, m: 3 };
+  }
+  // Stellen: Rest auf einen guten Wert bringen
+  let best = null;
+  for (const d of DARTS.filter(d => d.m !== 2)) {
+    const lo = rem - d.v; if (lo < 2) continue;
+    const md = minDarts(lo);
+    const c = md * 100 + (ROUTES[lo] && ROUTES[lo][md] ? ROUTES[lo][md].c : 50) - d.v * 0.01 + (d.m === 3 ? 2 : 0);
+    if (!best || c < best.c) best = { d, c };
+  }
+  return best ? best.d : { n: 20, m: 3 };
+}
+// Ein Bot-Zug: gibt Darts, neuen Rest, in-Status, checked zurück
+function botTurn(rem, isIn, sigma, doubleIn) {
+  const start = rem, startIn = isIn, darts = [];
+  for (let i = 0; i < 3; i++) {
+    const aim = botAim(rem, 3 - i, isIn || !doubleIn);
+    const h = throwDart(aim.n, aim.m, sigma);
+    h.rb = rem; h.att = (isIn || !doubleIn) && !!(ROUTES[rem] && ROUTES[rem][1]);
+    darts.push(h);
+    if (doubleIn && !isIn) { if (h.m === 2) isIn = true; else continue; }
+    isIn = true;
+    const nr = rem - h.v;
+    if (nr < 0 || nr === 1 || (nr === 0 && h.m !== 2)) return { darts, rem: start, isIn: startIn || (doubleIn ? isIn : true), bust: true, scored: 0 };
+    rem = nr;
+    if (rem === 0) return { darts, rem: 0, isIn, checked: true, scored: start };
+  }
+  return { darts, rem, isIn, scored: start - rem };
+}
+
+
+// ===== modules/drills.js =====
+// ===== Trainingsspiele: Around the Clock, Bob's 27, Doppel-Runde, Checkout-Leiter =====
+// Jeder Modus liefert: name, short, describe, opts, start, view, act, entry, metric, series, ov, tip.
+// trainer.js ruft diese Funktionen über window.DRILLS auf und übergibt Helfer in ctx
+// (btn, f1, LV, footer, showRoute).
+window.DRILLS = (function () {
+  const R20 = Array.from({ length: 20 }, (_, i) => i + 1);
+  const TOP_D = [20, 16, 18, 12, 10, 8, 4];
+  const COMMON_D = [20, 16, 18, 12, 10, 8, 4, 14, 6, 2];
+  const lbl = n => n === 25 ? 'Bull' : String(n);
+  const dl = n => n === 25 ? 'Bull' : 'D' + n;
+  const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+  const now = () => new Date().toISOString();
+  const pct = (a, b) => b ? a / b * 100 : 0;
+  const bar = (i, n) => `<div class="bar"><i style="width:${i / n * 100}%"></i></div>`;
+  const top = (c, mode, L, right) => `<div class="tophead"><span>${mode} · ${c.LV[L]}</span><span>${right}</span></div>`;
+
+  // ---------- Around the Clock ----------
+  const ATC_T = [...R20, 25];
+  // Was zählt als Treffer: m = 1 Single, 2 Doppel, 3 Triple (Bull: 1 = 25, 2 = 50)
+  function atcButtons(L, n) {
+    if (n === 25) {
+      if (L === 4) return [[2, 'Bull 50']];
+      return [[1, '25'], [2, 'Bull 50']];
+    }
+    if (L <= 1) return [[1, 'Single'], [2, 'Doppel'], [3, 'Triple']];
+    if (L === 3) return [[3, 'T' + n]];
+    return [[2, 'D' + n]];
+  }
+  function atcState(S) {
+    let idx = 0, hits = 0; const per = ATC_T.map(() => 0);
+    for (const m of S.d) {
+      if (idx > 20) break;
+      per[idx]++;
+      if (m > 0) { hits++; idx = idx === 20 ? 21 : (S.level === 1 ? Math.min(20, idx + m) : idx + 1); }
+    }
+    return { idx, hits, per, darts: S.d.length, done: idx > 20 };
+  }
+  const ATC = {
+    name: 'Around the Clock', short: 'ATC',
+    describe: L => ['1 bis 20, dann Bull · jeder Ring zählt',
+      '1 bis 20, dann Bull · jeder Ring zählt · Sprung: Doppel = 2 Felder weiter, Triple = 3',
+      '1 bis 20, dann Bull · nur Doppel zählen · Bull: 25 oder 50',
+      '1 bis 20, dann Bull · nur Triple zählen · Bull: 25 oder 50',
+      '1 bis 20, dann Bull · nur Doppel zählen · Bull nur als Bullseye (50)'][L] + ' · Ziel: so wenige Darts wie möglich',
+    opts: () => '',
+    start: s => ({ mode: 'atc', level: s.level, d: [], date: now() }),
+    view(S, c) {
+      const st = atcState(S), n = ATC_T[st.idx];
+      let h = `<div class="card">` + top(c, 'Around the Clock', S.level, `Feld ${st.idx + 1} / 21`) + bar(st.idx, 21);
+      const sub = n === 25 ? (S.level === 4 ? 'Bullseye (50) treffen' : 'Bull treffen (25 oder 50)')
+        : S.level <= 1 ? `Die ${n} treffen – egal welcher Ring` : S.level === 3 ? `Triple ${n} treffen` : `Doppel ${n} treffen`;
+      h += `<div class="target">${n === 25 ? 'Bull' : (S.level === 3 ? 'T' : S.level >= 2 ? 'D' : '') + n}</div><div class="tcap">${sub}</div>`;
+      h += `<div class="tdarts">Dart ${st.darts + 1} · ${st.per[st.idx]} auf dieses Feld</div>`;
+      h += `<div class="setlabel c">Was hast du getroffen?</div><div class="okgrid">`;
+      atcButtons(S.level, n).forEach(([m, l]) => { h += c.btn('drHit', l, m, 'okb'); });
+      h += `</div><button class="big bad" data-a="drHit" data-v="0">✕ Daneben</button>`;
+      h += `<div class="live">Darts <b>${st.darts}</b> · Trefferquote <b>${c.f1(pct(st.hits, st.darts))} %</b></div>`;
+      return h + c.footer() + `</div>`;
+    },
+    act(a, v, S) {
+      if (a === 'drHit') { S.d.push(+v); return atcState(S).done ? 'finish' : ''; }
+      if (a === 'undoTask') S.d.pop();
+      return '';
+    },
+    entry(S) {
+      if (!S.d.length) return null;
+      const st = atcState(S);
+      const worst = st.per.map((d, i) => [ATC_T[i], d]).filter((x, i) => i < st.idx).sort((a, b) => b[1] - a[1]).slice(0, 3);
+      return { date: S.date, mode: 'atc', level: S.level, done: st.done, reached: Math.min(st.idx, 21), darts: st.darts, hits: st.hits,
+               hitPct: pct(st.hits, st.darts), worst };
+    },
+    metric: (e, c) => ({ main: e.done ? e.darts + ' Darts' : 'bis ' + (e.reached ? lbl(ATC_T[e.reached - 1]) : '–'),
+                         det: `${c.f1(e.hitPct)} % Treffer${e.done ? '' : ' · abgebrochen'}${e.worst && e.worst.length ? ' · zäh: ' + e.worst.map(w => lbl(w[0])).join(', ') : ''}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b>${e.done ? e.darts : '–'}</b><small>Darts bis Bull</small></div><div><b>${c.f1(e.hitPct)} %</b><small>Trefferquote</small></div><div><b>${e.reached}/21</b><small>Felder geschafft</small></div></div>`
+      + (e.worst.length ? `<div class="hint">Am meisten Darts gekostet: ${e.worst.map(w => `<b>${lbl(w[0])}</b> (${w[1]})`).join(', ')}</div>` : ''),
+    series: [{ n: 'Darts bis Bull', c: '#4ade80', k: 'darts' }, { n: 'Trefferquote %', c: '#60a5fa', k: 'hitPct' }],
+    list: h => h.filter(e => e.done),
+    ov: { val: e => e.darts, unit: ' Darts', low: true, only: e => e.done, bar: v => Math.max(0, 100 - (v - 21) / 1.2) },
+    tip(e) {
+      if (!e.done) return 'Nicht bis zum Bull gekommen – beim nächsten Mal durchziehen, dann zählt die Darts-Zahl.';
+      const goal = [60, 50, 70, 80, 70][e.level];
+      if (e.darts <= goal && e.level < 4) return `Stark! Unter ${goal} Darts – probier die nächste Stufe.`;
+      return `Ziel auf dieser Stufe: unter ${goal} Darts bis zum Bull.`;
+    }
+  };
+
+  // ---------- Bob's 27 ----------
+  const BOB_T = [...R20, 25];
+  const BOB_GOAL = [0, 100, 200, 300, 500];
+  const dv = n => n === 25 ? 50 : 2 * n;
+  function bobState(S) {
+    let score = 27, out = false;
+    S.r.forEach((k, i) => { score += k ? k * dv(BOB_T[i]) : -dv(BOB_T[i]); if (score <= 0 && S.level >= 2) out = true; });
+    return { score, out, round: S.r.length, hits: S.r.reduce((a, b) => a + b, 0), done: out || S.r.length >= 21 };
+  }
+  const BOB = {
+    name: "Bob's 27", short: "Bob's 27",
+    describe: L => `Start mit 27 Punkten · 21 Runden D1 bis D20, dann Bull · 3 Darts pro Doppel · Treffer = + Wert des Doppels, keine Treffer = − Wert · `
+      + (L < 2 ? 'du spielst immer bis zum Ende' : 'bei 0 oder weniger ist Schluss') + (BOB_GOAL[L] ? ` · Ziel: ${BOB_GOAL[L]}+ Punkte` : ''),
+    opts: () => '',
+    start: s => ({ mode: 'bob', level: s.level, r: [], date: now() }),
+    view(S, c) {
+      const st = bobState(S), n = BOB_T[st.round];
+      let h = `<div class="card">` + top(c, "Bob's 27", S.level, `Runde ${st.round + 1} / 21`) + bar(st.round, 21);
+      h += `<div class="target">${dl(n)}</div><div class="tcap">3 Darts · Treffer +${dv(n)}, keiner −${dv(n)}</div>`;
+      h += `<div class="tdarts">Stand <b class="${st.score > 0 ? 'gw' : 'gl'}">${st.score}</b></div>`;
+      h += `<div class="setlabel c">Wie oft getroffen?</div><div class="okgrid">`;
+      for (let k = 0; k <= 3; k++) h += c.btn('drBob', k === 0 ? '0' : '✓ ' + k, k, k === 0 ? 'okb zero' : 'okb');
+      h += `</div><div class="live">Doppelquote <b>${c.f1(pct(st.hits, st.round * 3))} %</b></div>`;
+      if (S.r.length) h += `<div class="chips">${S.r.map((k, i) => `<span class="${k ? 'g' : ''}">${dl(BOB_T[i])}: ${k}</span>`).slice(-10).join('')}</div>`;
+      return h + c.footer() + `</div>`;
+    },
+    act(a, v, S) {
+      if (a === 'drBob') { S.r.push(+v); return bobState(S).done ? 'finish' : ''; }
+      if (a === 'undoTask') S.r.pop();
+      return '';
+    },
+    entry(S) {
+      if (!S.r.length) return null;
+      const st = bobState(S);
+      return { date: S.date, mode: 'bob', level: S.level, score: st.score, round: st.round, out: st.out, done: st.done,
+               hits: st.hits, darts: st.round * 3, hitPct: pct(st.hits, st.round * 3) };
+    },
+    metric: (e, c) => ({ main: e.score + ' Pkt', det: `${c.f1(e.hitPct)} % Doppel · ${e.out ? 'raus in Runde ' + e.round : e.done ? 'alle 21 Runden' : 'abgebrochen nach ' + e.round}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b class="${e.score > 0 ? '' : 'gl'}">${e.score}</b><small>Endpunktzahl</small></div><div><b>${c.f1(e.hitPct)} %</b><small>Doppelquote</small></div><div><b>${e.round}/21</b><small>Runden</small></div></div>`,
+    series: [{ n: 'Punkte', c: '#4ade80', k: 'score' }],
+    ov: { val: e => e.score, unit: ' Pkt', bar: v => Math.max(0, v / 7) },
+    tip(e) {
+      const g = BOB_GOAL[e.level], ng = BOB_GOAL[Math.min(4, e.level + 1)];
+      if (e.level < 4 && e.score >= Math.max(ng, 100)) return `Stark! ${e.score} Punkte reichen für die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
+      return g ? `Ziel auf dieser Stufe: ${g}+ Punkte.` : 'Spiel alle 21 Runden durch und schau, welche Doppel dir Punkte kosten.';
+    }
+  };
+  const LVN = ['Beginner', 'Leicht', 'Mittel', 'Fortgeschritten', 'Hart'];
+
+  // ---------- Doppel-Runde ----------
+  const DR_POOL = L => L === 0 ? TOP_D : L === 1 ? COMMON_D : [...R20, 25];
+  const DR_GOAL = [20, 25, 30, 35, 40];
+  const DR = {
+    name: 'Doppel-Runde', short: 'Doppel-Runde',
+    describe: (L, cnt, s) => `${L === 0 ? 'Top-Doppel (D20, D16, D18, D12, D10, D8, D4)' : L === 1 ? '10 gängige Doppel' : 'alle Doppel D1–D20 + Bull'} · je 3 Darts · ${s.drOrder === 'rnd' ? 'zufällige' : 'feste'} Reihenfolge · Ziel: ${DR_GOAL[L]} % Doppelquote`,
+    opts: (s, c) => `<div class="setlabel">Reihenfolge</div><div class="seg">${c.btn('drOrder', 'Der Reihe nach', 'seq', '', s.drOrder !== 'rnd')}${c.btn('drOrder', 'Zufällig', 'rnd', '', s.drOrder === 'rnd')}</div>`,
+    start(s) {
+      const p = DR_POOL(s.level).slice();
+      const t = s.drOrder === 'rnd' ? shuffle(p) : p.sort((a, b) => a - b);
+      return { mode: 'dr', level: s.level, t, r: [], date: now() };
+    },
+    view(S, c) {
+      const i = S.r.length, n = S.t[i], hits = S.r.reduce((a, b) => a + b, 0);
+      let h = `<div class="card">` + top(c, 'Doppel-Runde', S.level, `Doppel ${i + 1} / ${S.t.length}`) + bar(i, S.t.length);
+      h += `<div class="target">${dl(n)}</div><div class="tcap">${n === 25 ? 'Bullseye (50)' : 'Doppel ' + n} · 3 Darts</div>`;
+      h += `<div class="setlabel c">Wie oft getroffen?</div><div class="okgrid">`;
+      for (let k = 0; k <= 3; k++) h += c.btn('drDR', k === 0 ? '0' : '✓ ' + k, k, k === 0 ? 'okb zero' : 'okb');
+      h += `</div><div class="live">Doppelquote <b>${c.f1(pct(hits, i * 3))} %</b> · ${hits} Treffer</div>`;
+      if (i) h += `<div class="chips">${S.r.map((k, j) => `<span class="${k ? 'g' : ''}">${dl(S.t[j])}: ${k}</span>`).slice(-10).join('')}</div>`;
+      return h + c.footer() + `</div>`;
+    },
+    act(a, v, S) {
+      if (a === 'drDR') { S.r.push(+v); return S.r.length >= S.t.length ? 'finish' : ''; }
+      if (a === 'undoTask') S.r.pop();
+      return '';
+    },
+    entry(S) {
+      if (!S.r.length) return null;
+      const f = {}; S.r.forEach((k, i) => { f[S.t[i]] = k; });
+      const hits = S.r.reduce((a, b) => a + b, 0);
+      return { date: S.date, mode: 'dr', level: S.level, f, n: S.r.length, hits, darts: S.r.length * 3, hitPct: pct(hits, S.r.length * 3) };
+    },
+    metric: (e, c) => ({ main: c.f1(e.hitPct) + ' %', det: `${e.hits} Treffer · ${e.n} Doppel` }),
+    summary(e, c) {
+      const fs = Object.entries(e.f).map(([n, k]) => [+n, k]);
+      const best = fs.filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 3), miss = fs.filter(x => x[1] === 0).map(x => dl(x[0]));
+      return `<div class="sumgrid"><div><b>${c.f1(e.hitPct)} %</b><small>Doppelquote</small></div><div><b>${e.hits}</b><small>Treffer</small></div><div><b>${e.darts}</b><small>Darts</small></div></div>`
+        + `<div class="hint">${best.length ? 'Beste: ' + best.map(x => `<b>${dl(x[0])}</b> (${x[1]}/3)`).join(', ') + '. ' : ''}${miss.length ? 'Ohne Treffer: ' + miss.join(', ') + '.' : 'Jedes Doppel mindestens einmal getroffen!'}</div>`;
+    },
+    series: [{ n: 'Doppelquote %', c: '#4ade80', k: 'hitPct' }], max: 100,
+    ov: { val: e => e.hitPct, unit: ' %', bar: v => v },
+    // Doppelquote pro Feld über alle Doppel-Runden
+    extra(hist, c) {
+      const agg = {}; hist.filter(e => e.mode === 'dr').forEach(e => Object.entries(e.f).forEach(([n, k]) => { const a = agg[n] = agg[n] || [0, 0]; a[0] += k; a[1] += 3; }));
+      const rows = Object.entries(agg).map(([n, [h, d]]) => [+n, pct(h, d), d]);
+      if (!rows.length) return '';
+      rows.sort((a, b) => b[1] - a[1] || a[0] - b[0]);
+      let h = `<h2 class="sec">Doppelquote pro Feld</h2><div class="card"><div class="bars">`;
+      rows.forEach(([n, r, d]) => { h += `<div class="br"><span>${dl(n)}</span><i><em class="${r >= 40 ? 'g' : r >= 20 ? 'y' : 'r'}" style="width:${r}%"></em></i><b>${Math.round(r)} %</b><small>${d}</small></div>`; });
+      const best = rows[0], worst = rows[rows.length - 1];
+      return h + `</div><div class="boardhint">Aus allen Doppel-Runden · Bestes: ${dl(best[0])} · Schwächstes: ${dl(worst[0])}</div></div>`;
+    },
+    tip(e) {
+      const g = DR_GOAL[e.level];
+      if (e.hitPct >= g && e.level < 4) return `Stark! Über ${g} % – probier die nächste Stufe: <b>${LVN[e.level + 1]}</b>.`;
+      return `Ziel auf dieser Stufe: ${g} % Doppelquote.`;
+    }
+  };
+
+  // ---------- Checkout-Leiter ----------
+  const LAD_START = [41, 61, 81, 101, 121];
+  const ladState = S => {
+    let cur = S.start, high = 0, ok = 0, dsum = 0;
+    S.r.forEach(r => { if (r > 0) { ok++; dsum += r; high = Math.max(high, cur); cur++; } else cur = Math.max(S.start, cur - 1); });
+    return { cur, high, ok, dsum, n: S.r.length };
+  };
+  const LAD = {
+    name: 'Checkout-Leiter', short: 'Leiter',
+    describe: (L, cnt) => `${cnt} Runden · Start bei ${LAD_START[L]} · 9 Darts (3 Aufnahmen) pro Checkout · geschafft = Ziel +1, nicht geschafft = −1 (nie unter ${LAD_START[L]}) · Double-Out · Weg wird ${L < 3 ? 'angezeigt' : 'nur auf Wunsch angezeigt'}`,
+    opts: (s, c) => `<div class="setlabel">Runden</div><div class="seg">${[10, 20, 30].map(n => c.btn('tasks', n, n, '', s.tasks === n)).join('')}</div>`,
+    start: s => ({ mode: 'lad', level: s.level, start: LAD_START[s.level], n: s.tasks, r: [], date: now() }),
+    view(S, c) {
+      const st = ladState(S), rt = routeText(route(st.cur));
+      let h = `<div class="card">` + top(c, 'Checkout-Leiter', S.level, `Runde ${st.n + 1} / ${S.n}`) + bar(st.n, S.n);
+      h += `<div class="target">${st.cur}</div><div class="tcap">Checkout ${st.cur} (Double-Out) · 9 Darts</div>`;
+      if (rt) h += (S.level < 3 || c.showRoute) ? `<div class="route">Weg: ${rt}</div>` : `<button class="link" data-a="route">Weg anzeigen</button>`;
+      else h += `<div class="route">Kein 3-Dart-Finish – erst stellen</div>`;
+      h += `<div class="setlabel c">Geschafft mit Dart …</div><div class="okgrid">`;
+      for (let i = 1; i <= 9; i++) h += c.btn('drLad', `✓ ${i}`, i, 'okb');
+      h += `</div><button class="big bad" data-a="drLad" data-v="0">✕ Nicht in 9 Darts geschafft</button>`;
+      h += `<div class="live">Geschafft <b>${st.ok}/${st.n}</b> · Höchstes Finish <b>${st.high || '–'}</b></div>`;
+      return h + c.footer() + `</div>`;
+    },
+    act(a, v, S) {
+      if (a === 'drLad') { S.r.push(+v); return S.r.length >= S.n ? 'finish' : ''; }
+      if (a === 'undoTask') S.r.pop();
+      return '';
+    },
+    entry(S) {
+      if (!S.r.length) return null;
+      const st = ladState(S);
+      return { date: S.date, mode: 'lad', level: S.level, start: S.start, n: st.n, ok: st.ok, high: st.high, end: st.cur,
+               rate: pct(st.ok, st.n), dpc: st.ok ? st.dsum / st.ok : 0 };
+    },
+    metric: (e, c) => ({ main: e.high ? 'bis ' + e.high : '–', det: `${e.ok}/${e.n} · ${c.f1(e.rate)} % · ${e.ok ? c.f1(e.dpc) + ' Darts/Finish' : 'kein Finish'}` }),
+    summary: (e, c) => `<div class="sumgrid"><div><b>${e.high || '–'}</b><small>Höchstes Finish</small></div><div><b>${c.f1(e.rate)} %</b><small>Erfolgsquote</small></div><div><b>${e.ok ? c.f1(e.dpc) : '–'}</b><small>Darts pro Checkout</small></div></div>`,
+    series: [{ n: 'Höchstes Finish', c: '#4ade80', k: 'high' }, { n: 'Erfolgsquote %', c: '#60a5fa', k: 'rate' }],
+    ov: { val: e => e.high, unit: '', bar: v => (v - 40) / 1.3 },
+    tip(e) {
+      if (e.rate >= 60 && e.level < 4) return `Stark! ${Math.round(e.rate)} % – auf <b>${LVN[e.level + 1]}</b> startest du bei ${LAD_START[e.level + 1]}.`;
+      return 'Ab 60 % Erfolgsquote lohnt sich die nächste Stufe.';
+    }
+  };
+
+  return { atc: ATC, bob: BOB, dr: DR, lad: LAD };
+})();
+
+// ===== modules/x01.js =====
+// ===== X01 für mehrere Spieler =====
+// Eigenständiges Modul. Braucht aus core.js: route, routeText, dlabel.
+// Einhängen: X01.mount(element, { onBack }) und danach X01.render(). Daten in localStorage 'dartsX01'.
+(function () {
+  const KEY = 'dartsX01';
+  const R20 = Array.from({ length: 20 }, (_, i) => i + 1);
+  const MAXP = 8, MAXUNDO = 200;
+
+  let X = { set: { start: 501, out: 'double', legs: 1, players: ['Spieler 1', 'Spieler 2'] }, game: null, hist: [], mult: 1, confirm: null };
+  try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) X = Object.assign(X, s, { confirm: null }); } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(X)); } catch (e) {} };
+
+  let el = null, opts = {};
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const f1 = x => (isFinite(x) ? x : 0).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const btn = (a, label, v, cls = '', on = false) => `<button class="${cls}${on ? ' active' : ''}" data-a="${a}"${v !== undefined ? ` data-v="${v}"` : ''}>${label}</button>`;
+
+  // ---------- Spiellogik ----------
+  function newGame() {
+    const s = X.set;
+    X.game = {
+      start: s.start, out: s.out, legsTo: s.legs, legNo: 1, starter: 0, cur: 0, phase: 'play',
+      players: s.players.map(n => ({ name: n.trim() || 'Spieler', rem: s.start, legs: 0, darts: 0, pts: 0, legDarts: 0, best: 0, s180: 0, hiCO: 0, last: '' })),
+      visit: [], undo: [], msg: '', legWinner: null, date: new Date().toISOString()
+    };
+    X.mult = 1; X.confirm = null;
+  }
+  const G = () => X.game;
+  const P = () => G().players[G().cur];
+  const visitSum = () => G().visit.reduce((a, d) => a + d.v, 0);
+  const remNow = () => P().rem - visitSum();
+
+  function snapshot() {
+    const g = G(); g.undo.push(JSON.stringify(Object.assign({}, g, { undo: [] })));
+    if (g.undo.length > MAXUNDO) g.undo.shift();
+  }
+  function undo() {
+    const g = G(); if (!g || !g.undo.length) return;
+    const u = g.undo, prev = JSON.parse(u.pop()); prev.undo = u; X.game = prev; X.mult = 1;
+  }
+
+  function isBust(after, d, out) {
+    if (after < 0) return true;
+    if (out === 'double') return after === 1 || (after === 0 && d.m !== 2);
+    return false;
+  }
+
+  function dart(n, m) {
+    const g = G(); if (!g || g.phase !== 'play') return;
+    snapshot();
+    const p = P(), d = { n, m, v: n * m, l: n === 0 ? 'Miss' : dlabel(n, m) };
+    const after = remNow() - d.v;
+    g.visit.push(d); g.msg = '';
+    if (isBust(after, d, g.out)) {
+      p.darts += g.visit.length; p.legDarts += g.visit.length;
+      p.last = 'Überworfen (' + g.visit.map(x => x.l).join(' ') + ')';
+      g.msg = p.name + ': überworfen, bleibt auf ' + p.rem;
+      nextPlayer(); return;
+    }
+    if (after === 0) {
+      const sc = visitSum();
+      p.darts += g.visit.length; p.legDarts += g.visit.length; p.pts += sc; p.rem = 0;
+      p.best = Math.max(p.best, sc); p.hiCO = Math.max(p.hiCO, sc); p.last = 'Checkout ' + sc;
+      g.visit = []; legWon(); return;
+    }
+    if (g.visit.length === 3) closeVisit();
+  }
+  function closeVisit() {
+    const g = G(), p = P(), sc = visitSum();
+    p.rem -= sc; p.pts += sc; p.darts += g.visit.length; p.legDarts += g.visit.length;
+    p.best = Math.max(p.best, sc); if (sc === 180) p.s180++;
+    p.last = sc + ' (' + g.visit.map(x => x.l).join(' ') + ')';
+    nextPlayer();
+  }
+  function nextPlayer() { const g = G(); g.visit = []; g.cur = (g.cur + 1) % g.players.length; X.mult = 1; }
+
+  function legWon() {
+    const g = G(), w = P(); w.legs++; g.legWinner = g.cur;
+    g.phase = w.legs >= g.legsTo ? 'over' : 'legover';
+    if (g.phase === 'over') recordGame();
+  }
+  function nextLeg() {
+    const g = G(); if (g.phase !== 'legover') return;
+    g.legNo++; g.starter = (g.starter + 1) % g.players.length; g.cur = g.starter;
+    g.players.forEach(p => { p.rem = g.start; p.legDarts = 0; p.last = ''; });
+    g.visit = []; g.undo = []; g.msg = ''; g.phase = 'play'; g.legWinner = null;
+  }
+  function recordGame() {
+    const g = G();
+    X.hist.push({ type: 'x01', date: g.date, end: new Date().toISOString(), start: g.start, out: g.out, legsTo: g.legsTo,
+      winner: g.players[g.legWinner].name,
+      players: g.players.map(p => ({ name: p.name, legs: p.legs, darts: p.darts, pts: p.pts, avg: p.darts ? p.pts / p.darts * 3 : 0, best: p.best, s180: p.s180, hiCO: p.hiCO })) });
+  }
+  // Nach Rückgängig aus "over" das gespeicherte Ergebnis wieder entfernen
+  function undoFromOver() { if (X.hist.length && X.hist[X.hist.length - 1].date === G().date) X.hist.pop(); undo(); }
+
+  // ---------- Aktionen ----------
+  function act(a, v) {
+    const s = X.set, n = v !== undefined ? +v : NaN;
+    switch (a) {
+      case 'xStart': s.start = n; break;
+      case 'xOut': s.out = v; break;
+      case 'xLegs': s.legs = n; break;
+      case 'xAdd': if (s.players.length < MAXP) s.players.push('Spieler ' + (s.players.length + 1)); break;
+      case 'xDel': if (s.players.length > 1) s.players.splice(n, 1); break;
+      case 'xUp': if (n > 0) s.players.splice(n - 1, 0, s.players.splice(n, 1)[0]); break;
+      case 'xGo': newGame(); break;
+      case 'xMult': X.mult = X.mult === n ? 1 : n; break;
+      case 'xDart': dart(n, X.mult || 1); X.mult = 1; break;
+      case 'x25': dart(25, 1); break;
+      case 'xBull': dart(25, 2); break;
+      case 'xMiss': dart(0, 1); break;
+      case 'xUndo': if (G() && G().phase === 'over') undoFromOver(); else undo(); break;
+      case 'xNextLeg': nextLeg(); break;
+      case 'xQuit': X.confirm = 'quit'; break;
+      case 'xQuitYes': X.confirm = null; X.game = null; break;
+      case 'xNo': X.confirm = null; break;
+      case 'xAgain': { const g = G(); s.players = g.players.map(p => p.name); s.players.push(s.players.shift()); newGame(); break; }
+      case 'xClose': X.game = null; break;
+      case 'xBack': if (opts.onBack) opts.onBack(); return;
+      default: return;
+    }
+    render();
+  }
+
+  // ---------- Ansichten ----------
+  function viewSetup() {
+    const s = X.set;
+    let h = (opts.onBack ? btn('xBack', '← Zurück', undefined, 'link xback') : '') + `<div class="phead"><h1>X01</h1><p>Mehrere Spieler an einem Gerät</p></div><div class="card">`;
+    h += `<div class="setlabel">Punkte</div><div class="seg">${[301, 501, 701].map(v => btn('xStart', v, v, '', s.start === v)).join('')}</div>`;
+    h += `<div class="setlabel">Check-out</div><div class="seg">${btn('xOut', 'Double-Out', 'double', '', s.out === 'double')}${btn('xOut', 'Single-Out', 'single', '', s.out === 'single')}</div>`;
+    h += `<div class="setlabel">First to … Legs</div><div class="seg">${[1, 2, 3, 5].map(v => btn('xLegs', v, v, '', s.legs === v)).join('')}</div>`;
+    h += `<div class="setlabel">Spieler (Reihenfolge = Wurfreihenfolge)</div><div class="xplist">`;
+    s.players.forEach((p, i) => {
+      h += `<div class="xprow"><span class="xpn">${i + 1}</span><input data-p="${i}" value="${esc(p)}" maxlength="20" aria-label="Name Spieler ${i + 1}">`
+        + (i > 0 ? btn('xUp', '↑', i, 'xsm') : '<span class="xsm"></span>')
+        + (s.players.length > 1 ? btn('xDel', '✕', i, 'xsm') : '') + `</div>`;
+    });
+    h += `</div>`;
+    if (s.players.length < MAXP) h += btn('xAdd', '+ Spieler hinzufügen', undefined, 'link');
+    h += `<div class="desc">${s.start} · ${s.out === 'double' ? 'Double-Out' : 'Single-Out'} · ${s.players.length} Spieler · First to ${s.legs} Leg${s.legs > 1 ? 's' : ''}. Pfeile werden einzeln eingetragen.</div>`;
+    h += `<button class="big go" data-a="xGo">Spiel starten</button>`;
+    return h + `</div>`;
+  }
+
+  function scoreboard() {
+    const g = G();
+    return `<div class="xboard">${g.players.map((p, i) => {
+      const act = i === g.cur && g.phase === 'play';
+      const rem = act ? remNow() : p.rem;
+      const avg = p.darts ? p.pts / p.darts * 3 : 0;
+      return `<div class="xp${act ? ' act' : ''}${g.legWinner === i ? ' win' : ''}">
+        <div class="xpname">${esc(p.name)}${g.legsTo > 1 ? ` <small>· Legs ${p.legs}</small>` : ''}</div>
+        <div class="xprem">${rem}</div>
+        <div class="xpstat">Ø ${f1(avg)} · ${p.legDarts} Darts</div>
+        <div class="xplast">${esc(p.last) || '&nbsp;'}</div></div>`;
+    }).join('')}</div>`;
+  }
+
+  function viewGame() {
+    const g = G(), p = P();
+    let h = `<div class="card x01">`;
+    h += `<div class="tophead"><span>${g.start} · ${g.out === 'double' ? 'Double-Out' : 'Single-Out'}</span><span>Leg ${g.legNo}${g.legsTo > 1 ? ' · First to ' + g.legsTo : ''}</span></div>`;
+    h += scoreboard();
+    if (g.phase === 'play') {
+      const V = g.visit, m = X.mult || 1, rem = remNow();
+      h += `<div class="xturn"><b>${esc(p.name)}</b> ist dran · Rest ${rem}</div>`;
+      h += `<div class="slots">${[0, 1, 2].map(i => `<div class="${V[i] ? 'f' : ''}">${V[i] ? V[i].l : 'Pfeil ' + (i + 1)}</div>`).join('')}<div class="sum">${visitSum()}</div></div>`;
+      if (g.out === 'double') { const rt = route(rem, 3 - V.length); if (rt) h += `<div class="route">Checkout: ${routeText(rt)}</div>`; }
+      if (g.msg) h += `<div class="msg">${esc(g.msg)}</div>`;
+      h += `<div class="mult">${btn('xMult', 'Double', 2, 'm2', m === 2)}${btn('xMult', 'Triple', 3, 'm3', m === 3)}</div>`;
+      h += `<div class="numgrid">${R20.map(n => btn('xDart', (m === 3 ? 'T' : m === 2 ? 'D' : '') + n, n, 'nb m' + m)).join('')}</div>`;
+      h += `<div class="numrow">${btn('x25', '25', undefined, 'nb')}${btn('xBull', 'Bull', undefined, 'nb bullb')}${btn('xMiss', 'Miss / 0', undefined, 'nb missb')}</div>`;
+    } else {
+      const w = g.players[g.legWinner];
+      h += `<div class="result win">${esc(w.name)} ${g.phase === 'over' ? 'gewinnt das Spiel! 🏆' : 'gewinnt das Leg! 🎯'}</div>`;
+      if (g.players.length > 1 && g.legsTo > 1) h += `<div class="live">Legs: ${g.players.map(x => esc(x.name) + ' ' + x.legs).join(' · ')}</div>`;
+      h += statsTable(g);
+      if (g.phase === 'legover') h += `<button class="big go" data-a="xNextLeg">Nächstes Leg</button>`;
+      else h += `<div class="row2">${btn('xAgain', 'Neues Spiel', undefined, 'mid')}${btn('xClose', 'Zu den Einstellungen', undefined, 'mid')}</div>`;
+    }
+    if (X.confirm === 'quit') h += `<div class="confirmbox"><p>Spiel abbrechen? Es wird nicht gespeichert.</p><div class="row2">${btn('xNo', 'Weiterspielen', undefined, 'mid')}${btn('xQuitYes', 'Abbrechen', undefined, 'mid redb')}</div></div>`;
+    else h += `<div class="row2 foot">${btn('xUndo', '↶ Rückgängig', undefined, 'mid')}${g.phase === 'over' ? '' : btn('xQuit', 'Spiel beenden', undefined, 'mid')}</div>`;
+    return h + `</div>`;
+  }
+
+  function statsTable(g) {
+    const rows = [['Average', p => f1(p.darts ? p.pts / p.darts * 3 : 0)], ['Darts', p => p.darts], ['Höchste Aufnahme', p => p.best], ['180er', p => p.s180], ['Höchstes Finish', p => p.hiCO || '–']];
+    return `<table class="cmp"><tr><th></th>${g.players.map(p => `<th>${esc(p.name)}</th>`).join('')}</tr>${rows.map(r => `<tr><td>${r[0]}</td>${g.players.map(p => `<td>${r[1](p)}</td>`).join('')}</tr>`).join('')}</table>`;
+  }
+
+  function render() {
+    if (!el) return;
+    el.innerHTML = X.game ? viewGame() : viewSetup();
+    save();
+  }
+
+  // opts.onBack: optional, zeigt im Setup einen Zurück-Button
+  function mount(container, o) {
+    el = container; opts = o || {};
+    el.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && !b.disabled) act(b.dataset.a, b.dataset.v); });
+    el.addEventListener('input', e => { const i = e.target.closest('input[data-p]'); if (i) { X.set.players[+i.dataset.p] = i.value; save(); } });
+  }
+
+  // Zum Testen und für Stats: reine Logik zugänglich machen
+  window.X01 = { mount, render, act, state: () => X, history: () => X.hist };
+})();
+
+</script>
+<script>
+  const FIELDS = [...Array.from({ length: 20 }, (_, i) => i + 1), 25, 50];
+  const MODES = { N: 'Normal', D: 'Doppel', T: 'Triple' };
+  let step = 1, history = [], need = { 25: 3, 50: 3 }, results = [];
+  let mode = 'N', inPlay = [...FIELDS], locked = [], tap = 'hit', filter = 'all';
+  try {
+    const s = JSON.parse(localStorage.getItem('zaehler3') || 'null');
+    if (s) {
+      step = s.step || 1; history = s.history || []; need = s.need || need; results = s.results || [];
+      mode = s.mode || 'N'; inPlay = s.inPlay || inPlay; locked = s.locked || []; filter = s.filter || 'all';
+    }
+  } catch (e) {}
+  results.forEach(r => {
+    if (r.div === undefined) { r.div = r.count ? Math.round(r.total / r.count) || 1 : 1; r.result = r.total / r.div; }
+  });
+
+  const $ = id => document.getElementById(id);
+  const choices = $('choices'), numbers = $('numbers');
+  const req = k => (k === 25 || k === 50) ? need[k] : 3;
+  const hits = k => Math.min(req(k), history.filter(h => h.t === 'hit' && h.k === k).length);
+  const fmt = x => x.toLocaleString('de-DE', { maximumFractionDigits: 2 });
+  const adds = () => history.filter(h => h.t === 'add');
+  const stepLocked = () => adds().length > 0;
+  const active = () => FIELDS.filter(k => inPlay.includes(k) && !locked.includes(k));
+
+  // Zahlen-Auswahl 1–5
+  for (let i = 1; i <= 5; i++) {
+    const b = document.createElement('button');
+    b.className = 'choice'; b.textContent = i;
+    b.onclick = () => { if (!stepLocked()) { step = i; render(); } };
+    choices.appendChild(b);
+  }
+
+  // Treffen / Sperren
+  $('tapHit').onclick = () => { tap = 'hit'; render(); };
+  $('tapLock').onclick = () => { tap = 'lock'; render(); };
+
+  // Wurfart
+  Object.entries(MODES).forEach(([k, v]) => {
+    const b = document.createElement('button');
+    b.textContent = v; b.dataset.m = k;
+    b.onclick = () => { mode = k; render(); };
+    $('modeSeg').appendChild(b);
+  });
+
+  // 25/50 Anzahl
+  document.querySelectorAll('.seg[data-field]').forEach(seg => {
+    const k = +seg.dataset.field;
+    [1, 2, 3].forEach(n => {
+      const b = document.createElement('button');
+      b.textContent = n + '×';
+      b.onclick = () => {
+        need[k] = n;
+        let extra = history.filter(h => h.t === 'hit' && h.k === k).length - n;
+        for (let i = history.length - 1; i >= 0 && extra > 0; i--)
+          if (history[i].t === 'hit' && history[i].k === k) { history.splice(i, 1); extra--; }
+        render(); checkDone();
+      };
+      seg.appendChild(b);
+    });
+  });
+
+  // Zahlen im Spiel
+  FIELDS.forEach(k => {
+    const b = document.createElement('button');
+    b.textContent = k; b.dataset.k = k;
+    b.onclick = () => {
+      inPlay = inPlay.includes(k) ? inPlay.filter(x => x !== k) : [...inPlay, k];
+      render(); checkDone();
+    };
+    $('pick').appendChild(b);
+  });
+  document.querySelectorAll('.presets button').forEach(b => b.onclick = () => {
+    const p = b.dataset.p;
+    inPlay = p === 'all' ? [...FIELDS] : p === 'none' ? [] : p === '1-20' ? FIELDS.filter(k => k <= 20)
+           : p === '15-20' ? FIELDS.filter(k => k >= 15) : [25, 50];
+    render(); checkDone();
+  });
+
+  // Ergebnis-Filter
+  [['all', 'Alle'], ['N', 'Normal'], ['D', 'Doppel'], ['T', 'Triple']].forEach(([k, v]) => {
+    const b = document.createElement('button');
+    b.textContent = v; b.dataset.f = k;
+    b.onclick = () => { filter = k; render(); };
+    $('filter').appendChild(b);
+  });
+
+  function tapField(k) {
+    hideBanner();
+    if (tap === 'lock') {
+      locked = locked.includes(k) ? locked.filter(x => x !== k) : [...locked, k];
+      render(); checkDone();
+    } else if (!locked.includes(k) && hits(k) < req(k)) {
+      history.push({ t: 'hit', k }); render(); checkDone();
+    }
+  }
+
+  function checkDone() {
+    const act = active();
+    if (!act.length || !act.every(k => hits(k) >= req(k))) return;
+    const a = adds();
+    const total = a.reduce((s, h) => s + h.n, 0);
+    const div = a.length ? a[0].n : step;
+    const result = total / div;
+    results.push({ date: new Date().toISOString(), total, count: a.length, div, result, mode,
+                   fields: act, n25: need[25], n50: need[50] });
+    history = []; locked = []; tap = 'hit';
+    showBanner('Abgeschlossen (' + MODES[mode] + ', ' + act.length + ' Felder)! ' + total + ' ÷ ' + div + ' = ' + fmt(result));
+    render();
+  }
+  function showBanner(t) { $('banner').textContent = t; $('banner').classList.add('show'); }
+  function hideBanner() { $('banner').classList.remove('show'); }
+
+  function save() {
+    try { localStorage.setItem('zaehler3', JSON.stringify({ step, history, need, results, mode, inPlay, locked, filter })); } catch (e) {}
+  }
+
+  const shown = () => results.map((r, i) => ({ ...r, nr: i + 1, idx: i })).filter(r => filter === 'all' || r.mode === filter);
+
+  function renderResults() {
+    const box = $('results'), list = shown();
+    $('clearRow').style.display = results.length ? 'flex' : 'none';
+    if (!list.length) { box.innerHTML = '<div class="empty">' + (results.length ? 'Keine Runden mit dieser Wurfart.' : 'Noch keine abgeschlossenen Runden.') + '</div>'; return; }
+    let html = '<table><tr><th>#</th><th>Datum</th><th>Art</th><th>Summe</th><th>÷</th><th>Ergebnis</th><th></th></tr>';
+    list.forEach(r => {
+      const d = new Date(r.date);
+      const ds = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      const md = r.mode ? MODES[r.mode] : '–';
+      const fl = r.fields ? ' · ' + r.fields.length + 'F' : '';
+      html += `<tr><td>${r.nr}</td><td>${ds}</td><td class="md">${md}${fl}</td><td class="tot">${r.total}</td><td>${r.div}</td><td class="res">${fmt(r.result)}</td><td><button class="del" data-i="${r.idx}">×</button></td></tr>`;
+    });
+    html += '</table>';
+    html += '<div class="avg">Durchschnitt: Gesamt <b>' + fmt(list.reduce((s, r) => s + r.total, 0) / list.length) +
+            '</b> · Geteilt <b>' + fmt(list.reduce((s, r) => s + r.result, 0) / list.length) + '</b></div>';
+    box.innerHTML = html;
+    box.querySelectorAll('.del').forEach(b => b.onclick = () => { results.splice(+b.dataset.i, 1); render(); });
+  }
+
+  function niceMax(v) {
+    if (v <= 0) return 10;
+    const p = Math.pow(10, Math.floor(Math.log10(v)));
+    for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p;
+    return 10 * p;
+  }
+
+  function renderChart() {
+    const box = $('chart'), list = shown();
+    if (!list.length) { box.innerHTML = '<div class="empty">Der Graph erscheint nach der ersten Runde.</div>'; return; }
+    const W = 400, H = 240, L = 36, R = 14, T = 14, B = 26;
+    const pw = W - L - R, ph = H - T - B;
+    const max = niceMax(Math.max(...list.map(r => Math.max(r.total, r.result))));
+    const n = list.length;
+    const x = i => L + (n === 1 ? pw / 2 : i * pw / (n - 1));
+    const y = v => T + (v / max) * ph;   // umgedreht: 0 oben
+
+    let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">`;
+    for (let g = 0; g <= 4; g++) {
+      const v = max * g / 4, yy = y(v);
+      s += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="#334155" stroke-width="1"/>`;
+      s += `<text x="${L - 6}" y="${yy + 4}" fill="#64748b" font-size="11" text-anchor="end">${fmt(v)}</text>`;
+    }
+    const every = Math.ceil(n / 10);
+    list.forEach((r, i) => {
+      if (i % every === 0 || i === n - 1)
+        s += `<text x="${x(i)}" y="${H - 8}" fill="#64748b" font-size="11" text-anchor="middle">${r.nr}</text>`;
+    });
+    const line = (key, color) => {
+      const pts = list.map((r, i) => `${x(i).toFixed(1)},${y(r[key]).toFixed(1)}`).join(' ');
+      let out = n > 1 ? `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>` : '';
+      list.forEach((r, i) => {
+        out += `<circle cx="${x(i)}" cy="${y(r[key])}" r="4" fill="${color}" stroke="#1e293b" stroke-width="2"><title>Runde ${r.nr}: ${fmt(r[key])}</title></circle>`;
+      });
+      return out;
+    };
+    s += line('total', '#60a5fa') + line('result', '#4ade80');
+    s += '</svg>';
+    box.innerHTML = s;
+  }
+
+  function render() {
+    const a = adds();
+    $('total').textContent = a.reduce((s, h) => s + h.n, 0);
+    $('sub').textContent = a.length + (a.length === 1 ? ' Eingabe' : ' Eingaben');
+    $('add').textContent = '+' + step;
+    $('modebadge').textContent = MODES[mode];
+    const lk = stepLocked();
+    [...choices.children].forEach((b, i) => { b.classList.toggle('active', i + 1 === step); b.disabled = lk && i + 1 !== step; });
+    $('lockhint').textContent = lk ? 'Zahl für diese Runde festgelegt: ÷ ' + step : '';
+
+    $('tapHit').classList.toggle('active', tap === 'hit');
+    $('tapLock').classList.toggle('active', tap === 'lock');
+    numbers.classList.toggle('lockmode', tap === 'lock');
+
+    // Felder neu aufbauen (nur Zahlen im Spiel)
+    numbers.innerHTML = '';
+    const shownFields = FIELDS.filter(k => inPlay.includes(k));
+    let done = 0;
+    shownFields.forEach(k => {
+      const r = req(k), h = hits(k), isL = locked.includes(k);
+      if (!isL && h >= r) done++;
+      const b = document.createElement('button');
+      b.className = 'num' + (k >= 25 ? ' wide' : '') + (isL ? ' locked' : h >= r ? ' done' : h ? ' part' : '');
+      b.innerHTML = k + '<span class="dots">' + Array.from({ length: r }, (_, j) => `<span class="dot${j < h ? ' on' : ''}"></span>`).join('') + '</span>';
+      b.onclick = () => tapField(k);
+      numbers.appendChild(b);
+    });
+    if (!shownFields.length) numbers.innerHTML = '<div class="empty" style="grid-column:1/-1">Keine Zahlen im Spiel – in den Einstellungen auswählen.</div>';
+    $('doneCount').textContent = done;
+    $('activeCount').textContent = active().length;
+
+    document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('active', b.dataset.m === mode));
+    document.querySelectorAll('.seg[data-field]').forEach(seg => {
+      [...seg.children].forEach((b, i) => b.classList.toggle('active', i + 1 === need[+seg.dataset.field]));
+    });
+    document.querySelectorAll('#pick button').forEach(b => b.classList.toggle('on', inPlay.includes(+b.dataset.k)));
+    document.querySelectorAll('#filter button').forEach(b => b.classList.toggle('active', b.dataset.f === filter));
+
+    $('log').textContent = a.length ? 'Verlauf: ' + a.slice(-15).map(h => '+' + h.n).join(' ') : '';
+    renderResults();
+    renderChart();
+    save();
+  }
+
+  $('add').onclick = () => { history.push({ t: 'add', n: step }); hideBanner(); render(); };
+  $('undo').onclick = () => { history.pop(); render(); };
+  $('reset').onclick = () => $('confirm').classList.add('show');
+  $('no').onclick = () => $('confirm').classList.remove('show');
+  $('yes').onclick = () => { history = []; locked = []; $('confirm').classList.remove('show'); render(); };
+  $('clearAll').onclick = () => $('confirm2').classList.add('show');
+  $('no2').onclick = () => $('confirm2').classList.remove('show');
+  $('yes2').onclick = () => { results = []; $('confirm2').classList.remove('show'); render(); };
+  render();
+</script>
+<script>
+// ===== Darts-Trainer =====
+(function () {
+
+  // ===== 00-state.js =====
+// Konstanten, Zustand (T), Speichern, Hilfsfunktionen
+  const KEY = 'dartsTrainer';
+  const LV = ['Beginner', 'Leicht', 'Mittel', 'Fortgeschritten', 'Hart'];
+  const BOT = [
+    { n: 'Beginner', a: 25, s: 38 }, { n: 'Leicht', a: 40, s: 23 }, { n: 'Mittel', a: 55, s: 15.5 },
+    { n: 'Fortgeschritten', a: 70, s: 11.5 }, { n: 'Profi', a: 90, s: 8 }
+  ];
+  const TM = { hit: 'Treffen', single: 'Single', double: 'Doppel', triple: 'Triple', checkout: 'Checkouts', score: 'Punkte', game: 'Spiel vs. Bot' };
+  const IMPOSSIBLE = [163, 166, 169, 172, 173, 175, 176, 178, 179];
+  const R20 = Array.from({ length: 20 }, (_, i) => i + 1);
+  const FAV_D = [20, 16, 10, 8], TOP_D = [20, 16, 18, 12, 10, 8, 4];
+  const SCORE_GOAL = [30, 45, 60, 75, 90];
+  const HIT = [
+    [['A', 3], ['S', 4], ['D', 9]],
+    [['A', 2], ['S', 3], ['T', 9], ['D', 6]],
+    [['S', 2], ['T', 6], ['D', 4]],
+    [['S', 2], ['T', 4], ['D', 3], ['B', 3]],
+    [['S', 1], ['T', 3], ['D', 2], ['B', 2]]
+  ];
+  const ICON = {
+    play: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>',
+    train: '<svg viewBox="0 0 24 24"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>',
+    stats: '<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+    counter: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h6M12 9v6M9 15h6"/></svg>',
+    home: '<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>'
+  };
+  const LOGO = '<svg viewBox="-20 -20 40 40"><circle r="19" fill="#111"/><circle r="17" fill="none" stroke="#ec4899" stroke-width="3"/><circle r="10.5" fill="none" stroke="#f9a8d4" stroke-width="2.2"/><circle r="4" fill="#ec4899"/><path d="M6 -6 L17 -17 M14 -17 L17 -17 L17 -14" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>';
+  const BLOCKNAME = { A: 'Zahlen treffen', S: 'Single', T: 'Triple', D: 'Doppel', B: 'Bull' };
+
+  let T = { set: { mode: 'hit', level: 0, tasks: 10, bot: 2, start: 501, din: false, legs: 1 },
+            sess: null, game: null, hist: [], filter: 'all', input: '', summary: null, confirm: null, showRoute: false, route: 'home', stab: 'over', tgt: null };
+  try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) T = Object.assign(T, s, { confirm: null }); } catch (e) {}
+  // Erweiterungen: neue Module tragen sich hier ein, statt zentrale Dateien zu ändern (siehe docs/ENTWICKLUNG.md)
+  //   EXT.views[route]  = () => html         eigene Seite unter T.route === route
+  //   EXT.actions[name] = (v, n) => {}        Klick auf data-a="name" (v = data-v als Text, n = als Zahl)
+  //   EXT.nav.push({ route, label, icon })    Eintrag in der unteren Navigation (sparsam, Platz ist knapp)
+  //   EXT.playLinks / EXT.trainLinks.push({ route, title, sub })   Kachel auf der Spielen- bzw. Training-Seite
+  //   EXT.after[route] = container => {}     läuft nach jedem Rendern der Seite (z.B. eigenständiges Modul einhängen)
+  //   EXT.panels[route] = { el, render }    eigenständiges Modul mit eigenem Container neben #viewTrainer (eigene Klick-Logik)
+  //   EXT.dataKeys.push('meinKey')            eigener localStorage-Schlüssel, wird mit gesichert/gelöscht
+  const EXT = { views: {}, after: {}, panels: {}, actions: {}, nav: [], playLinks: [], trainLinks: [], dataKeys: [] };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(T)); } catch (e) {} };
+
+  const el = document.getElementById('viewTrainer');
+  const f1 = x => (isFinite(x) ? x : 0).toLocaleString('de-DE', { maximumFractionDigits: 1 });
+  const rnd = a => a[Math.floor(Math.random() * a.length)];
+  const pickSeq = (pool, count) => { const out = []; let prev = null; for (let i = 0; i < count; i++) { let c, g = 0; do { c = rnd(pool); } while (pool.length > 1 && c === prev && g++ < 20); out.push(c); prev = c; } return out; };
+
+
+  // ===== 05-drills.js =====
+// Trainingsspiele aus src/modules/drills.js (Around the Clock, Bob's 27, Doppel-Runde, Checkout-Leiter)
+// Die Regeln und Ansichten stehen dort; hier werden sie in TM eingetragen und mit Helfern versorgt.
+  const DR = window.DRILLS || {};
+  delete TM.game; Object.keys(DR).forEach(k => { TM[k] = DR[k].name; }); TM.game = 'Spiel vs. Bot';
+  const ctx = { btn: (...a) => btn(...a), f1, LV, footer: () => footer(), get showRoute() { return T.showRoute; } };
+  // Eingaben während eines Trainingsspiels (drHit, drBob, drDR, drLad)
+  ['drHit', 'drBob', 'drDR', 'drLad'].forEach(a => {
+    EXT.actions[a] = v => { const S = T.sess; if (S && DR[S.mode] && DR[S.mode].act(a, v, S) === 'finish') finish(); };
+  });
+
+  // ===== 10-training.js =====
+// Training: Aufgaben erzeugen, Sitzung, Auswertung
+  // ---------- Aufgaben ----------
+  function mk(type, n, darts, block) {
+    let big, cap;
+    if (type === 'A') { big = String(n); cap = 'Die ' + n + ' treffen – egal welcher Ring'; }
+    else if (type === 'B') { big = 'Bull'; cap = 'Bull treffen (25 oder 50)'; }
+    else if (n === 25) { big = type === 'D' ? 'Bull' : '25'; cap = type === 'D' ? 'Bullseye (50)' : 'Single Bull (25)'; }
+    else { big = (type === 'S' ? '' : type) + n; cap = { S: 'Single', D: 'Doppel', T: 'Triple' }[type] + ' ' + n; }
+    return { type, n, darts, big, cap, block };
+  }
+  function checkoutPool(L) {
+    const [lo, hi] = [[2, 40], [2, 60], [41, 100], [61, 130], [100, 170]][L];
+    const p = []; for (let r = lo; r <= hi; r++) if (minDarts(r) <= 3 && (L > 0 || r % 2 === 0)) p.push(r);
+    return p;
+  }
+  function genTasks(mode, L, count) {
+    const t = [];
+    if (mode === 'single') { const d = [4, 3, 2, 2, 1][L]; pickSeq(L >= 3 ? [...R20, 25] : R20, count).forEach(n => t.push(mk('S', n, d))); }
+    if (mode === 'double') { const d = [6, 5, 4, 3, 2][L]; pickSeq([FAV_D, TOP_D, R20, [...R20, 25], [...R20, 25]][L], count).forEach(n => t.push(mk('D', n, d))); }
+    if (mode === 'triple') { const d = [9, 6, 5, 4, 3][L]; pickSeq([[20, 19], [20, 19, 18, 17], [20, 19, 18, 17, 16, 15], R20, R20][L], count).forEach(n => t.push(mk('T', n, d))); }
+    if (mode === 'checkout') {
+      const d = [9, 9, 6, 6, 3][L];
+      pickSeq(checkoutPool(L), count).forEach(r => t.push({ type: 'C', n: r, darts: d, big: String(r), cap: 'Checkout ' + r + ' (Double-Out)', route: routeText(route(r)) }));
+    }
+    if (mode === 'hit') {
+      const bl = HIT[L], base = Math.floor(count / bl.length), extra = count % bl.length;
+      bl.forEach(([type, d], i) => {
+        const c = base + (i < extra ? 1 : 0);
+        const pool = type === 'B' ? [25] : (type === 'D' && L < 2) ? TOP_D : (type === 'T' && L < 2) ? [20, 19, 18, 17] : R20;
+        const seq = type === 'A' && L === 0 ? R20.slice(0, c).concat(pickSeq(R20, Math.max(0, c - 20))) : pickSeq(pool, c);
+        seq.forEach(n => t.push(mk(type, n, d, { i: i + 1, of: bl.length, name: BLOCKNAME[type] })));
+      });
+    }
+    return t;
+  }
+  function describe(mode, L, c) {
+    if (DR[mode]) return DR[mode].describe(L, c, T.set);
+    if (mode === 'single') return `${c} Aufgaben · Single-Felder ${L >= 3 ? '1–20 + Bull' : '1–20'} · ${[4, 3, 2, 2, 1][L]} Darts pro Feld`;
+    if (mode === 'double') return `${c} Aufgaben · ${['D20, D16, D10, D8', 'Top-Doppel (D20, D16, D18, D12, D10, D8, D4)', 'alle Doppel', 'alle Doppel + Bull', 'alle Doppel + Bull'][L]} · ${[6, 5, 4, 3, 2][L]} Darts pro Feld`;
+    if (mode === 'triple') return `${c} Aufgaben · ${['T20, T19', 'T20–T17', 'T20–T15', 'alle Triple', 'alle Triple'][L]} · ${[9, 6, 5, 4, 3][L]} Darts pro Feld`;
+    if (mode === 'checkout') { const r = [[2, 40], [2, 60], [41, 100], [61, 130], [100, 170]][L]; return `${c} Checkouts von ${r[0]} bis ${r[1]} · ${[9, 9, 6, 6, 3][L]} Darts pro Checkout · Weg wird ${L < 3 ? 'angezeigt' : 'nur auf Wunsch angezeigt'}`; }
+    if (mode === 'score') return `${c} Aufnahmen à 3 Darts auf ${L < 2 ? 'das 20er-Segment' : 'die T20'} · Ziel pro Aufnahme: ${SCORE_GOAL[L]} Punkte`;
+    if (mode === 'hit') return `Kompletter Trainingsplan, ${c} Aufgaben in Blöcken: ` + HIT[L].map(([t, d]) => `${BLOCKNAME[t]} (${d} Darts)`).join(' → ');
+    return '';
+  }
+
+  // ---------- Sitzung ----------
+  function start() {
+    const s = T.set; T.summary = null; T.input = ''; T.showRoute = false;
+    if (s.mode === 'game') { newGame(); return; }
+    if (DR[s.mode]) { T.sess = DR[s.mode].start(s); return; }
+    if (s.mode === 'score') { T.sess = { mode: 'score', level: s.level, n: s.tasks, goal: SCORE_GOAL[s.level], visits: [], date: new Date().toISOString() }; return; }
+    T.sess = { mode: s.mode, level: s.level, tasks: genTasks(s.mode, s.level, s.tasks), idx: 0, log: [], phase: 'task', more: 0, date: new Date().toISOString() };
+  }
+  function taskStats(S) {
+    const ok = S.log.filter(l => l.ok).length, hits = S.log.filter(l => l.done).length, darts = S.log.reduce((a, l) => a + l.darts, 0);
+    return { n: S.log.length, ok, hits, darts, rate: S.log.length ? ok / S.log.length * 100 : 0, hitPct: darts ? hits / darts * 100 : 0 };
+  }
+  function scoreStats(S) {
+    const v = S.visits, n = v.length, sum = v.reduce((a, b) => a + b, 0);
+    return { n, avg: n ? sum / n : 0, best: n ? Math.max(...v) : 0, goalPct: n ? v.filter(x => x >= S.goal).length / n * 100 : 0,
+             c100: v.filter(x => x >= 100).length, c140: v.filter(x => x >= 140).length, c180: v.filter(x => x === 180).length };
+  }
+  function finish() {
+    const S = T.sess; if (!S) return;
+    let entry;
+    if (DR[S.mode]) { entry = DR[S.mode].entry(S); if (!entry) { T.sess = null; return; } }
+    else if (S.mode === 'score') { if (!S.visits.length) { T.sess = null; return; } entry = Object.assign({ date: S.date, mode: 'score', level: S.level, goal: S.goal }, scoreStats(S)); }
+    else { if (!S.log.length) { T.sess = null; return; } entry = Object.assign({ date: S.date, mode: S.mode, level: S.level, planned: S.tasks.length }, taskStats(S)); }
+    T.hist.push(entry); T.summary = entry; T.sess = null; T.filter = entry.mode;
+  }
+  function record(r) {
+    const S = T.sess, task = S.tasks[S.idx];
+    S.log.push(Object.assign({ allowed: task.darts }, r));
+    S.idx++; S.phase = 'task'; T.showRoute = false;
+    if (S.idx >= S.tasks.length) finish();
+  }
+
+
+  // ===== 20-game.js =====
+// Spiel X01 vs. Bot: Ablauf, Bot-Züge, Leg-/Spielende, Spieler-Stats
+  // ---------- Spiel ----------
+  function newGame() {
+    const s = T.set;
+    T.zoom = null; T.mult = 1;
+    T.game = { start: s.start, din: s.din, bot: s.bot, legsTo: s.legs, legs: { p: 0, b: 0 }, legNo: 1, starter: 'p', turn: 'p',
+               p: { rem: s.start, in: !s.din }, b: { rem: s.start, in: !s.din },
+               visit: null, vis: { p: [], b: [] }, att: { p: 0, b: 0 }, pdots: [], bLast: [], legWins: [],
+               last: { p: '', b: '' }, phase: 'play', undo: [], busy: false, msg: '', date: new Date().toISOString() };
+  }
+  function snapshot() { const g = T.game; g.undo.push(JSON.stringify(Object.assign({}, g, { undo: [] }))); if (g.undo.length > 15) g.undo.shift(); }
+  const visitText = ds => ds.map(d => d.l).join(' · ');
+
+  // Ein Pfeil des Spielers: d = { n, m, v, l, x, y }
+  function playerDart(d) {
+    const g = T.game; g.msg = '';
+    if (!g || g.busy || g.turn !== 'p' || g.phase !== 'play') return;
+    snapshot();
+    const P = g.p;
+    if (!g.visit) g.visit = { start: P.rem, startIn: P.in, darts: [] };
+    const V = g.visit;
+    d.rb = P.rem; d.att = P.in && !!(ROUTES[P.rem] && ROUTES[P.rem][1]);
+    let aim = null;
+    if (P.in) { const rt = P.rem <= 170 ? route(P.rem, 3 - V.darts.length) : null; aim = rt ? dlabel(rt[0].n, rt[0].m) : 'T20'; }
+    if (d.att) g.att.p++;
+    V.darts.push(d);
+    g.pdots.push({ x: d.x, y: d.y, l: d.l, leg: g.legNo, rb: P.rem, att: d.att, din: !P.in, aim });
+    if (!P.in) {
+      if (d.m === 2) P.in = true;
+      else { if (V.darts.length === 3) closeVisit(false, false); return; }
+    }
+    const nr = P.rem - d.v;
+    if (nr < 0 || nr === 1 || (nr === 0 && d.m !== 2)) { P.rem = V.start; closeVisit(true, false); return; }
+    P.rem = nr;
+    if (nr === 0) { closeVisit(false, true); legWon('p'); return; }
+    if (V.darts.length === 3) closeVisit(false, false);
+  }
+  function closeVisit(bust, checked) {
+    const g = T.game, P = g.p, V = g.visit;
+    const score = bust ? 0 : V.start - P.rem;
+    g.vis.p.push({ leg: g.legNo, score, n: V.darts.length, bust, co: checked ? V.start : 0 });
+    g.last.p = visitText(V.darts) + (bust ? ' → Überworfen' : (g.din && !P.in) ? ' → nicht drin' : ' = ' + score) + (checked ? ' ✓' : '');
+    g.lastVisit = V.darts; g.visit = null;
+    if (!checked) endPlayerTurn();
+  }
+  function endPlayerTurn() { const g = T.game; T.zoom = null; g.turn = 'b'; g.busy = true; setTimeout(botMove, 900); }
+  function botMove() {
+    const g = T.game; if (!g || !g.busy) return;
+    if (g.botPending) { finishBot(); render(); return; }   // nach Neuladen: direkt abschließen
+    const r = botTurn(g.b.rem, g.b.in, BOT[g.bot].s, g.din);
+    g.botPending = r; g.bLast = []; g.botPop = null; g.bShowRem = g.b.rem; g.bShowIn = g.b.in || !g.din;
+    render(); animateBot(g, r, 0);
+  }
+  function animateBot(g, r, i) {
+    if (i >= r.darts.length) { setTimeout(() => { if (T.game === g && g.botPending === r) { finishBot(); render(); } }, 900); return; }
+    setTimeout(() => {
+      if (T.game !== g || g.botPending !== r) return;
+      const d = r.darts[i];
+      g.bLast.push({ x: d.x, y: d.y });
+      let txt = d.l === 'Miss' ? 'Daneben (0)' : (d.m === 1 && d.n < 25 ? 'S' + d.n : d.l) + ' = ' + d.v;
+      if (!g.bShowIn) { if (d.m === 2) g.bShowIn = true; else txt += ' · nicht drin'; }
+      if (g.bShowIn && !(r.bust && i === r.darts.length - 1)) g.bShowRem -= (g.bShowIn ? d.v : 0);
+      if (r.bust && i === r.darts.length - 1) txt += ' → Überworfen!';
+      if (r.checked && i === r.darts.length - 1) { g.bShowRem = 0; txt += ' → Checkout! ✓'; }
+      g.botPop = { i: i + 1, txt };
+      render(); animateBot(g, r, i + 1);
+    }, i === 0 ? 600 : 1100);
+  }
+  function finishBot() {
+    const g = T.game, r = g.botPending; if (!r) return;
+    const scored = r.bust ? 0 : g.b.rem - r.rem;
+    g.att.b += r.darts.filter(d => d.att).length;
+    g.vis.b.push({ leg: g.legNo, score: scored, n: r.darts.length, bust: !!r.bust, co: r.checked ? g.b.rem : 0 });
+    g.last.b = visitText(r.darts) + (r.bust ? ' → Überworfen' : (g.din && !r.isIn) ? ' → nicht drin' : ' = ' + scored) + (r.checked ? ' ✓' : '');
+    g.bLast = r.darts.map(d => ({ x: d.x, y: d.y }));
+    g.b.rem = r.rem; g.b.in = r.isIn; g.busy = false; g.botPending = null; g.botPop = null;
+    T.zoom = null;
+    if (r.checked) legWon('b'); else g.turn = 'p';
+  }
+  function legWon(w) {
+    const g = T.game; g.legs[w]++; g.legWinner = w; g.legWins.push({ leg: g.legNo, w });
+    if (g.legs[w] >= g.legsTo) {
+      g.phase = 'over';
+      const P = pstats(g, 'p'), B = pstats(g, 'b');
+      T.hist.push({ date: g.date, mode: 'game', level: g.bot, won: w === 'p', lp: g.legs.p, lb: g.legs.b, avg: P.avg, botAvg: B.avg,
+                    start: g.start, din: g.din, best: P.best, hiCO: P.hiCO, P, B,
+                    dots: g.pdots.filter(d => d.x !== null && d.x !== undefined).map(d => [d.x, d.y, d.l, d.rb, d.att ? 1 : 0, d.aim === undefined ? null : d.aim]) });
+      T.filter = 'game';
+    } else g.phase = 'legover';
+  }
+  function nextLeg() {
+    const g = T.game; g.legNo++; g.starter = g.starter === 'p' ? 'b' : 'p';
+    g.p = { rem: g.start, in: !g.din }; g.b = { rem: g.start, in: !g.din };
+    g.turn = g.starter; g.phase = 'play'; g.last = { p: '', b: '' }; g.undo = []; g.bLast = []; g.lastVisit = null; g.visit = null;
+    if (g.turn === 'b') { g.busy = true; setTimeout(botMove, 900); }
+  }
+  function gameUndo() {
+    const g = T.game; if (!g || g.busy || g.phase === 'over' || !g.undo.length) return;
+    const u = g.undo; const prev = JSON.parse(u.pop()); prev.undo = u; T.game = prev; T.zoom = null;
+  }
+  // Statistik eines Spielers aus den Aufnahmen
+  function pstats(g, who) {
+    const V = g.vis[who], darts = V.reduce((a, v) => a + v.n, 0), pts = V.reduce((a, v) => a + v.score, 0);
+    const legs = [...new Set(V.map(v => v.leg))];
+    const firstN = k => { let p = 0, d = 0; legs.forEach(l => V.filter(v => v.leg === l).slice(0, k).forEach(v => { p += v.score; d += v.n; })); return d ? p / d * 3 : 0; };
+    const sc = V.map(v => v.score), coHits = V.filter(v => v.co > 0).length;
+    const won = g.legWins.filter(x => x.w === who).map(x => x.leg);
+    const legDarts = won.map(l => V.filter(v => v.leg === l).reduce((a, v) => a + v.n, 0));
+    return {
+      avg: darts ? pts / darts * 3 : 0, f9: firstN(3), f6: firstN(2), darts, pts,
+      coPct: g.att[who] ? coHits / g.att[who] * 100 : 0, coHits, coAtt: g.att[who],
+      hiCO: Math.max(0, ...V.map(v => v.co)), best: Math.max(0, ...sc), bestLeg: legDarts.length ? Math.min(...legDarts) : 0,
+      s40: sc.filter(x => x >= 40 && x < 100).length, s100: sc.filter(x => x >= 100 && x < 120).length,
+      s120: sc.filter(x => x >= 120 && x < 140).length, s140: sc.filter(x => x >= 140 && x < 180).length, s180: sc.filter(x => x === 180).length
+    };
+  }
+
+
+  // ===== 26-x01-hook.js =====
+// Hook: hängt das eigenständige Mehrspieler-X01 (src/modules/x01.js, global X01) in die App ein.
+  if (window.X01) {
+    const box = document.createElement('div');
+    box.id = 'viewX01'; box.style.display = 'none';
+    el.after(box);
+    X01.mount(box, { onBack: () => act('nav', 'play') });
+    EXT.panels.x01 = { el: box, render: () => X01.render(), nav: 'play' };
+    EXT.playLinks.push({ route: 'x01', title: 'X01 Mehrspieler', sub: 'Mehrere Spieler, ein Gerät' });
+    EXT.dataKeys.push('dartsX01');
+  }
+
+  // ===== 30-board.js =====
+// Dartscheibe: SVG zeichnen, Tippen auswerten
+  // ---------- Dartscheibe ----------
+  const pt = (r, a) => [(r * Math.sin(a * Math.PI / 180)).toFixed(2), (-r * Math.cos(a * Math.PI / 180)).toFixed(2)];
+  function sector(r1, r2, a1, a2, fill) {
+    const [x1, y1] = pt(r2, a1), [x2, y2] = pt(r2, a2), [x3, y3] = pt(r1, a2), [x4, y4] = pt(r1, a1);
+    return `<path d="M${x1} ${y1}A${r2} ${r2} 0 0 1 ${x2} ${y2}L${x3} ${y3}A${r1} ${r1} 0 0 0 ${x4} ${y4}Z" fill="${fill}" stroke="#94a3b8" stroke-width=".5"/>`;
+  }
+  let BOARD_BASE = '';
+  (function () {
+    let s = `<circle r="198" fill="#0b1220"/><circle r="172" fill="#111"/>`;
+    ORDER.forEach((n, i) => {
+      const a1 = i * 18 - 9, a2 = i * 18 + 9, dark = i % 2 === 0;
+      const sg = dark ? '#111111' : '#f5f5f5', rg = dark ? '#ec4899' : '#f9a8d4';
+      s += sector(15.9, 99, a1, a2, sg) + sector(99, 107, a1, a2, rg) + sector(107, 162, a1, a2, sg) + sector(162, 170, a1, a2, rg);
+      const [tx, ty] = pt(185, i * 18);
+      s += `<text x="${tx}" y="${(+ty + 6).toFixed(1)}" fill="#e2e8f0" font-size="17" font-weight="700" text-anchor="middle">${n}</text>`;
+    });
+    s += `<circle r="15.9" fill="#f9a8d4" stroke="#94a3b8" stroke-width=".5"/><circle r="6.35" fill="#db2777" stroke="#94a3b8" stroke-width=".5"/>`;
+    BOARD_BASE = s;
+  })();
+  // dots: [{x,y,c,r,o,t}] in mm (y nach oben)
+  function boardSVG(o) {
+    const vb = o.zoom ? `${(o.zoom.x - 50).toFixed(1)} ${(o.zoom.y - 50).toFixed(1)} 100 100` : '-200 -200 400 400';
+    const k = o.zoom ? 0.3 : 1;
+    let s = `<svg ${o.click ? 'data-board="1"' : ''} viewBox="${vb}" width="100%" style="display:block;touch-action:manipulation">${BOARD_BASE}${o.extra || ''}`;
+    (o.dots || []).forEach(d => {
+      s += `<circle cx="${d.x}" cy="${-d.y}" r="${(d.r || 4) * k}" fill="${d.c}" fill-opacity="${d.o || 1}" stroke="${d.s || '#000'}" stroke-width="${(d.sw || 1) * k}"/>`;
+      if (d.t) s += `<text x="${d.x}" y="${(-d.y + 3.5 * k).toFixed(2)}" font-size="${10 * k}" font-weight="800" text-anchor="middle" fill="${d.tc || '#000'}">${d.t}</text>`;
+    });
+    if (o.mean) {
+      const m = o.mean;
+      s += `<circle cx="${m.x}" cy="${-m.y}" r="${m.r}" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="5 4"/>`;
+      s += `<path d="M${m.x - 8} ${-m.y}h16M${m.x} ${-m.y - 8}v16" stroke="#38bdf8" stroke-width="3"/>`;
+    }
+    return s + `</svg>`;
+  }
+  function boardTap(e, svg) {
+    const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
+    const q = p.matrixTransform(svg.getScreenCTM().inverse());
+    if (T.set.zoom !== false && !T.zoom) { T.zoom = { x: q.x, y: q.y }; render(); return; }
+    T.zoom = null;
+    const x = Math.round(q.x * 10) / 10, y = Math.round(-q.y * 10) / 10;
+    playerDart(Object.assign(scoreAt(x, y), { x, y }));
+    render();
+  }
+  function buttonDart(n, m) {
+    if (n === 0) { playerDart({ n: 0, m: 0, v: 0, l: 'Miss', x: null, y: null }); return; }
+    let x, y;
+    if (n === 25) { if (m === 2) { x = 0; y = 0; } else { x = 0; y = 11; } }
+    else { [x, y] = aimPoint(n, m); x = Math.round(x * 10) / 10; y = Math.round(y * 10) / 10; }
+    playerDart({ n, m, v: n * m, l: dlabel(n, m), x, y });
+  }
+
+
+  // ===== 40-actions.js =====
+// Aktionen: alle Klicks (data-a) laufen über act()
+  // ---------- Aktionen ----------
+  function act(a, v) {
+    const s = T.set, S = T.sess, g = T.game;
+    const n = v !== undefined ? +v : NaN;
+    switch (a) {
+      case 'mode': s.mode = v; break;
+      case 'level': s.level = n; break;
+      case 'tasks': s.tasks = n; break;
+      case 'bot': s.bot = n; break;
+      case 'start': s.start = n; break;
+      case 'din': s.din = v === '1'; break;
+      case 'legs': s.legs = n; break;
+      case 'go': start(); break;
+      case 'ok': record({ ok: true, done: true, darts: n }); break;
+      case 'fail': S.phase = 'fail'; break;
+      case 'cont': S.phase = 'more'; S.more = S.tasks[S.idx].darts + 1; break;
+      case 'moreM': S.more = Math.max(S.tasks[S.idx].darts + 1, S.more - 1); break;
+      case 'moreP': S.more = Math.min(99, S.more + 1); break;
+      case 'moreOk': record({ ok: false, done: true, darts: S.more }); break;
+      case 'skip': record({ ok: false, done: false, darts: S.tasks[S.idx].darts }); break;
+      case 'route': T.showRoute = !T.showRoute; break;
+      case 'undoTask':
+        if (DR[S.mode]) DR[S.mode].act(a, v, S);
+        else if (S.mode === 'score') { S.visits.pop(); }
+        else if (S.phase !== 'task') S.phase = 'task';
+        else if (S.log.length) { S.log.pop(); S.idx--; }
+        break;
+      case 'end': T.confirm = 'end'; break;
+      case 'endSave': T.confirm = null; finish(); break;
+      case 'endDrop': T.confirm = null; T.sess = null; break;
+      case 'quit': T.confirm = 'quit'; break;
+      case 'quitYes': T.confirm = null; T.game = null; break;
+      case 'no': T.confirm = null; break;
+      case 'key': if (T.input.length < 3) T.input = (T.input === '0' ? '' : T.input) + v; break;
+      case 'quick': T.input = v; break;
+      case 'back': T.input = T.input.slice(0, -1); break;
+      case 'submit': {
+        const val = T.input === '' ? NaN : +T.input;
+        if (S && S.mode === 'score') {
+          if (isNaN(val) || val > 180 || IMPOSSIBLE.includes(val)) { S.msg = 'Ungültige Punktzahl'; }
+          else { S.msg = ''; S.visits.push(val); T.input = ''; if (S.visits.length >= S.n) finish(); }
+        }
+        break;
+      }
+      case 'mult': T.mult = n; break;
+      case 'dart': buttonDart(n, T.mult || 1); T.mult = 1; T.zoom = null; break;
+      case 's25': buttonDart(25, 1); T.mult = 1; T.zoom = null; break;
+      case 'bull': buttonDart(25, 2); T.mult = 1; T.zoom = null; break;
+      case 'miss': buttonDart(0, 0); T.mult = 1; T.zoom = null; break;
+      case 'zoomOff': T.zoom = null; break;
+      case 'zoomSet': T.set.zoom = v === '1'; T.zoom = null; break;
+      case 'hm': T.hm = v; break;
+      case 'exp': T.exp = T.exp === n ? null : n; break;
+      case 'nav': T.route = v; T.confirm = null; T.zoom = null; window.scrollTo(0, 0); break;
+      case 'stab': T.stab = v; T.dataMsg = null; T.confirm = null; break;
+      case 'tgt': T.tgt = v; break;
+      case 'qs':
+        if (v === '501' || v === '301di') {
+          T.route = 'play';
+          if (!T.game) { Object.assign(s, { mode: 'game', start: v === '501' ? 501 : 301, din: v === '301di', bot: 2, legs: 1 }); start(); }
+        } else {
+          T.route = 'train';
+          if (!T.sess) { s.mode = v; T.summary = null; start(); }
+        }
+        window.scrollTo(0, 0); break;
+      case 'nextLeg': nextLeg(); break;
+      case 'gUndo': gameUndo(); break;
+      case 'again': start(); break;
+      case 'close': T.game = null; T.summary = null; break;
+      case 'filter': T.filter = v; break;
+      case 'del': T.hist.splice(n, 1); break;
+      case 'drOrder': s.drOrder = v; break;
+      default: if (EXT.actions[a]) EXT.actions[a](v, n); else console.warn('Unbekannte Aktion:', a);
+      case 'export': exportData(); break;
+      case 'importPick': document.getElementById('importFile').click(); break;
+      case 'wipe': T.confirm = 'wipe'; break;
+      case 'wipeYes': wipeData(); return;
+    }
+    render();
+  }
+  el.addEventListener('click', e => {
+    const svg = e.target.closest('svg[data-board]'); if (svg) { boardTap(e, svg); return; }
+    const b = e.target.closest('[data-a]'); if (b && !b.disabled) act(b.dataset.a, b.dataset.v);
+  });
+
+
+  // ===== 50-views-home.js =====
+// Ansichten: Einstellungen (Spiel/Training) und Startseite
+  // ---------- Ansichten ----------
+  const btn = (a, label, v, cls = '', on = false) => `<button class="${cls}${on ? ' active' : ''}" data-a="${a}"${v !== undefined ? ` data-v="${v}"` : ''}>${label}</button>`;
+
+  function phead(title, sub) { return `<div class="phead"><h1>${title}</h1>${sub ? `<p>${sub}</p>` : ''}</div>`; }
+
+  // Kacheln für Module, die sich über EXT.playLinks / EXT.trainLinks eintragen
+  function extLinks(list, title) {
+    if (!list.length) return '';
+    return `<h2 class="sec">${title}</h2><div class="quickstart">` + list.map(x => btn('nav', `<b>${x.title}</b><small>${x.sub || ''}</small>`, x.route)).join('') + `</div>`;
+  }
+  function viewSetup() {
+    const s = T.set;
+    if (T.route === 'play') {
+      s.mode = 'game';
+      let h = phead('Spielen', 'Du gegen den Darts-Bot') + `<div class="card">`;
+      h += `<div class="setlabel">Punkte</div><div class="seg">${btn('start', '301', 301, '', s.start === 301)}${btn('start', '501', 501, '', s.start === 501)}</div>`;
+      h += `<div class="setlabel">Einwurf</div><div class="seg">${btn('din', 'Single-In', 0, '', !s.din)}${btn('din', 'Double-In', 1, '', s.din)}</div>`;
+      h += `<div class="setlabel">Bot-Stärke</div><div class="lvl">`;
+      BOT.forEach((b, i) => { h += btn('bot', `<b>${i + 1}</b><small>${b.n}</small><small>Ø ~${b.a}</small>`, i, '', s.bot === i); });
+      h += `</div><div class="setlabel">Legs (First to)</div><div class="seg">${[1, 2, 3, 5].map(n => btn('legs', n, n, '', s.legs === n)).join('')}</div>`;
+      h += `<div class="desc">${s.start} · ${s.din ? 'Double-In' : 'Single-In'} · Double-Out · gegen Bot „${BOT[s.bot].n}“ (Ø ~${BOT[s.bot].a}) · First to ${s.legs} Leg${s.legs > 1 ? 's' : ''}. Du trägst jeden Pfeil einzeln ein – per Tippen auf die Scheibe oder über Single/Double/Triple + Zahl. Nach deinen 3 Pfeilen wirft der Bot.</div>`;
+      return h + `<button class="big go" data-a="go">Spiel starten</button></div>` + extLinks(EXT.playLinks, 'Weitere Spielmodi');
+    }
+    if (s.mode === 'game') s.mode = 'hit';
+    let h = phead('Training', 'Wähle, was du heute üben willst') + `<div class="card"><div class="setlabel">Was willst du trainieren?</div><div class="tgrid">`;
+    Object.entries(TM).forEach(([k, v]) => { if (k !== 'game' && !DR[k]) h += btn('mode', v, k, '', s.mode === k); });
+    h += `</div><div class="setlabel">Trainingsspiele</div><div class="tgrid dgrid">`;
+    Object.keys(DR).forEach(k => { h += btn('mode', DR[k].name, k, '', s.mode === k); });
+    h += `</div><div class="setlabel">Schwierigkeit</div><div class="lvl">`;
+    LV.forEach((l, i) => { h += btn('level', `<b>${i + 1}</b><small>${l}</small>`, i, '', s.level === i); });
+    h += `</div>` + (DR[s.mode] ? DR[s.mode].opts(s, ctx) : `<div class="setlabel">${s.mode === 'score' ? 'Aufnahmen' : 'Aufgaben'}</div><div class="seg">${[10, 20, 30].map(n => btn('tasks', n, n, '', s.tasks === n)).join('')}</div>`);
+    h += `<div class="desc">${describe(s.mode, s.level, s.tasks)}</div>`;
+    return h + `<button class="big go" data-a="go">Training starten</button></div>` + extLinks(EXT.trainLinks, 'Weitere Trainings');
+  }
+
+  // ---------- Auswertung über alle Spiele ----------
+  const games = () => T.hist.filter(e => e.mode === 'game');
+  function lifetime(list) {
+    const G = list.filter(e => e.P);
+    const sum = k => G.reduce((a, e) => a + (e.P[k] || 0), 0);
+    const pts = sum('pts'), darts = sum('darts');
+    const avg = darts ? pts / darts * 3 : (list.length ? list.reduce((a, e) => a + e.avg, 0) / list.length : 0);
+    const coHits = sum('coHits'), coAtt = sum('coAtt');
+    const legs = G.filter(e => e.P.bestLeg).map(e => e.P.bestLeg);
+    return {
+      n: list.length, wins: list.filter(e => e.won).length, avg, darts, pts,
+      f9: G.length ? G.reduce((a, e) => a + e.P.f9, 0) / G.length : 0,
+      coPct: coAtt ? coHits / coAtt * 100 : 0, coHits, coAtt,
+      hiCO: Math.max(0, ...G.map(e => e.P.hiCO || 0)), best: Math.max(0, ...G.map(e => e.P.best || 0)),
+      bestLeg: legs.length ? Math.min(...legs) : 0,
+      s100: sum('s100'), s120: sum('s120'), s140: sum('s140'), s180: sum('s180'), s40: sum('s40')
+    };
+  }
+
+  function viewHome() {
+    const L = lifetime(games()), trains = T.hist.filter(e => e.mode !== 'game').length;
+    let h = `<div class="hero"><div class="logo">${LOGO}</div><div><h1>Darts-Scorer</h1><p>Was steht heute an?</p></div></div>`;
+    h += `<div class="statstrip">
+      <div><b>${L.n ? f1(L.avg) : '–'}</b><small>Average</small></div>
+      <div><b>${L.n}</b><small>Spiele</small></div>
+      <div><b>${L.n ? Math.round(L.wins / L.n * 100) + ' %' : '–'}</b><small>Siege</small></div>
+      <div><b>${trains}</b><small>Trainings</small></div></div>`;
+    if (T.game && T.game.phase !== 'over') h += `<button class="resume" data-a="nav" data-v="play"><span>🎯 Laufendes Spiel</span><b>${T.game.p.rem} : ${T.game.b.rem} ›</b></button>`;
+    if (T.sess) h += `<button class="resume" data-a="nav" data-v="train"><span>💪 Laufendes Training</span><b>${TM[T.sess.mode]} ›</b></button>`;
+    const tile = (route, cls, icon, t, sub) => `<button class="tile ${cls}" data-a="nav" data-v="${route}"><span class="ti">${icon}</span><b>${t}</b><small>${sub}</small></button>`;
+    h += `<div class="tiles">
+      ${tile('play', 't1', ICON.play, 'Spielen', '301 / 501 gegen den Bot')}
+      ${tile('train', 't2', ICON.train, 'Trainieren', 'Doppel, Triple, Checkouts …')}
+      ${tile('stats', 't3', ICON.stats, 'Meine Stats', 'Average & Trefferquote')}
+      ${tile('counter', 't4', ICON.counter, 'Zähler', 'Felder abwerfen')}</div>`;
+    h += `<h2 class="sec">Schnellstart</h2><div class="quickstart">
+      ${btn('qs', '<b>501</b><small>vs. Bot Mittel</small>', '501')}
+      ${btn('qs', '<b>301</b><small>Double-In</small>', '301di')}
+      ${btn('qs', '<b>Doppel</b><small>Training</small>', 'double')}
+      ${btn('qs', '<b>Checkouts</b><small>Training</small>', 'checkout')}
+      ${btn('qs', '<b>Trainingsplan</b><small>Treffen</small>', 'hit')}
+      ${btn('qs', '<b>Punkte</b><small>T20 Scoring</small>', 'score')}
+      ${btn('qs', '<b>Around the Clock</b><small>1 bis Bull</small>', 'atc')}
+      ${btn('qs', "<b>Bob's 27</b><small>Doppel-Spiel</small>", 'bob')}
+      ${btn('qs', '<b>Leiter</b><small>Checkout ab 41+</small>', 'lad')}</div>`;
+    const last = T.hist.slice(-3).reverse();
+    if (last.length) {
+      h += `<h2 class="sec">Zuletzt</h2><div class="card list">`;
+      last.forEach(e => { const m = metric(e); h += `<div class="li"><span>${TM[e.mode]}<small>${new Date(e.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} · Stufe ${e.level + 1}</small></span><b class="${e.mode === 'game' && !e.won ? 'gl' : 'gw'}">${m.main}</b></div>`; });
+      h += `</div>`;
+    }
+    return h;
+  }
+
+
+  // ===== 60-views-stats.js =====
+// Ansichten: Stats-Seite (Übersicht, Trefferquote, Verlauf)
+  // ---------- Stats-Seite ----------
+  function viewStatsPage() {
+    const tab = T.stab || 'over';
+    let h = phead('Meine Stats', 'Alles aus deinen Spielen und Trainings');
+    h += `<div class="segtabs">${btn('stab', 'Übersicht', 'over', '', tab === 'over')}${btn('stab', 'Trefferquote', 'acc', '', tab === 'acc')}${btn('stab', 'Verlauf', 'hist', '', tab === 'hist')}${btn('stab', 'Daten', 'data', '', tab === 'data')}</div>`;
+    if (tab === 'over') return h + viewOverview();
+    if (tab === 'acc') return h + viewAccuracy();
+    if (tab === 'data') return h + viewData();
+    return h + viewHistory();
+  }
+
+  function viewOverview() {
+    const G = games(), L = lifetime(G), F = lifetime(G.slice(-5));
+    let h = '';
+    if (!G.length) h += `<div class="card empty">Noch keine Spiele. Spiel ein Spiel gegen den Bot – dann siehst du hier deinen Average.</div>`;
+    else {
+      const diff = F.avg - L.avg;
+      h += `<div class="card bigavg"><small>Dein Average · aus ${G.length} Spiel${G.length > 1 ? 'en' : ''}</small><div class="avgnum">${f1(L.avg)}</div>
+        <div class="form">Form (letzte ${Math.min(5, G.length)}): <b>${f1(F.avg)}</b> <span class="${diff >= 0 ? 'up' : 'down'}">${diff >= 0 ? '▲' : '▼'} ${f1(Math.abs(diff))}</span></div></div>`;
+      h += `<div class="sumgrid">
+        <div><b>${f1(L.f9)}</b><small>Ø erste 9</small></div><div><b>${f1(L.coPct)} %</b><small>Checkout (${L.coHits}/${L.coAtt})</small></div><div><b>${L.wins}/${L.n}</b><small>Siege</small></div>
+        <div><b>${L.hiCO || '–'}</b><small>Höchstes Finish</small></div><div><b>${L.bestLeg || '–'}</b><small>Bestes Leg (Darts)</small></div><div><b>${L.best}</b><small>Höchste Aufnahme</small></div>
+        <div><b>${L.s100}</b><small>100+</small></div><div><b>${L.s140}</b><small>140+</small></div><div><b>${L.s180}</b><small>180er</small></div></div>`;
+      let run = 0, rd = 0;
+      const list = G.map(e => { if (e.P) { run += e.P.pts; rd += e.P.darts; } return Object.assign({}, e, { run: rd ? run / rd * 3 : e.avg }); });
+      h += `<h2 class="sec">Entwicklung</h2>` + chart(list, [{ n: 'Ø pro Spiel', c: '#ec4899', k: 'avg' }, { n: 'Gesamt-Average', c: '#60a5fa', k: 'run' }], null, 'Spiel Nr.');
+    }
+    // Trainings
+    const modes = Object.keys(TM).filter(k => k !== 'game' && T.hist.some(e => e.mode === k));
+    if (modes.length) {
+      h += `<h2 class="sec">Training</h2><div class="trgrid">`;
+      modes.forEach(k => {
+        const O = DR[k] && DR[k].ov;
+        const l = T.hist.filter(e => e.mode === k && (!O || !O.only || O.only(e))), last5 = l.slice(-5);
+        if (!l.length) return;
+        const val = O ? O.val : e => k === 'score' ? e.avg : e.rate;
+        const avg = last5.reduce((a, e) => a + val(e), 0) / last5.length, best = (O && O.low ? Math.min : Math.max)(...l.map(val));
+        const u = O ? O.unit : k === 'score' ? '' : ' %';
+        const w = O ? O.bar(avg) : k === 'score' ? avg / 1.2 : avg;
+        h += `<div class="trc"><small>${TM[k]}</small><b>${f1(avg)}${u}</b><span>Ø letzte ${last5.length} · Best ${f1(best)}${u} · ${l.length}×</span><i style="width:${Math.max(0, Math.min(100, w))}%"></i></div>`;
+      });
+      h += `</div>`;
+    }
+    Object.values(DR).forEach(d => { if (d.extra) h += d.extra(T.hist, ctx); });
+    return h;
+  }
+
+  // Treffer-Daten: [x, y, Feld, Rest davor, Checkout-Versuch, Ziel]
+  const disp = l => /^\d+$/.test(l) ? 'S' + l : l;
+  function inferAim(d) {
+    const rb = d[3];
+    if (d[4] === 1) { const r = route(rb, 1); return r ? dlabel(r[0].n, r[0].m) : null; }
+    if (rb > 170) return 'T20';
+    const r = route(rb, 3); return r ? dlabel(r[0].n, r[0].m) : 'T20';
+  }
+  function allDots() {
+    return games().filter(e => e.dots).flatMap(e => e.dots.map(d => ({ x: d[0], y: d[1], l: d[2], aim: d[5] !== undefined ? d[5] : inferAim(d) })));
+  }
+  function parseLab(l) {
+    if (l === 'Bull') return { n: 25, m: 2 }; if (l === '25') return { n: 25, m: 1 };
+    const m = l[0] === 'T' ? 3 : l[0] === 'D' ? 2 : 1; return { n: +(m === 1 ? l : l.slice(1)), m };
+  }
+  function hl(r1, r2, a1, a2) {
+    const [x1, y1] = pt(r2, a1), [x2, y2] = pt(r2, a2), [x3, y3] = pt(r1, a2), [x4, y4] = pt(r1, a1);
+    return `<path d="M${x1} ${y1}A${r2} ${r2} 0 0 1 ${x2} ${y2}L${x3} ${y3}A${r1} ${r1} 0 0 0 ${x4} ${y4}Z" fill="rgba(34,211,238,.18)" stroke="#22d3ee" stroke-width="2.5"/>`;
+  }
+  function targetShape(l) {
+    const { n, m } = parseLab(l);
+    if (n === 25) return m === 2 ? `<circle r="6.35" fill="rgba(34,211,238,.3)" stroke="#22d3ee" stroke-width="2.5"/>` : `<circle r="15.9" fill="rgba(34,211,238,.15)" stroke="#22d3ee" stroke-width="2.5"/>`;
+    const i = ORDER.indexOf(n), a1 = i * 18 - 9, a2 = i * 18 + 9;
+    return m === 3 ? hl(99, 107, a1, a2) : m === 2 ? hl(162, 170, a1, a2) : hl(15.9, 99, a1, a2) + hl(107, 162, a1, a2);
+  }
+  function tendency(ds, l) {
+    const { n, m } = parseLab(l), N = ds.length;
+    const mx = ds.reduce((a, d) => a + d.x, 0) / N, my = ds.reduce((a, d) => a + d.y, 0) / N;
+    const rms = Math.sqrt(ds.reduce((a, d) => a + (d.x - mx) ** 2 + (d.y - my) ** 2, 0) / N);
+    let txt = [];
+    if (n === 25) {
+      if (Math.abs(mx) > 2) txt.push(`${f1(Math.abs(mx))} mm zu weit ${mx < 0 ? 'links' : 'rechts'}`);
+      if (Math.abs(my) > 2) txt.push(`${f1(Math.abs(my))} mm zu ${my < 0 ? 'tief' : 'hoch'}`);
+    } else {
+      const i = ORDER.indexOf(n), rt = m === 3 ? 103 : m === 2 ? 166 : 134;
+      const rm = Math.hypot(mx, my), cwm = Math.atan2(mx, my) * 180 / Math.PI;
+      let da = ((cwm - i * 18 + 540) % 360) - 180; const tang = rm * da * Math.PI / 180;
+      if (m !== 1 && Math.abs(rm - rt) > 2) txt.push(`${f1(Math.abs(rm - rt))} mm zu weit ${rm > rt ? 'außen' : 'innen'}`);
+      if (Math.abs(tang) > 2) txt.push(`${f1(Math.abs(tang))} mm Richtung ${ORDER[(i + (tang > 0 ? 1 : 19)) % 20]}`);
+    }
+    return { mean: { x: mx.toFixed(1), y: my.toFixed(1), r: Math.max(4, rms).toFixed(1) }, rms, txt: txt.length ? txt.join(', ') : 'sehr zentral – kaum Abweichung' };
+  }
+
+  function viewAccuracy() {
+    const D = allDots().filter(d => d.aim);
+    if (!D.length) return `<div class="card empty">Noch keine Pfeil-Daten. Spiel ein Spiel gegen den Bot und tipp deine Treffer auf der Scheibe an – dann siehst du hier, wo du hinwirfst.</div>`;
+    const cnt = {}; D.forEach(d => { cnt[d.aim] = (cnt[d.aim] || 0) + 1; });
+    const targets = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
+    const sel = T.tgt === '__all' ? '__all' : (T.tgt && cnt[T.tgt] ? T.tgt : targets[0]);
+    const rate = t => D.filter(d => d.aim === t && d.l === t).length / cnt[t] * 100;
+    let h = `<div class="card"><div class="setlabel">Ziel wählen</div><div class="tchips">${btn('tgt', 'Alle Pfeile', '__all', 'all', sel === '__all')}`;
+    targets.slice(0, 16).forEach(t => { const r = rate(t); h += btn('tgt', `${disp(t)}<small class="${r >= 40 ? 'gw' : r >= 20 ? 'mid' : 'gl'}">${Math.round(r)} %</small>`, t, '', sel === t); });
+    h += `</div>`;
+    if (sel === '__all') {
+      const dots = D.map(d => ({ x: d.x, y: d.y, c: '#facc15', o: .55, r: 3.5, s: '#000', sw: .4 }));
+      h += `<div class="boardwrap">${boardSVG({ dots })}</div><div class="live">${D.length} Pfeile – jeder Punkt ist ein Wurf, den du eingetragen hast.</div>`;
+      const lc = {}; D.forEach(d => { lc[d.l] = (lc[d.l] || 0) + 1; });
+      h += fieldTable(lc, D.length, 'Wo du am meisten hintriffst') + `</div>`;
+      return h + targetList(targets, cnt, rate);
+    }
+    const ds = D.filter(d => d.aim === sel), N = ds.length, { n } = parseLab(sel);
+    const hits = ds.filter(d => d.l === sel).length;
+    const num = ds.filter(d => d.l !== 'Miss' && parseLab(d.l).n === n).length;
+    const tdc = tendency(ds, sel);
+    const dots = ds.map(d => ({ x: d.x, y: d.y, c: d.l === sel ? '#22c55e' : (d.l !== 'Miss' && parseLab(d.l).n === n) ? '#facc15' : '#ef4444', o: .85, r: 4, s: '#000', sw: .5 }));
+    h += `<div class="boardwrap">${boardSVG({ dots, mean: tdc.mean, extra: targetShape(sel) })}</div>`;
+    h += `<div class="legend2"><span style="--c:#22c55e">${disp(sel)} getroffen</span><span style="--c:#facc15">richtige Zahl</span><span style="--c:#ef4444">daneben</span></div>`;
+    h += `<div class="sumgrid"><div><b>${N}</b><small>Würfe auf ${disp(sel)}</small></div><div><b class="${hits / N >= .4 ? 'gw' : hits / N >= .2 ? '' : 'gl'}">${f1(hits / N * 100)} %</b><small>Trefferquote</small></div><div><b>${f1(num / N * 100)} %</b><small>richtige Zahl</small></div></div>`;
+    const miss = {}; ds.filter(d => d.l !== sel).forEach(d => { miss[d.l] = (miss[d.l] || 0) + 1; });
+    const topMiss = Object.entries(miss).sort((a, b) => b[1] - a[1])[0];
+    let tip = `<b>Tendenz:</b> ${tdc.txt}. Streuung ${f1(tdc.rms)} mm.`;
+    if (topMiss) tip += `<br><b>Häufigster Fehlwurf:</b> ${disp(topMiss[0])} (${f1(topMiss[1] / N * 100)} %).`;
+    if (sel[0] === 'D' && hits / N < .25 && N >= 5) tip += `<br>👉 Auf ${disp(sel)} liegst du unter 25 %. Übe ihn gezielt im Doppel-Training.`;
+    h += `<div class="hint">${tip}</div>`;
+    h += fieldTable(miss, N, 'Wohin deine Fehlwürfe gehen') + `</div>`;
+    return h + targetList(targets, cnt, rate);
+  }
+  function fieldTable(c, N, title) {
+    const top = Object.entries(c).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    if (!top.length) return '';
+    return `<div class="setlabel">${title}</div><div class="bars">${top.map(([l, k]) => `<div class="br"><span>${disp(l)}</span><i><em style="width:${k / N * 100}%"></em></i><b>${f1(k / N * 100)} %</b></div>`).join('')}</div>`;
+  }
+  function targetList(targets, cnt, rate) {
+    let h = `<h2 class="sec">Alle Ziele</h2><div class="card"><div class="bars">`;
+    targets.forEach(t => { const r = rate(t); h += `<div class="br clk" data-a="tgt" data-v="${t}"><span>${disp(t)}</span><i><em class="${r >= 40 ? 'g' : r >= 20 ? 'y' : 'r'}" style="width:${r}%"></em></i><b>${Math.round(r)} %</b><small>${cnt[t]}×</small></div>`; });
+    return h + `</div><div class="boardhint">Ziel = dein Checkout-Weg, sonst T20. Treffer = genau dieses Feld.</div></div>`;
+  }
+
+  function viewHistory() {
+    let h = `<div class="chipsel">${btn('filter', 'Alle', 'all', '', T.filter === 'all')}`;
+    Object.entries(TM).forEach(([k, v]) => { h += btn('filter', v, k, '', T.filter === k); });
+    h += `</div>`;
+    const list = T.hist.map((e, i) => Object.assign({ i }, e)).filter(e => T.filter === 'all' || e.mode === T.filter);
+    if (!list.length) return h + `<div class="card empty">Noch keine Einträge${T.filter !== 'all' ? ' für ' + TM[T.filter] : ''}.</div>`;
+    if (T.filter !== 'all') { const cl = DR[T.filter] && DR[T.filter].list ? DR[T.filter].list(list) : list; if (cl.length) h += chart(cl); }
+    if (T.filter === 'game') h += `<div class="boardhint">Tippe auf ein Spiel für die komplette Statistik</div>`;
+    h += `<div class="card tablecard"><table><tr><th>Datum</th><th>Modus</th><th>Stufe</th><th>Ergebnis</th><th></th></tr>`;
+    list.slice().reverse().forEach(e => {
+      const d = new Date(e.date), m = metric(e);
+      const ds = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + '<br><small>' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + '</small>';
+      const ex = e.mode === 'game' && e.P;
+      h += `<tr${ex ? ` data-a="exp" data-v="${e.i}" class="clk"` : ''}><td>${ds}</td><td>${TM[e.mode]}${ex ? ' ▾' : ''}</td><td>${e.level + 1}</td><td><b class="${e.mode === 'game' ? (e.won ? 'gw' : 'gl') : 'gw'}">${m.main}</b><br><small>${m.det}</small></td><td>${btn('del', '×', e.i, 'del')}</td></tr>`;
+      if (ex && T.exp === e.i) h += `<tr><td colspan="5">${cmpTable(e.P, e.B)}</td></tr>`;
+    });
+    return h + `</table></div>`;
+  }
+
+
+  // ===== 70-views-session.js =====
+// Ansichten: laufendes Training, laufendes Spiel, Zusammenfassung
+  function viewTask() {
+    const S = T.sess, task = S.tasks[S.idx], st = taskStats(S);
+    let h = `<div class="card">`;
+    h += `<div class="tophead"><span>${TM[S.mode]} · ${LV[S.level]}</span><span>Aufgabe ${S.idx + 1} / ${S.tasks.length}</span></div>`;
+    h += `<div class="bar"><i style="width:${S.idx / S.tasks.length * 100}%"></i></div>`;
+    if (task.block) h += `<div class="block">Block ${task.block.i}/${task.block.of} · ${task.block.name}</div>`;
+    h += `<div class="target">${task.big}</div><div class="tcap">${task.cap}</div>`;
+    h += `<div class="tdarts">${task.darts} Dart${task.darts > 1 ? 's' : ''}</div>`;
+    if (task.type === 'C') {
+      const showR = S.level < 3 || T.showRoute;
+      h += showR ? `<div class="route">Weg: ${task.route}</div>` : `<button class="link" data-a="route">Weg anzeigen</button>`;
+    }
+    if (S.phase === 'task') {
+      h += `<div class="setlabel c">Geschafft mit …</div><div class="okgrid">`;
+      for (let i = 1; i <= task.darts; i++) h += btn('ok', `✓ ${i}`, i, 'okb');
+      h += `</div><button class="big bad" data-a="fail">✕ Nicht in ${task.darts} Darts geschafft</button>`;
+    } else if (S.phase === 'fail') {
+      h += `<div class="setlabel c">Nicht in ${task.darts} Darts geschafft – wie weiter?</div>`;
+      h += `<div class="row2">${btn('cont', '🎯 Weiterwerfen', undefined, 'mid')}${btn('skip', 'Weiter →', undefined, 'mid')}</div>`;
+    } else if (S.phase === 'more') {
+      h += `<div class="setlabel c">Wirf weiter, bis du triffst. Wie viele Darts insgesamt?</div>`;
+      h += `<div class="stepper">${btn('moreM', '−')}<span>${S.more}</span>${btn('moreP', '+')}</div>`;
+      h += `<button class="big go" data-a="moreOk">✓ Geschafft mit ${S.more} Darts</button>`;
+      h += `<button class="link" data-a="skip">Doch aufgeben → nächste Aufgabe</button>`;
+    }
+    h += `<div class="live">Erfolg <b>${st.ok}/${st.n}</b> · Trefferquote <b>${f1(st.hitPct)} %</b></div>`;
+    h += footer();
+    return h + `</div>`;
+  }
+
+  function keypad(quick) {
+    let h = `<div class="disp">${T.input === '' ? '<span class="ph">Punkte eingeben</span>' : T.input}</div>`;
+    if (quick) h += `<div class="quick">${quick.map(q => btn('quick', q, q)).join('')}</div>`;
+    h += `<div class="pad">`;
+    [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(k => { h += btn('key', k, k); });
+    h += btn('back', '⌫') + btn('key', 0, 0) + btn('submit', 'OK', undefined, 'okk') + `</div>`;
+    return h;
+  }
+
+  function viewScore() {
+    const S = T.sess, st = scoreStats(S);
+    let h = `<div class="card">`;
+    h += `<div class="tophead"><span>Punkte · ${LV[S.level]}</span><span>Aufnahme ${S.visits.length + 1} / ${S.n}</span></div>`;
+    h += `<div class="bar"><i style="width:${S.visits.length / S.n * 100}%"></i></div>`;
+    h += `<div class="target sm">${S.level < 2 ? '20er' : 'T20'}</div><div class="tcap">3 Darts · Ziel: ${S.goal}+ Punkte</div>`;
+    h += `<div class="live">Ø <b>${f1(st.avg)}</b> · Ziel erreicht <b>${f1(st.goalPct)} %</b> · Best <b>${st.best}</b></div>`;
+    if (S.visits.length) h += `<div class="chips">${S.visits.slice(-12).map(v => `<span class="${v >= S.goal ? 'g' : ''}">${v}</span>`).join('')}</div>`;
+    if (S.msg) h += `<div class="msg">${S.msg}</div>`;
+    h += keypad([26, 41, 45, 60, 81, 85, 100, 140]);
+    h += footer();
+    return h + `</div>`;
+  }
+
+  function footer() {
+    if (T.confirm === 'end') return `<div class="confirmbox"><p>Training beenden?</p><div class="row2">${btn('no', 'Weiter trainieren', undefined, 'mid')}${btn('endSave', 'Beenden & speichern', undefined, 'mid')}</div>${btn('endDrop', 'Verwerfen (nicht speichern)', undefined, 'link red')}</div>`;
+    return `<div class="row2 foot">${btn('undoTask', '↶ Rückgängig', undefined, 'mid')}${btn('end', 'Training beenden', undefined, 'mid')}</div>`;
+  }
+
+  function cmpTable(P, B) {
+    const rows = [
+      ['Average', f1(P.avg), f1(B.avg)], ['Ø erste 9', f1(P.f9), f1(B.f9)], ['Ø erste 6', f1(P.f6), f1(B.f6)],
+      ['Checkout %', `${f1(P.coPct)} % <small>(${P.coHits}/${P.coAtt})</small>`, `${f1(B.coPct)} % <small>(${B.coHits}/${B.coAtt})</small>`],
+      ['Höchstes Finish', P.hiCO || '–', B.hiCO || '–'], ['Bestes Leg', P.bestLeg ? P.bestLeg + ' Darts' : '–', B.bestLeg ? B.bestLeg + ' Darts' : '–'],
+      ['Höchste Aufnahme', P.best, B.best], ['40+', P.s40, B.s40], ['100+', P.s100, B.s100], ['120+', P.s120, B.s120],
+      ['140+', P.s140, B.s140], ['180', P.s180, B.s180], ['Darts geworfen', P.darts, B.darts], ['Punkte gesamt', P.pts, B.pts]
+    ];
+    return `<table class="cmp"><tr><th></th><th>Du</th><th>Bot</th></tr>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>`;
+  }
+
+  function viewGame() {
+    const g = T.game, P = pstats(g, 'p'), B = pstats(g, 'b');
+    let h = `<div class="card">`;
+    h += `<div class="tophead"><span>${g.start} · ${g.din ? 'Double-In' : 'Single-In'} · Double-Out</span><span>Leg ${g.legNo} · First to ${g.legsTo}</span></div>`;
+    const panel = (who, name, PL, avg, last, legs) => `<div class="gp ${g.turn === who && g.phase === 'play' ? 'act' : ''}">
+        <div class="gn">${name}</div><div class="grem">${PL.rem}</div>
+        <div class="gs">Ø ${f1(avg)} · Legs ${legs}${!PL.in ? ' · <span class="warn">nicht drin</span>' : ''}</div>
+        <div class="glast">${last || '&nbsp;'}</div></div>`;
+    h += `<div class="gboard">${panel('p', 'Du', g.p, P.avg, g.last.p, g.legs.p)}${panel('b', 'Bot · ' + BOT[g.bot].n, g.botPending ? { rem: g.bShowRem, in: g.bShowIn } : g.b, B.avg, g.botPending ? (g.botPop ? 'Pfeil ' + g.botPop.i + ': ' + g.botPop.txt : 'wirft …') : g.last.b, g.legs.b)}</div>`;
+
+    if (g.phase === 'play') {
+      const V = g.visit ? g.visit.darts : [];
+      const myTurn = !g.busy && g.turn === 'p';
+      // Scheibe
+      const dots = [];
+      g.pdots.filter(d => d.leg === g.legNo && d.x !== null && d.x !== undefined).forEach(d => dots.push({ x: d.x, y: d.y, c: '#facc15', o: .35, r: 3.5, s: '#000', sw: .5 }));
+      if (g.busy) g.bLast.forEach((d, i) => dots.push({ x: d.x, y: d.y, c: '#3b82f6', r: 8, t: i + 1, s: '#fff', sw: 1.5, tc: '#fff' }));
+      else if (!V.length) g.bLast.forEach((d, i) => dots.push({ x: d.x, y: d.y, c: '#3b82f6', o: .5, r: 5, s: '#fff', sw: .8 }));
+      V.forEach((d, i) => { if (d.x !== null && d.x !== undefined) dots.push({ x: d.x, y: d.y, c: '#facc15', r: 7, t: i + 1 }); });
+      if (g.busy) h += `<div class="botpop ${g.botPop ? 'on' : ''}">${g.botPop ? `<small>Bot · Pfeil ${g.botPop.i}</small>${g.botPop.txt}` : '<small>Bot</small>wirft …'}</div>`;
+      h += `<div class="boardwrap">${boardSVG({ click: myTurn, zoom: T.zoom, dots })}</div>`;
+      if (T.zoom) h += `<div class="zoombar"><span>🔍 Jetzt genau tippen, wo der Pfeil steckt</span>${btn('zoomOff', 'Abbrechen', undefined, 'zb')}</div>`;
+      else if (myTurn) h += `<div class="boardhint">Auf die Scheibe tippen${T.set.zoom !== false ? ' (zoomt zum genauen Setzen)' : ''} oder unten das Feld wählen</div>`;
+
+      if (g.busy) h += `<div class="wait">Du bist gleich wieder dran …</div>`;
+      else {
+        h += `<div class="slots">${[0, 1, 2].map(i => `<div class="${V[i] ? 'f' : ''}">${V[i] ? V[i].l : 'Pfeil ' + (i + 1)}</div>`).join('')}<div class="sum">${V.reduce((a, d) => a + d.v, 0)}</div></div>`;
+        if (!g.p.in) h += `<div class="hint">Double-In: Erst ein Doppel bringt dich rein. Pfeile davor zählen 0.</div>`;
+        else { const rt = route(g.p.rem, 3 - V.length); if (rt) h += `<div class="route">Checkout: ${routeText(rt)}</div>`; }
+        if (g.msg) h += `<div class="msg">${g.msg}</div>`;
+        const m = T.mult || 1;
+        h += `<div class="mult">${btn('mult', 'Single', 1, 'm1', m === 1)}${btn('mult', 'Double', 2, 'm2', m === 2)}${btn('mult', 'Triple', 3, 'm3', m === 3)}</div>`;
+        h += `<div class="numgrid">${R20.map(n => btn('dart', (m === 3 ? 'T' : m === 2 ? 'D' : '') + n, n, 'nb m' + m)).join('')}</div>`;
+        h += `<div class="numrow">${btn('s25', '25', undefined, 'nb')}${btn('bull', 'Bull', undefined, 'nb bullb')}${btn('miss', 'Miss / 0', undefined, 'nb missb')}</div>`;
+        h += `<button class="link" data-a="zoomSet" data-v="${T.set.zoom === false ? 1 : 0}">🔍 Zoom beim Tippen auf die Scheibe: ${T.set.zoom === false ? 'aus' : 'an'}</button>`;
+      }
+    } else if (g.phase === 'legover') {
+      h += `<div class="result ${g.legWinner === 'p' ? 'win' : 'lose'}">${g.legWinner === 'p' ? 'Leg gewonnen! 🎯' : 'Leg an den Bot'}</div>`;
+      h += `<div class="live">Stand ${g.legs.p} : ${g.legs.b}</div><button class="big go" data-a="nextLeg">Nächstes Leg</button>`;
+      h += `<div class="setlabel">Statistik bisher</div>${cmpTable(P, B)}`;
+    } else if (g.phase === 'over') {
+      const won = g.legWinner === 'p';
+      h += `<div class="result ${won ? 'win' : 'lose'}">${won ? 'Spiel gewonnen! 🏆' : 'Spiel verloren'}</div>`;
+      h += `<div class="live">Legs ${g.legs.p} : ${g.legs.b}</div>${cmpTable(P, B)}`;
+      h += `<div class="row2">${btn('again', 'Revanche', undefined, 'mid')}${btn('close', 'Zu den Einstellungen', undefined, 'mid')}</div>`;
+      return h + `</div>`;
+    }
+    if (T.confirm === 'quit') h += `<div class="confirmbox"><p>Spiel abbrechen? Es wird nicht gespeichert.</p><div class="row2">${btn('no', 'Weiterspielen', undefined, 'mid')}${btn('quitYes', 'Abbrechen', undefined, 'mid redb')}</div></div>`;
+    else h += `<div class="row2 foot">${btn('gUndo', '↶ Letzten Pfeil zurück', undefined, 'mid')}${btn('quit', 'Spiel beenden', undefined, 'mid')}</div>`;
+    return h + `</div>`;
+  }
+
+  function viewSummary() {
+    const e = T.summary;
+    let h = `<div class="card"><div class="result win">Training abgeschlossen ✓</div><div class="tcap">${TM[e.mode]} · ${LV[e.level]}</div>`;
+    if (DR[e.mode]) h += DR[e.mode].summary(e, ctx);
+    else if (e.mode === 'score') {
+      h += `<div class="sumgrid"><div><b>${f1(e.avg)}</b><small>Ø pro Aufnahme</small></div><div><b>${f1(e.goalPct)} %</b><small>Ziel ${e.goal}+ erreicht</small></div><div><b>${e.best}</b><small>Beste Aufnahme</small></div><div><b>${e.c100}</b><small>100+</small></div><div><b>${e.c140}</b><small>140+</small></div><div><b>${e.c180}</b><small>180er</small></div></div>`;
+    } else {
+      h += `<div class="sumgrid"><div><b>${e.ok}/${e.n}</b><small>in der Vorgabe</small></div><div><b>${f1(e.rate)} %</b><small>Erfolgsquote</small></div><div><b>${f1(e.hitPct)} %</b><small>Trefferquote</small></div><div><b>${e.hits}</b><small>getroffen gesamt</small></div><div><b>${e.darts}</b><small>Darts geworfen</small></div><div><b>${e.hits ? f1(e.darts / e.hits) : '–'}</b><small>Darts pro Treffer</small></div></div>`;
+    }
+    const tip = nextTip(e);
+    if (tip) h += `<div class="hint">${tip}</div>`;
+    h += `<div class="row2">${btn('again', 'Nochmal', undefined, 'mid')}${btn('close', 'Zu den Einstellungen', undefined, 'mid')}</div></div>`;
+    return h;
+  }
+  function nextTip(e) {
+    if (DR[e.mode]) return DR[e.mode].tip(e);
+    const val = e.mode === 'score' ? e.goalPct : e.rate;
+    if (val >= 70 && e.level < 4) return `Stark! Ab 70 % lohnt sich die nächste Stufe: <b>${LV[e.level + 1]}</b>.`;
+    if (val < 30 && e.level > 0) return `Unter 30 % – auf Stufe <b>${LV[e.level - 1]}</b> baust du die Sicherheit schneller auf.`;
+    return 'Bleib auf dieser Stufe, bis du regelmäßig über 70 % kommst.';
+  }
+
+
+  // ===== 80-charts.js =====
+// Statistik-Helfer: Kennzahl pro Eintrag, Liniendiagramm
+  // ---------- Statistik ----------
+  function metric(e) {
+    if (DR[e.mode]) return DR[e.mode].metric(e, ctx);
+    if (e.mode === 'game') return { main: (e.won ? 'Sieg ' : 'Niederl. ') + e.lp + ':' + e.lb, det: `${e.start} ${e.din ? 'DI' : 'SI'} · Bot ${BOT[e.level].n} · Ø ${f1(e.avg)} / ${f1(e.botAvg)}` };
+    if (e.mode === 'score') return { main: 'Ø ' + f1(e.avg), det: `${f1(e.goalPct)} % ≥ ${e.goal} · Best ${e.best}` };
+    return { main: f1(e.rate) + ' %', det: `${e.ok}/${e.n} · ${f1(e.hitPct)} % Treffer` };
+  }
+  function niceMax(v) { if (v <= 0) return 10; const p = Math.pow(10, Math.floor(Math.log10(v))); for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p; return 10 * p; }
+  function chart(list, ser, mx, xl) {
+    let series = ser, max = mx;
+    if (series) {}
+    else if (DR[list[0].mode]) { series = DR[list[0].mode].series; max = DR[list[0].mode].max; }
+    else if (list[0].mode === 'game') series = [{ n: 'Dein Ø', c: '#4ade80', k: 'avg' }, { n: 'Bot Ø', c: '#f87171', k: 'botAvg' }];
+    else if (list[0].mode === 'score') series = [{ n: 'Ø pro Aufnahme', c: '#4ade80', k: 'avg' }, { n: '% Ziel erreicht', c: '#60a5fa', k: 'goalPct' }];
+    else { series = [{ n: 'Erfolgsquote %', c: '#4ade80', k: 'rate' }, { n: 'Trefferquote %', c: '#60a5fa', k: 'hitPct' }]; max = 100; }
+    max = max || niceMax(Math.max(...list.flatMap(e => series.map(s => e[s.k] || 0))));
+    const W = 400, H = 220, L = 34, R = 12, Tp = 12, B = 24, pw = W - L - R, ph = H - Tp - B, n = list.length;
+    const x = i => L + (n === 1 ? pw / 2 : i * pw / (n - 1)), y = v => Tp + ph - (v / max) * ph;
+    let s = `<div class="chartbox"><div class="legend">${series.map(se => `<span style="--c:${se.c}">${se.n}</span>`).join('')}</div><svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">`;
+    for (let gi = 0; gi <= 4; gi++) { const v = max * gi / 4; s += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(255,255,255,.08)"/><text x="${L - 5}" y="${y(v) + 4}" fill="#64748b" font-size="11" text-anchor="end">${f1(v)}</text>`; }
+    const every = Math.ceil(n / 10);
+    list.forEach((e, i) => { if (i % every === 0 || i === n - 1) s += `<text x="${x(i)}" y="${H - 6}" fill="#64748b" font-size="11" text-anchor="middle">${i + 1}</text>`; });
+    series.forEach(se => {
+      if (n > 1) s += `<polyline points="${list.map((e, i) => x(i).toFixed(1) + ',' + y(e[se.k] || 0).toFixed(1)).join(' ')}" fill="none" stroke="${se.c}" stroke-width="2.5" stroke-linejoin="round"/>`;
+      list.forEach((e, i) => { s += `<circle cx="${x(i)}" cy="${y(e[se.k] || 0)}" r="4" fill="${se.c}" stroke="#0b0b12" stroke-width="2"><title>${se.n}: ${f1(e[se.k] || 0)}</title></circle>`; });
+    });
+    return s + `</svg><div class="chartnote">${DR[list[0].mode] && DR[list[0].mode].ov.low && !ser ? 'Darts: weniger ist besser' : 'Je höher, desto besser'} · x-Achse = ${xl || 'Training Nr.'}</div></div>`;
+  }
+
+
+  // ===== 85-data.js =====
+// Daten-Sicherung: Export als JSON-Datei, Import, alles löschen.
+// Gesichert werden beide localStorage-Schlüssel: 'dartsTrainer' (App) und 'zaehler3' (Zähler).
+  const DATA_KEYS = ['dartsTrainer', 'zaehler3'];
+  const dataKeys = () => DATA_KEYS.concat(EXT.dataKeys);
+  T.dataMsg = null;
+
+  function exportData() {
+    save();
+    const data = { app: 'darts-scorer', format: 1, exported: new Date().toISOString(), version: window.APP_VERSION || '' };
+    dataKeys().forEach(k => { data[k] = localStorage.getItem(k); });
+    const name = 'darts-scorer-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    const file = typeof File === 'function' ? new File([blob], name, { type: 'application/json' }) : null;
+    // Auf dem Handy: Teilen-Menü (Dateien, AirDrop, Mail …); sonst normaler Download
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: 'Darts-Scorer Sicherung' }).catch(() => {});
+    } else {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }
+    T.dataMsg = { ok: true, t: 'Sicherung erstellt: ' + name };
+  }
+
+  function importData(text) {
+    let d;
+    try { d = JSON.parse(text); } catch (e) { d = null; }
+    if (!d || d.app !== 'darts-scorer' || typeof d.dartsTrainer !== 'string') {
+      T.dataMsg = { ok: false, t: 'Das ist keine gültige Darts-Scorer-Sicherung.' }; render(); return;
+    }
+    try { JSON.parse(d.dartsTrainer); } catch (e) { T.dataMsg = { ok: false, t: 'Sicherung ist beschädigt.' }; render(); return; }
+    dataKeys().forEach(k => { if (typeof d[k] === 'string') localStorage.setItem(k, d[k]); else localStorage.removeItem(k); });
+    location.reload();
+  }
+
+  function wipeData() {
+    dataKeys().forEach(k => localStorage.removeItem(k));
+    location.reload();
+  }
+
+  function viewData() {
+    const G = games().length, Tr = T.hist.length - G;
+    let h = `<div class="card datacard"><div class="setlabel">Sicherung</div>
+      <p>Deine Daten liegen nur auf diesem Gerät (im Browser). Sichere sie ab und zu – vor allem, bevor du den Browser-Verlauf löschst oder das Handy wechselst.<br>Aktuell gespeichert: <b>${G}</b> Spiel${G === 1 ? '' : 'e'} und <b>${Tr}</b> Training${Tr === 1 ? '' : 's'}.</p>
+      ${btn('export', '⤓ Sicherung exportieren', undefined, 'big go')}
+      ${btn('importPick', '⤒ Sicherung importieren', undefined, 'big ghost')}
+      <div class="datamsg${T.dataMsg && !T.dataMsg.ok ? ' err' : ''}">${T.dataMsg ? T.dataMsg.t : ''}</div></div>`;
+    h += `<div class="card datacard"><div class="setlabel">Zurücksetzen</div><p>Löscht alle Spiele, Trainings, Einstellungen und den Zähler auf diesem Gerät.</p>`;
+    h += T.confirm === 'wipe'
+      ? `<div class="confirmbox"><p>Wirklich alles löschen? Das lässt sich nicht rückgängig machen.</p><div class="row2">${btn('no', 'Abbrechen', undefined, 'mid')}${btn('wipeYes', 'Alles löschen', undefined, 'mid redb')}</div></div>`
+      : btn('wipe', 'Alle Daten löschen', undefined, 'big danger');
+    h += `</div><div class="appver">Darts-Scorer · Version ${window.APP_VERSION || 'dev'}</div>`;
+    return h;
+  }
+
+  // ===== 90-main.js =====
+// Rendern, Navigation, Start
+  function render() {
+    const cv = document.getElementById('viewCounter'), r = T.route || 'home';
+    const panel = EXT.panels[r];   // eigenständiges Modul mit eigenem Container (z.B. X01)
+    cv.style.display = r === 'counter' ? '' : 'none';
+    el.style.display = r === 'counter' || panel ? 'none' : '';
+    Object.entries(EXT.panels).forEach(([k, p]) => { p.el.style.display = k === r ? '' : 'none'; });
+    if (panel) panel.render();
+    else if (r !== 'counter') {
+      let h;
+      if (r === 'home') h = viewHome();
+      else if (r === 'stats') h = viewStatsPage();
+      else if (EXT.views[r]) h = EXT.views[r]();
+      else if (r === 'play') h = T.game ? viewGame() : viewSetup();
+      else h = T.sess ? (DR[T.sess.mode] ? DR[T.sess.mode].view(T.sess, ctx) : T.sess.mode === 'score' ? viewScore() : viewTask()) : T.summary ? viewSummary() : viewSetup();
+      el.innerHTML = h;
+      if (EXT.after[r]) EXT.after[r](el);
+    }
+    document.querySelectorAll('#nav [data-route]').forEach(b => b.classList.toggle('active', b.dataset.route === ((panel && panel.nav) || r)));
+    save();
+  }
+  document.getElementById('nav').addEventListener('click', e => { const b = e.target.closest('[data-route]'); if (b) act('nav', b.dataset.route); });
+  const NAV = [['home', 'Home', ICON.home], ['play', 'Spielen', ICON.play], ['train', 'Training', ICON.train], ['stats', 'Stats', ICON.stats], ['counter', 'Zähler', ICON.counter]];
+  EXT.nav.forEach(x => NAV.splice(NAV.length - 1, 0, [x.route, x.label, x.icon || ICON.play]));
+  document.getElementById('nav').innerHTML = NAV.map(([r, l, i]) => `<button data-route="${r}">${i}<span>${l}</span></button>`).join('');
+  window.renderTrainer = render;
+  // Unsichtbares Datei-Feld für den Import (liegt außerhalb von #viewTrainer, damit render() es nicht ersetzt)
+  const imp = document.createElement('input');
+  imp.type = 'file'; imp.accept = '.json,application/json'; imp.id = 'importFile'; imp.hidden = true;
+  imp.addEventListener('change', () => { const f = imp.files[0]; imp.value = ''; if (f) f.text().then(importData); });
+  document.body.appendChild(imp);
+  if (T.game && T.game.busy) setTimeout(botMove, 500);
+  render();
+})();
+
+</script>
+<script>
+// ===== PWA: Service Worker anmelden (nur über http/https, nicht bei file://) =====
+window.APP_VERSION = '5b2eb872f5';
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service Worker nicht registriert:', e)); });
+}
+</script>
+</body>
+</html>
